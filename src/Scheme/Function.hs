@@ -1,0 +1,208 @@
+{-# LANGUAGE ExistentialQuantification #-}
+
+module Scheme.Function (
+  primitives,
+  ioPrimitives,
+  or,
+  and,
+  eqv,
+  car,
+  cdr,
+  cons,
+  load,
+) where
+
+import Prelude hiding (or, and)
+
+import Scheme.Error
+import {-# SOURCE #-} Scheme.Eval
+import Scheme.Function.Helper
+import Scheme.Parser (readExpr, readExprList)
+import Scheme.Type
+
+import Control.Monad
+import Control.Monad.Error (throwError, catchError)
+import Control.Monad.IO.Class (liftIO)
+import System.IO
+import qualified Data.List as List
+
+
+primitives :: [(String, PrimitiveFunc)]
+primitives = [("+", numberBinFunc (+)),
+              ("-", numberBinFunc (-)),
+              ("*", numberBinFunc (*)),
+              ("/", numberBinFunc div),
+              ("mod", numberBinFunc quot),
+              ("remainder", numberBinFunc rem),
+              ("=", numberBoolFunc (==)),
+              ("<", numberBoolFunc (<)),
+              (">", numberBoolFunc (>)),
+              ("/=", numberBoolFunc (/=)),
+              (">=", numberBoolFunc (>=)),
+              ("<=", numberBoolFunc (<=)),
+              ("&&", boolBoolFunc (&&)),
+              ("||", boolBoolFunc (||)),
+              ("string=?", stringBoolFunc (==)),
+              ("string<?", stringBoolFunc (<)),
+              ("string>?", stringBoolFunc (>)),
+              ("string<=?", stringBoolFunc (<=)),
+              ("string>=?", stringBoolFunc (>=)),
+              ("symbol?",  function1 unpackAny (return . Bool) isSymbol),
+              ("boolean?", function1 unpackAny (return . Bool) isBoolean),
+              ("string?",  function1 unpackAny (return . Bool) isString),
+              ("list?",    function1 unpackAny (return . Bool) isList),
+              ("eq?", eqv),
+              ("eqv?", eqv),
+              ("equal?", equal),
+              ("or", or),
+              ("and", and),
+              ("car", car),
+              ("cdr", cdr),
+              ("cons", cons)
+             ]
+
+ioPrimitives :: [(String, IOFunc)]
+ioPrimitives = [("apply", applyProc),
+                ("open-input-file", makePort ReadMode),
+                ("open-output-file", makePort WriteMode),
+                ("close-input-file", closePort),
+                ("close-output-file", closePort),
+                ("read", readProc),
+                ("write", writeProc),
+                ("read-contents", readContents),
+                ("read-all", readAll)
+               ]
+
+-- type check
+
+isSymbol :: LispVal -> Bool
+isSymbol (Atom _) = True
+isSymbol _        = False
+
+isBoolean :: LispVal -> Bool
+isBoolean (Bool _) = True
+isBoolean _        = False
+
+isNumber :: LispVal -> Bool
+isNumber (Number _)  = True
+isNumber (Float _)   = True
+isNumber (Ratio _)   = True
+isNumber (Complex _) = True
+isNumber _           = False
+
+isString :: LispVal -> Bool
+isString (String _)  = True
+isString _           = False
+
+isList :: LispVal -> Bool
+isList (List _)  = True
+isList _         = False
+
+
+-- equality
+
+equalSeq :: LispVal -> LispVal -> PrimitiveFunc -> ThrowsError LispVal
+equalSeq (DottedList xs x) (DottedList ys y) eq = eq [List $ xs ++ [x], List $ ys ++ [y]]
+equalSeq (List xs) (List ys) eq =
+    return $ Bool $ (length xs == length ys) && all eqvPair (zip xs ys)
+  where
+    eqvPair (x, y) = case eq [x, y] of
+      Left _           -> False
+      Right (Bool val) -> val
+
+eqv :: PrimitiveFunc
+eqv [Bool   arg1, Bool   arg2]  = return $ Bool (arg1 == arg2)
+eqv [Number arg1, Number arg2]  = return $ Bool (arg1 == arg2)
+eqv [String arg1, String arg2]  = return $ Bool (arg1 == arg2)
+eqv [Atom   arg1, Atom   arg2]  = return $ Bool (arg1 == arg2)
+eqv [xs@(DottedList {}), ys@(DottedList {})] = equalSeq xs ys eqv
+eqv [xs@(List _), ys@(List _)] = equalSeq xs ys eqv
+eqv [_, _] = return (Bool False)
+eqv badArgList = throwError $ NumArgsError 2 badArgList
+
+
+data AnyUnpacker = forall a. Eq a => AnyUnpacker (Unpacker a)
+
+unpackEquals :: LispVal -> LispVal -> AnyUnpacker -> ThrowsError Bool
+unpackEquals arg1 arg2 (AnyUnpacker unpacker) =
+  do unpacked1 <- unpacker arg1
+     unpacked2 <- unpacker arg2
+     return $ unpacked1 == unpacked2
+   `catchError` const (return False)
+  
+equal :: PrimitiveFunc
+equal [x@(DottedList {}), y@(DottedList {})] = equalSeq x y equal
+equal [x@(List _), y@(List _)] = equalSeq x y equal
+equal [arg1, arg2] = do
+  primitiveEquals <- liftM List.or $ mapM (unpackEquals arg1 arg2)
+                     [AnyUnpacker unpackNumber, AnyUnpacker unpackString, AnyUnpacker unpackBool]
+  Bool eqvEqual <- eqv [arg1, arg2]
+  return $ Bool (primitiveEquals || eqvEqual)
+
+
+or :: PrimitiveFunc
+or [] = return (Bool False)
+or (Bool False : xs) = or xs
+or (x:xs) = return x
+
+and :: PrimitiveFunc
+and []  = return (Bool True)
+and [x] = return x
+and (Bool False : _) = return (Bool False)
+and (x:xs) = and xs
+
+
+-- list
+
+car :: PrimitiveFunc
+car [List (x:xs)] = return x
+car [DottedList (x:xs) _] = return x
+car [badArg]   = throwError $ TypeMismatchError "pair" badArg
+car badArgList = throwError $ NumArgsError 1 badArgList
+
+cdr :: PrimitiveFunc
+cdr [List (x:xs)] = return $ List xs
+cdr [DottedList [_] x] = return x
+cdr [DottedList (_:xs) x] = return $ DottedList xs x
+cdr [badArg] = throwError $ TypeMismatchError "pair" badArg
+cdr badArgList = throwError $ NumArgsError 1 badArgList
+
+cons :: PrimitiveFunc
+cons [x, List xs] = return $ List (x:xs)
+cons [x, DottedList xs xlast] = return $ DottedList (x:xs) xlast
+cons [x, y] = return $ DottedList [x] y
+cons badArgList = throwError $ NumArgsError 2 badArgList
+
+
+-- IO Primitives
+
+applyProc :: IOFunc
+applyProc [func, List args] = apply func args
+applyProc (func:args)       = apply func args
+
+makePort :: IOMode -> IOFunc
+makePort mode [String filename] = liftM Port $ liftIO $ openFile filename mode
+
+closePort :: IOFunc
+closePort [Port handle] = liftIO (hClose handle) >> return (Bool True)
+closePort _ = return (Bool False)
+
+readProc :: IOFunc
+readProc [] = readProc [Port stdin]
+readProc [Port handle] = liftIO (hGetLine handle)
+                         >>= liftThrowsError . readExpr
+
+writeProc :: IOFunc
+writeProc [obj] = writeProc [obj, Port stdout]
+writeProc [obj, Port handle] = liftIO (hPrint handle obj) >> return (Bool True)
+
+readContents :: IOFunc
+readContents [String filename] = liftM String $ liftIO $ readFile filename
+
+
+load :: String -> IOThrowsError [LispVal]
+load filename = liftIO (readFile filename)
+                >>= liftThrowsError . readExprList
+
+readAll :: IOFunc
+readAll [String filename] = liftM List $ load filename
