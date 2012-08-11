@@ -1,6 +1,6 @@
 SRC = src
 TARGET = run
-MAIN = run.hs
+MAIN = $(SRC)/run.hs
 GHC = /usr/local/bin/ghc
 XARGS = /usr/local/bin/gxargs
 FIND = /usr/local/bin/gfind

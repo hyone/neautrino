@@ -3,8 +3,7 @@
 module Scheme.Function (
   primitives,
   ioPrimitives,
-  or,
-  and,
+  apply,
   eqv,
   car,
   cdr,
@@ -12,10 +11,8 @@ module Scheme.Function (
   load,
 ) where
 
-import Prelude hiding (or, and)
-
 import Scheme.Error
-import {-# SOURCE #-} Scheme.Eval
+import {-# SOURCE #-} Scheme.Eval (apply)
 import Scheme.Function.Helper
 import Scheme.Parser (readExpr, readExprList)
 import Scheme.Type
@@ -54,8 +51,6 @@ primitives = [("+", numberBinFunc (+)),
               ("eq?", eqv),
               ("eqv?", eqv),
               ("equal?", equal),
-              ("or", or),
-              ("and", and),
               ("car", car),
               ("cdr", cdr),
               ("cons", cons)
@@ -140,19 +135,7 @@ equal [arg1, arg2] = do
   return $ Bool (primitiveEquals || eqvEqual)
 
 
-or :: PrimitiveFunc
-or [] = return (Bool False)
-or (Bool False : xs) = or xs
-or (x:xs) = return x
-
-and :: PrimitiveFunc
-and []  = return (Bool True)
-and [x] = return x
-and (Bool False : _) = return (Bool False)
-and (x:xs) = and xs
-
-
--- list
+-- List
 
 car :: PrimitiveFunc
 car [List (x:xs)] = return x

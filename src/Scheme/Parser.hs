@@ -233,20 +233,29 @@ parseUnQuote = try $ do
   x <- parseExpr
   return $ List [Atom "unquote", x]
 
+parseComment :: Parser ()
+parseComment = try $ do
+  char ';'
+  manyTill anyChar (char '\n')
+  return ()
+
 
 -- API
 
 parseExpr :: Parser LispVal
-parseExpr = parseAtom
-        <|> parseChar
-        <|> parseString
-        <|> parseNumeric
-        <|> parseBoolean
-        <|> parseVector
-        <|> parseAnyList
-        <|> parseQuoted
-        <|> parseQuasiQuoted
-        <|> parseUnQuote
+parseExpr = do
+  skipMany parseComment
+  -- remove newline or spaces just after comment
+  skipMany (oneOf "\n\r" <|> space)
+  parseAtom <|> parseChar
+            <|> parseString
+            <|> parseNumeric
+            <|> parseBoolean
+            <|> parseVector
+            <|> parseAnyList
+            <|> parseQuoted
+            <|> parseQuasiQuoted
+            <|> parseUnQuote
 
 readOrThrow :: Parser a -> String -> ThrowsError a
 readOrThrow parser input = case parse parser "lisp" input of
@@ -257,4 +266,5 @@ readExpr :: String -> ThrowsError LispVal
 readExpr = readOrThrow parseExpr
 
 readExprList :: String -> ThrowsError [LispVal]
-readExprList = readOrThrow $ sepEndBy parseExpr spaces
+readExprList = readOrThrow $ 
+  optional spaces *> sepEndBy parseExpr spaces

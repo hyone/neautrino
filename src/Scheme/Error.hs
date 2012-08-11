@@ -36,6 +36,7 @@ showError :: LispError -> String
 showError (UnboundVarError message varname) = message ++ ": " ++ varname
 showError (BadSpecialFormError message form) = message ++ ": " ++ show form
 showError (NotFunctionError message func) = message ++ ": " ++ show func
+showError (SyntaxError message exps) = "Syntax error at " ++ message ++ ": " ++ show exps
 showError (NumArgsError expected found) = "Expected " ++ show expected
                                        ++ " args; found values " ++ (unwords . map show) found
 showError (TypeMismatchError expected found) = "Invalid type: expected " ++ show expected

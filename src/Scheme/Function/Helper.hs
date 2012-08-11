@@ -12,6 +12,7 @@ type Unpacker a = LispVal -> ThrowsError a
 type Packer   a = a -> ThrowsError LispVal
 
 
+-- ----------------------------------------------------------------------------------------
 -- Lisp Function Builder
 
 function1 :: Unpacker a -> Packer b -> (a -> b) -> PrimitiveFunc
@@ -42,21 +43,15 @@ functionFold unpacker packer op params    = do
 numberBinFunc :: (Integer -> Integer -> Integer) -> PrimitiveFunc
 numberBinFunc = functionFold unpackNumber (return . Number)
 
--- numberBinFunc :: (Integer -> Integer -> Integer) -> PrimitiveFunc
--- numberBinFunc op param@[_] = throwError $ NumArgsError 2 param
--- numberBinFunc op params = liftM (Number . foldl1 op) $ mapM unpackNumber params
-
 boolBinFunc :: (LispVal -> ThrowsError a) -> (a -> a -> Bool) -> PrimitiveFunc
-boolBinFunc unpacker op args = if length args /= 2
-                               then throwError $ NumArgsError 2 args
-                               else do left  <- unpacker (head args)
-                                       right <- unpacker (args !! 1)
-                                       return $ Bool (left `op` right)
+boolBinFunc = function2 `flip` (return . Bool)
+
 numberBoolFunc  = boolBinFunc unpackNumber
 stringBoolFunc  = boolBinFunc unpackString
 boolBoolFunc    = boolBinFunc unpackBool
 
 
+-- ----------------------------------------------------------------------------------------
 -- Unpacker
 
 unpackAny :: LispVal -> ThrowsError LispVal
