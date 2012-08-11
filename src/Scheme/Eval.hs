@@ -10,6 +10,7 @@ import Scheme.Type
 import Scheme.Env
 import Scheme.Error
 import Scheme.Parser (readExpr, readExprList)
+import Scheme.Util (until_)
 import qualified Scheme.Function as F
 
 import Control.Monad
@@ -175,12 +176,6 @@ readPrompt prompt = flushStr prompt >> getLine
     flushStr :: String -> IO ()
     flushStr str = putStr str >> hFlush stdout
 
-
-until_ :: Monad m => (a -> Bool) -> m a -> (a -> m ()) -> m ()
-until_ pred prompt action = do
-  result <- prompt
-  unless (pred result) $
-    action result >> until_ pred prompt action
 
 loadLibraries :: Env -> IO ()
 loadLibraries env = void . runIOThrowsError $
