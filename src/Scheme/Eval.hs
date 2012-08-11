@@ -182,6 +182,10 @@ until_ pred prompt action = do
   unless (pred result) $
     action result >> until_ pred prompt action
 
+loadLibraries :: Env -> IO ()
+loadLibraries env = void . runIOThrowsError $
+                      liftM show $ eval env $
+                      List [Atom "load", String "/Users/hiro/program/haskell/scheme/lib/init.scm"]
 
 runOne :: [String] -> IO ()
 runOne args = do
