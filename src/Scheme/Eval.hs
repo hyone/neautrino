@@ -178,17 +178,21 @@ readPrompt prompt = flushStr prompt >> getLine
     flushStr str = putStr str >> hFlush stdout
 
 
-loadLibraries :: Env -> IO ()
-loadLibraries env = void . runIOThrowsError $
+loadLibrary :: Env -> FilePath -> IO ()
+loadLibrary env path = void . runIOThrowsError $
                       liftM show $ eval env $
-                      List [Atom "load", String "/Users/hiro/program/haskell/scheme/lib/init.scm"]
+                      List [Atom "load", String path]
+
+
+initModule :: FilePath
+initModule = "/Users/hiro/program/haskell/scheme/lib/init.scm"
 
 runOne :: [String] -> IO ()
 runOne args = do
   env <- primitiveEnv >>= bindVars `flip` [("args", List (map String $ drop 1 args))]
+  loadLibrary env initModule
   runIOThrowsError (liftM show $ eval env $ List [Atom "load", String (head args)])
   >>= hPutStrLn stderr
-
 
 runRepl :: IO ()
 runRepl = do env <- primitiveEnv
