@@ -19,6 +19,7 @@ import Control.Monad.IO.Class (liftIO)
 import Data.Maybe (isNothing)
 import Text.ParserCombinators.Parsec (parse)
 import System.IO (hFlush, hPutStrLn, stderr, stdout)
+import System.IO.Error (catchIOError, isEOFError)
 
 
 -- ----------------------------------------------------------------------------------------
@@ -190,5 +191,10 @@ runOne args = do
 
 
 runRepl :: IO ()
-runRepl = primitiveEnv
-          >>= until_ (== "quit") (readPrompt "lisp> ") . evalAndPrint
+runRepl = do env <- primitiveEnv
+             loadLibrary env initModule
+             catchIOError (loop env)  
+              ( \e -> unless (isEOFError e) $ ioError e )
+  where
+    loop :: Env -> IO ()
+    loop env = until_ (== "quit") (readPrompt "lisp> ") (evalAndPrint env)
