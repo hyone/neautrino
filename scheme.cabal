@@ -1,0 +1,24 @@
+Name: scheme
+Version: 0.1
+
+Synopsis: My Scheme Implemention
+Description:
+  My Scheme Implemention
+
+Author: hyone
+Maintainer: hyone
+
+License: BSD3
+
+Cabal-Version: >= 1.2
+
+Build-Type: Simple
+
+Executable scheme
+  Main-is: run.hs
+  Hs-Source-Dirs: src
+  Build-Depends: base >= 2.0,
+                 array >= 0.4.0.0,
+                 mtl >= 2.1.1,
+                 parsec >= 3.1.2,
+                 transformers >= 0.3.0.0
