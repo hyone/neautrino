@@ -1,0 +1,4 @@
+*.o
+*.hi
+*.o-boot
+*.hi-boot
