@@ -185,7 +185,7 @@ loadLibrary env path = void . runIOThrowsError $
 
 
 initModule :: FilePath
-initModule = "/Users/hiro/program/haskell/scheme/lib/init.scm"
+initModule = "./lib/init.scm"
 
 runOne :: [String] -> IO ()
 runOne args = do

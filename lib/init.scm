@@ -1,1 +1,1 @@
-(load "/Users/hiro/program/haskell/scheme/lib/base.scm")
+(load "./lib/base.scm")
