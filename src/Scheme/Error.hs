@@ -1,11 +1,13 @@
 module Scheme.Error (
-  LispError(..),
-  ThrowsError,
-  IOThrowsError,
-  trapError,
-  extractValue,
-  liftThrowsError,
-  runIOThrowsError
+  LispError(..)
+, ThrowsError
+, IOThrowsError
+, trapError
+, extractValue
+, liftThrowsError
+, runIOThrowsError
+-- * Convenience re-exports
+, throwError
 ) where
 
 import Scheme.Type (LispVal)

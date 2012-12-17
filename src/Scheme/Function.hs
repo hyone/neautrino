@@ -1,14 +1,14 @@
 {-# LANGUAGE ExistentialQuantification #-}
 
 module Scheme.Function (
-  primitives,
-  ioPrimitives,
-  apply,
-  eqv,
-  car,
-  cdr,
-  cons,
-  load,
+  primitives
+, ioPrimitives
+, apply
+, eqv
+, car
+, cdr
+, cons
+, load
 ) where
 
 import Scheme.Error

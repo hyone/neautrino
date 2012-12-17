@@ -1,7 +1,7 @@
 module Scheme.Type (
-  PrimitiveFunc,
-  IOFunc,
-  LispVal(..),
+  PrimitiveFunc
+, IOFunc
+, LispVal(..)
 ) where
 
 import {-# SOURCE #-} Scheme.Error

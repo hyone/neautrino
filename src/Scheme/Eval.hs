@@ -1,9 +1,9 @@
 module Scheme.Eval (
-  apply,
-  eval,
-  evalString,
-  runOne,
-  runRepl
+  apply
+, eval
+, evalString
+, runOne
+, runRepl
 ) where
 
 import Scheme.Type
@@ -14,7 +14,6 @@ import Scheme.Util (until_)
 import qualified Scheme.Function as F
 
 import Control.Monad
-import Control.Monad.Error (throwError)
 import Control.Monad.IO.Class (liftIO)
 import Data.Maybe (isNothing)
 import Text.ParserCombinators.Parsec (parse)
@@ -47,7 +46,7 @@ eval env (List (Atom "cond" : exps)) = condForm env exps
 eval env (List (Atom "case" : pred : exps)) = caseForm env pred exps
 -- function application
 eval env (List (func : args)) = applyFunc env func args
--- error
+-- or error
 eval env badForm = throwError $ BadSpecialFormError "Unrecognized special form" badForm
 
 
@@ -70,7 +69,7 @@ apply (Func params varargs body closure) args =
       Nothing      -> return env
 
 
--- function application
+-- | apply function
 applyFunc :: Env -> LispVal -> IOFunc
 applyFunc env func args = do
   func <- eval env func

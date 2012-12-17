@@ -1,10 +1,10 @@
 module Scheme.Env (
-  Env,
-  getVar,
-  setVar,
-  defineVar,
-  bindVars,
-  primitiveEnv
+  Env
+, getVar
+, setVar
+, defineVar
+, bindVars
+, primitiveEnv
 ) where
 
 import Scheme.Error
@@ -13,28 +13,33 @@ import Scheme.Function (primitives, ioPrimitives)
 
 import Data.IORef
 import Control.Monad (liftM)
-import Control.Monad.Error (throwError)
 import Control.Monad.IO.Class (liftIO)
 import Data.Maybe (isJust)
 
 
-type Env = IORef [(String, IORef LispVal)]
+type Var = String
+type VarPair = (Var, LispVal)
+type VarRefPair = (Var, IORef LispVal)
+type Env = IORef [VarRefPair]
 
 
 nullEnv :: IO Env
 nullEnv = newIORef []
 
-isBound :: Env -> String -> IO Bool
+-- | whether or not the variable is bounded
+isBound :: Env -> Var -> IO Bool
 isBound envRef var = liftM (isJust . lookup var) (readIORef envRef)
 
-getVar :: Env -> String -> IOThrowsError LispVal
+-- | get value of variable
+getVar :: Env -> Var -> IOThrowsError LispVal
 getVar envRef var = do
   env <- liftIO $ readIORef envRef
   maybe (throwError $ UnboundVarError "Getting an unbound variable" var)
         (liftIO . readIORef)
         (lookup var env)
 
-setVar :: Env -> String -> LispVal -> IOThrowsError LispVal
+-- | set value of variable
+setVar :: Env -> Var -> LispVal -> IOThrowsError LispVal
 setVar envRef var value = do
   env <- liftIO $ readIORef envRef
   maybe (throwError $ UnboundVarError "Setting an unbound variable" var)
@@ -42,31 +47,35 @@ setVar envRef var value = do
         (lookup var env)
   return value
 
-defineVar :: Env -> String -> LispVal -> IOThrowsError LispVal
+-- | modify value of an existing variable or create new one
+defineVar :: Env -> Var -> LispVal -> IOThrowsError LispVal
 defineVar envRef var value = do
   defined <- liftIO $ isBound envRef var
   if defined
-    then setVar envRef var value
-    else liftIO $ do
-      valueRef <- newIORef value
-      env <- readIORef envRef
-      writeIORef envRef ((var, valueRef) : env)
-      return value
+     then setVar envRef var value
+     else liftIO $ do
+       valueRef <- newIORef value
+       env <- readIORef envRef
+       writeIORef envRef ((var, valueRef) : env)
+       return value
 
-bindVars :: Env -> [(String, LispVal)] -> IO Env
+-- | extend env with bindings
+bindVars :: Env -> [VarPair] -> IO Env
 bindVars envRef bindings = readIORef envRef >>= extendEnv bindings >>= newIORef
   where
-    extendEnv :: [(String, LispVal)] -> [(String, IORef LispVal)] -> IO [(String, IORef LispVal)]
+    extendEnv :: [VarPair] -> [VarRefPair] -> IO [VarRefPair]
     extendEnv bindings env = liftM (++ env) (mapM addBinding bindings)
 
-    addBinding :: (String, LispVal) -> IO (String, IORef LispVal)
+    addBinding :: VarPair -> IO VarRefPair
     addBinding (var, value) = liftM (\ref -> (var, ref)) $ newIORef value
 
 
 primitiveEnv :: IO Env
 primitiveEnv = nullEnv >>=
-                 (flip bindVars $ 
-                    map (buildFunc IOPrimitiveFunc) ioPrimitives ++
-                    map (buildFunc PrimitiveFunc) primitives)
+                (flip bindVars $
+                  map (buildFunc IOPrimitiveFunc) ioPrimitives ++
+                  map (buildFunc PrimitiveFunc) primitives)
   where
+    buildFunc :: (a -> b) -> (c, a) -> (c, b)
     buildFunc constructor (var, func) = (var, constructor func)
+
