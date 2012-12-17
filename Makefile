@@ -1,17 +1,9 @@
-SRC = src
-TARGET = run
-MAIN = $(SRC)/run.hs
-GHC = /usr/local/bin/ghc
-XARGS = /usr/local/bin/gxargs
-FIND = /usr/local/bin/gfind
+TARGET = simple-scheme
 RM = /bin/rm
-
-
-all: $(TARGET)
-
-$(TARGET):
-	$(GHC) -i$(SRC) --make -o $(TARGET) $(MAIN)
+FIND = gfind
+XARGS = gxargs
 
 clean:
-	$(FIND) . -name "*.hi" -or -name "*.o" | $(XARGS) -i $(RM) "{}"
-	$(RM) $(TARGET)
+	cabal clean
+	$(FIND) . -name "*.hi" -or -name "*.o" -or -name "*.hi-boot" -or -name "*.o-boot" | ${XARGS} -i $(RM) -f "{}"
+	$(RM) -f $(TARGET)

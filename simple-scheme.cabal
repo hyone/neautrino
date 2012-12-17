@@ -1,9 +1,9 @@
-Name: scheme
+Name: simple-scheme
 Version: 0.1
 
-Synopsis: My Scheme Implemention
+Synopsis: Simple Scheme Implemention
 Description:
-  My Scheme Implemention
+  Simple Scheme Implemention
 
 Author: hyone
 Maintainer: hyone
@@ -14,7 +14,9 @@ Cabal-Version: >= 1.2
 
 Build-Type: Simple
 
-Executable scheme
+data-files: lib/*.scm
+
+Executable simple-scheme
   Main-is: run.hs
   Hs-Source-Dirs: src
   Build-Depends: base >= 2.0,
@@ -22,3 +24,7 @@ Executable scheme
                  mtl >= 2.1.1,
                  parsec >= 3.1.2,
                  transformers >= 0.3.0.0
+
+source-repository head
+  type: git
+  location: https://github.com/hyone/simple-scheme

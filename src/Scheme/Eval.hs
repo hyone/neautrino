@@ -201,4 +201,4 @@ runRepl = do env <- primitiveEnv
               ( \e -> unless (isEOFError e) $ ioError e )
   where
     loop :: Env -> IO ()
-    loop env = until_ (== "quit") (readPrompt "lisp> ") (evalAndPrint env)
+    loop env = until_ (== "quit") (readPrompt "scheme> ") (evalAndPrint env)
