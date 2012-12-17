@@ -24,6 +24,7 @@ Run a script file:
 
 ## Usage
 
+```scheme
     ;; arithmetic
     scheme> (+ 1 2)
     3
@@ -77,3 +78,4 @@ Run a script file:
     13
     scheme> (acc 6)
     19
+```
