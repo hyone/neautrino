@@ -66,8 +66,6 @@ scheme> (factorial 10)
 3628800
 
 ;; define closure
-scheme> (define (accumulator n) (lambda (i) (set! n (+ n i))))
-#<closure>
 scheme> (define (gen-accumulator n) (lambda (i) (set! n (+ n i))))
 #<closure>
 scheme> (define acc (gen-accumulator 5))
