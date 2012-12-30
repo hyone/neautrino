@@ -51,14 +51,9 @@ type ThrowsError = Either LispError
 trapError :: (Show e, MonadError e m) => m String -> m String
 trapError action = catchError action (return . show)
 
-{-
-   We purposely leave extractValue undefined for a Left constructor,
-   because that represents a programmer error.
-   We intend to use extractValue only after a catchError
--}
-extractValue :: ThrowsError a -> a
+extractValue :: ThrowsError String -> String
 extractValue (Right val) = val
-
+extractValue (Left err)  = show err
 
 type IOThrowsError = ErrorT LispError IO
 
@@ -67,4 +62,4 @@ liftThrowsError (Left err)  = throwError err
 liftThrowsError (Right val) = return val
 
 runIOThrowsError :: IOThrowsError String -> IO String
-runIOThrowsError action = liftM extractValue $ runErrorT (trapError action)
+runIOThrowsError = liftM extractValue . runErrorT

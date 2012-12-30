@@ -15,6 +15,7 @@ import Scheme.Util (until_)
 import qualified Scheme.Function as F
 
 import Control.Monad
+import Control.Monad.Error (runErrorT)
 import Control.Monad.IO.Class (liftIO)
 import Data.Maybe (isNothing)
 import Text.ParserCombinators.Parsec (parse)
@@ -159,14 +160,16 @@ caseForm env pred exps =
 -- ----------------------------------------------------------------------------------------
 -- REPL
 
-evalString :: Env -> String -> IO String
--- evalString env expr = runIOThrowsError . liftM show $
---                         liftThrowsError (readExpr expr) >>= eval env
-evalString env expr = runIOThrowsError $ do
+evalStringToLispVal :: Env -> String -> IO (ThrowsError LispVal)
+evalStringToLispVal env expr = runErrorT $ do
   parsed <- liftThrowsError $ readExpr expr
   result <- eval env parsed
-  return $ show result
+  return result
 
+evalString :: Env -> String -> IO String
+evalString env expr = do
+  result <- evalStringToLispVal env expr
+  return $ extractValue (fmap show result)
 
 evalAndPrint :: Env -> String -> IO ()
 evalAndPrint env expr = evalString env expr >>= putStrLn 
