@@ -87,34 +87,35 @@ evalBody env = liftM last . mapM (eval env)
 -- Special Form
 
 -- helper to build function 
-makeFunc :: (Monad m) => Maybe String -> Env -> [LispVal] -> [LispVal] -> m LispVal
+makeFunc :: Monad m => Maybe String -> Env -> [LispVal] -> [LispVal] -> m LispVal
 makeFunc varargs env params body =
   return $ Func (map show params) varargs body env
 
-makeNormalFunc :: (Monad m) => Env -> [LispVal] -> [LispVal] -> m LispVal
+makeNormalFunc :: Monad m => Env -> [LispVal] -> [LispVal] -> m LispVal
 makeNormalFunc = makeFunc Nothing
 
-makeVarargsFunc :: (Monad m) => LispVal -> Env -> [LispVal] -> [LispVal] -> m LispVal
+makeVarargsFunc :: Monad m => LispVal -> Env -> [LispVal] -> [LispVal] -> m LispVal
 makeVarargsFunc = makeFunc . Just . show
 
 
 defineForm :: Env -> [LispVal] -> IOThrowsError LispVal
 -- variable
 defineForm env [Atom var, form] = eval env form >>= defineVar env var
--- normal function
+-- normal function: (define (hoge a b) ...)
 defineForm env (List (Atom var : params) : body) =
   makeNormalFunc env params body >>= defineVar env var
--- varargs function
+-- varargs function: (define (hoge a . b) ...)
 defineForm env (DottedList (Atom var : params) varargs : body) =
   makeVarargsFunc varargs env params body >>= defineVar env var
 defineForm env badArgs = throwError $ SyntaxError "define" (List (Atom "define" : badArgs))
 
 
 lambdaForm :: Env -> [LispVal] -> IOThrowsError LispVal
--- normal lambda expression
+-- normal lambda expression: (lambda (a b) ...)
 lambdaForm env (List params : body) = makeNormalFunc env params body
--- varargs lambda expression
+-- varargs lambda expression: (lambda (a . b) ...)
 lambdaForm env (DottedList params varargs : body) = makeVarargsFunc varargs env params body
+-- only varargs lambda expression: (lambda a ...)
 lambdaForm env (varargs@(Atom _) : body) = makeVarargsFunc varargs env [] body
 lambdaForm env badArgs = throwError $ SyntaxError "lambda" (List (Atom "lambda" : badArgs))
 
