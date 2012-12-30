@@ -2,6 +2,7 @@ module Scheme.Eval (
   apply
 , eval
 , evalString
+, initEnv
 , runOne
 , runRepl
 ) where
@@ -186,16 +187,20 @@ loadLibrary env path = void . runIOThrowsError $
 initModule :: FilePath
 initModule = "./lib/init.scm"
 
+initEnv :: IO Env
+initEnv = do
+  env <- primitiveEnv
+  loadLibrary env initModule
+  return env
+
 runOne :: [String] -> IO ()
 runOne args = do
-  env <- primitiveEnv >>= bindVars `flip` [("args", List (map String $ drop 1 args))]
-  loadLibrary env initModule
+  env <- initEnv >>= bindVars `flip` [("args", List (map String $ drop 1 args))]
   runIOThrowsError (liftM show $ eval env $ List [Atom "load", String (head args)])
   >>= hPutStrLn stderr
 
 runRepl :: IO ()
-runRepl = do env <- primitiveEnv
-             loadLibrary env initModule
+runRepl = do env <- initEnv
              catchIOError (loop env)  
               ( \e -> unless (isEOFError e) $ ioError e )
   where
