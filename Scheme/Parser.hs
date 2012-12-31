@@ -5,11 +5,10 @@
 module Scheme.Parser where
 
 import Scheme.Type
-import Scheme.Error (ThrowsError, LispError(ParserError))
+import Scheme.Error (throwError, ThrowsError, LispError(ParserError))
 
 import Control.Applicative ((<*), (*>), (<$>))
 import Control.Monad
-import Control.Monad.Error (throwError)
 import Data.Array (listArray)
 import Data.Char (digitToInt)
 import Data.Complex (Complex(..))
