@@ -1,14 +1,11 @@
-{-# LANGUAGE TemplateHaskell #-}
+module LispCodeSpec (specs) where
 
-module LispCodeSpec where
-
-import Control.Monad.IO.Class (liftIO)
 import Test.Hspec
 import Scheme.Eval (initEnv, evalString)
 
 
-spec :: Spec
-spec = do
+specs :: Spec
+specs = do
   describe "arithmetic" $ do
     it "additional" $ do
       env <- initEnv
@@ -59,4 +56,4 @@ spec = do
 
 
 main :: IO ()
-main = hspec spec
+main = hspec specs
