@@ -1,28 +1,56 @@
-Name: simple-scheme
-Version: 0.1
-
-Synopsis: Simple Scheme Implemention
-Description:
+cabal-version: >= 1.8
+name:          simple-scheme
+version:       0.1
+synopsis:      Simple Scheme Implemention
+description:
   Simple Scheme Implemention
+author:        hyone
+maintainer:    hyone
+license:       BSD3
+build-type:    Simple
+-- included only in source distributions
+-- extra-source-files: lib/*.scm
+data-files:    lib/*.scm
+extra-source-files:
+  test/test.hs
+  test/LispCodeSpec.hs
 
-Author: hyone
-Maintainer: hyone
+library
+  build-depends: base >= 2.0
+                ,array >= 0.4.0.0
+                ,mtl >= 2.1.1
+                ,parsec >= 3.1.3
+                ,transformers >= 0.3.0.0
+  exposed-modules:
+    Scheme.Env
+    Scheme.Error
+    Scheme.Eval
+    Scheme.Function
+    Scheme.Function.Helper
+    Scheme.Parser
+    Scheme.Type
+    Scheme.Util
+  other-modules:
+    Scheme.Internal.Parser
 
-License: BSD3
+executable simple-scheme
+  main-is: run.hs
+  build-depends: base >= 2.0
+                ,array >= 0.4.0.0
+                ,mtl >= 2.1.1
+                ,parsec >= 3.1.3
+                ,transformers >= 0.3.0.0
 
-Cabal-Version: >= 1.2
+test-suite tests
+  type: exitcode-stdio-1.0
+  main-is: test.hs
+  hs-source-dirs: test
 
-Build-Type: Simple
-
-data-files: lib/*.scm
-
-Executable simple-scheme
-  Main-is: run.hs
-  Build-Depends: base >= 2.0,
-                 array >= 0.4.0.0,
-                 mtl >= 2.1.1,
-                 parsec >= 3.1.2,
-                 transformers >= 0.3.0.0
+  build-depends: base >= 2.0
+                ,hspec >= 1.4.3
+                ,transformers >= 0.3.0.0
+                ,simple-scheme
+  ghc-options: -Wall
 
 source-repository head
   type: git
