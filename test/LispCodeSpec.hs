@@ -29,6 +29,14 @@ spec = do
       evalString env "(car '(1 2 3))"  `shouldReturn` "1"
       evalString env "(cdr '(1 2 3))"  `shouldReturn` "(2 3)"
 
+  describe "variable" $ do
+    it "basic" $ do
+      env <- initEnv
+      _   <- evalString env "(define a 3)"
+      evalString env "a" `shouldReturn` "3"
+      _   <- evalString env "(set! a #\\c)"
+      evalString env "a" `shouldReturn` "#\\c"
+
   describe "function" $ do
     it "basic" $ do
       env <- initEnv
