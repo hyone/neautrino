@@ -18,7 +18,6 @@ data-files: lib/*.scm
 
 Executable simple-scheme
   Main-is: run.hs
-  Hs-Source-Dirs: src
   Build-Depends: base >= 2.0,
                  array >= 0.4.0.0,
                  mtl >= 2.1.1,
