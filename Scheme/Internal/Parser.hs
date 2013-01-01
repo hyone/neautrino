@@ -19,6 +19,9 @@ symbol = oneOf "!$%&|*+-/:<=>?@^_~"
 spaces :: Parser ()
 spaces = skipMany1 space
 
+eol :: Parser Char
+eol = newline <|> (eof >> return '\n')
+
 
 -- Atom
 
@@ -231,7 +234,7 @@ parseUnQuote = try $ do
 parseComment :: Parser ()
 parseComment = try $ do
   char ';'
-  manyTill anyChar (char '\n')
+  manyTill anyChar eol
   return ()
 
 
