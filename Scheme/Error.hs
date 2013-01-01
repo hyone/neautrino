@@ -7,6 +7,7 @@ module Scheme.Error (
 , liftThrowsError
 , runIOThrowsError
 -- * Convenience re-exports
+, ParseError
 , throwError
 ) where
 
