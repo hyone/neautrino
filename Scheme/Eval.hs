@@ -18,7 +18,6 @@ import Control.Monad
 import Control.Monad.Error (runErrorT)
 import Control.Monad.IO.Class (liftIO)
 import Data.Maybe (isNothing)
-import Text.ParserCombinators.Parsec (parse)
 import System.IO (hFlush, hPutStrLn, stderr, stdout)
 import System.IO.Error (catchIOError, isEOFError)
 

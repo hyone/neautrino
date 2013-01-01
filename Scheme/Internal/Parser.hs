@@ -10,7 +10,8 @@ import Data.Char (digitToInt)
 import Data.Complex (Complex(..))
 import Data.Ratio ((%))
 import Numeric (readInt, readOct, readDec, readHex, readFloat)
-import Text.ParserCombinators.Parsec hiding (spaces)
+import Text.Parsec hiding (spaces)
+import Text.Parsec.String (Parser)
 
 
 symbol :: Parser Char

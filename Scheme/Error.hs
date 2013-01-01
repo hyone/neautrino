@@ -14,7 +14,7 @@ module Scheme.Error
 import Scheme.Type (LispVal)
 
 import Control.Monad.Error
-import Text.ParserCombinators.Parsec (ParseError)
+import Text.Parsec (ParseError)
 
 
 data LispError = NumArgsError Int [LispVal]
