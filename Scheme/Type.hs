@@ -51,6 +51,7 @@ instance Eq LispVal where
   Undefined       == Undefined       = True
   List xs         == List ys         = xs == ys
   DottedList xs x == DottedList ys y = xs == ys && x == y
+  Vector xs       == Vector ys       = xs == ys
   _               == _               = False
 
 
