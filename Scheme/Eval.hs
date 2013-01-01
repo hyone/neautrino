@@ -1,11 +1,11 @@
-module Scheme.Eval (
-  apply
-, eval
-, evalString
-, initEnv
-, runOne
-, runRepl
-) where
+module Scheme.Eval
+  ( apply
+  , eval
+  , evalString
+  , initEnv
+  , runOne
+  , runRepl
+  ) where
 
 import Scheme.Type
 import Scheme.Env

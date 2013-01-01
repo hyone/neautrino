@@ -1,11 +1,11 @@
-module Scheme.Env (
-  Env
-, getVar
-, setVar
-, defineVar
-, bindVars
-, primitiveEnv
-) where
+module Scheme.Env
+  ( Env
+  , getVar
+  , setVar
+  , defineVar
+  , bindVars
+  , primitiveEnv
+  ) where
 
 import Scheme.Error
 import Scheme.Type

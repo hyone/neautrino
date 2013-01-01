@@ -1,8 +1,8 @@
-module Scheme.Type (
-  PrimitiveFunc
-, IOFunc
-, LispVal(..)
-) where
+module Scheme.Type
+  ( PrimitiveFunc
+  , IOFunc
+  , LispVal(..)
+  ) where
 
 import {-# SOURCE #-} Scheme.Error
 import {-# SOURCE #-} Scheme.Env
@@ -73,9 +73,9 @@ showVal Undefined              = "#<undef>"
 showVal PrimitiveFunc {}       = "#<primitive>"
 showVal IOPrimitiveFunc {}     = "#<io primitive>"
 showVal Func {}                = "#<closure>"
-showVal (List contents)        = "(" ++ unwordsList contents ++ ")"
+showVal (List contents)        = "("  ++ unwordsList contents ++ ")"
 showVal (Vector arr)           = "#(" ++ unwordsList (elems arr) ++ ")"
-showVal (DottedList head tail) = "(" ++ unwordsList head ++ " . " ++ showVal tail ++ ")"
+showVal (DottedList head tail) = "("  ++ unwordsList head ++ " . " ++ showVal tail ++ ")"
 
 unwordsList :: [LispVal] -> String
 unwordsList =  unwords . map showVal

@@ -1,15 +1,15 @@
-module Scheme.Error (
-  LispError(..)
-, ThrowsError
-, IOThrowsError
-, trapError
-, extractValue
-, liftThrowsError
-, runIOThrowsError
--- * Convenience re-exports
-, ParseError
-, throwError
-) where
+module Scheme.Error
+  ( LispError(..)
+  , ThrowsError
+  , IOThrowsError
+  , trapError
+  , extractValue
+  , liftThrowsError
+  , runIOThrowsError
+  -- * Convenience re-exports
+  , ParseError
+  , throwError
+  ) where
 
 import Scheme.Type (LispVal)
 
