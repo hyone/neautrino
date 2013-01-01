@@ -7,7 +7,7 @@ module Scheme.Type (
 import {-# SOURCE #-} Scheme.Error
 import {-# SOURCE #-} Scheme.Env
 
-import Data.Array (Array)
+import Data.Array (Array, elems)
 import Data.Complex (Complex)
 import Data.Ratio (Rational)
 import System.IO (Handle)
@@ -58,6 +58,7 @@ showVal PrimitiveFunc {}       = "#<primitive>"
 showVal IOPrimitiveFunc {}     = "#<io primitive>"
 showVal Func {}                = "#<closure>"
 showVal (List contents)        = "(" ++ unwordsList contents ++ ")"
+showVal (Vector arr)           = "#(" ++ unwordsList (elems arr) ++ ")"
 showVal (DottedList head tail) = "(" ++ unwordsList head ++ " . " ++ showVal tail ++ ")"
 
 unwordsList :: [LispVal] -> String
