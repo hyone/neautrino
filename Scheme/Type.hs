@@ -39,6 +39,21 @@ data LispVal = Atom String
                       closure :: Env }
 
 
+instance Eq LispVal where
+  (Atom x)        == (Atom y)        = x == y 
+  (Number x)      == (Number y)      = x == y 
+  (Float x)       == (Float y)       = x == y 
+  (Ratio x)       == (Ratio y)       = x == y 
+  (Complex x)     == (Complex y)     = x == y 
+  (Character x)   == (Character y)   = x == y 
+  (String x)      == (String y)      = x == y 
+  (Bool x)        == (Bool y)        = x == y 
+  Undefined       == Undefined       = True
+  List xs         == List ys         = xs == ys
+  DottedList xs x == DottedList ys y = xs == ys && x == y
+  _               == _               = False
+
+
 instance Show LispVal where
   show = showVal
 
