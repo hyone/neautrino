@@ -76,4 +76,23 @@ scheme> (acc 5)
 13
 scheme> (acc 6)
 19
+
+;; quote and quasiauote
+scheme> '(1 2 3)
+(1 2 3)
+scheme> (define a 5)
+5
+scheme> `(1 2 ,a . 9)
+(1 2 5 . 9)
+scheme> `(1 (2 ,a) 3)
+(1 (2 5) 3)
 ```
+
+## Run Unit Test
+
+    $ cabal configure --enable-tests
+    $ cabal build
+    $ cabal test
+
+    # to run single test
+    $ runhaskell test/LispCodeSpec.hs
