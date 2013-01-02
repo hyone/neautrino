@@ -1,6 +1,5 @@
 module Scheme.Eval where
 
-import Scheme.Type  (LispVal, IOFunc)
-import Scheme.Error (IOThrowsError)
+import Scheme.Type (LispVal, IOFunc)
 
 apply :: LispVal -> IOFunc

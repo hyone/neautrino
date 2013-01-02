@@ -3,10 +3,6 @@ module Scheme.Function.Helper where
 import Scheme.Type
 import Scheme.Error
 
-import Control.Monad
-import Control.Monad.Error (throwError)
-import Data.Maybe (listToMaybe)
-
 
 type Unpacker a = LispVal -> ThrowsError a
 type Packer   a = a -> ThrowsError LispVal
@@ -34,8 +30,8 @@ function3 unpacker packer f args = if length args /= 3
                                            packer $ f (head vals) (vals !! 1) (vals !! 2)
 
 functionFold :: Unpacker a -> Packer a -> (a -> a -> a) -> PrimitiveFunc
-functionFold unpacker packer op param@[_] = throwError $ NumArgsError 2 param
-functionFold unpacker packer op params    = do
+functionFold _        _      _  param@[_] = throwError $ NumArgsError 2 param
+functionFold unpacker packer op params = do
   vals <- mapM unpacker params
   packer $ foldl1 op vals
 
@@ -46,8 +42,13 @@ numberBinFunc = functionFold unpackNumber (return . Number)
 boolBinFunc :: (LispVal -> ThrowsError a) -> (a -> a -> Bool) -> PrimitiveFunc
 boolBinFunc = function2 `flip` (return . Bool)
 
+numberBoolFunc :: (Integer -> Integer -> Bool) -> PrimitiveFunc
 numberBoolFunc  = boolBinFunc unpackNumber
+
+stringBoolFunc :: (String -> String -> Bool) -> PrimitiveFunc
 stringBoolFunc  = boolBinFunc unpackString
+
+boolBoolFunc :: (Bool -> Bool -> Bool) -> PrimitiveFunc
 boolBoolFunc    = boolBinFunc unpackBool
 
 

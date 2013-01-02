@@ -64,7 +64,7 @@ bindVars :: Env -> [VarPair] -> IO Env
 bindVars envRef bindings = readIORef envRef >>= extendEnv bindings >>= newIORef
   where
     extendEnv :: [VarPair] -> [VarRefPair] -> IO [VarRefPair]
-    extendEnv bindings env = liftM (++ env) (mapM addBinding bindings)
+    extendEnv bindings' env = liftM (++ env) (mapM addBinding bindings')
 
     addBinding :: VarPair -> IO VarRefPair
     addBinding (var, value) = liftM (\ref -> (var, ref)) $ newIORef value

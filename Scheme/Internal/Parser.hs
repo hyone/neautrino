@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -fno-warn-unused-do-bind #-}
+-- | Parser implementation for Scheme language
 module Scheme.Internal.Parser where
 
 import Scheme.Type
@@ -47,9 +49,11 @@ parseChar = do
     characterName = do
       s <- try (string "space") <|> try (string "newline")
       notFollowedBy alphaNum
-      return $ case s of
-        "space"   -> Character ' '
-        "newline" -> Character '\n'
+      case s of
+        "space"   -> return $ Character ' '
+        "newline" -> return $ Character '\n'
+        _         -> fail $ "parse error at #\\" ++ s
+
 
 escapedChar :: Parser Char
 escapedChar = do
@@ -74,10 +78,11 @@ parseString = try $ do
 parseBoolean :: Parser LispVal
 parseBoolean = try $ do
   char '#'
-  s <- oneOf "tf"
-  return $ case s of
-    't' -> Bool True
-    'f' -> Bool False
+  c <- oneOf "tf"
+  case c of
+    't' -> return $ Bool True
+    'f' -> return $ Bool False
+    _   -> fail $ "parse error at #\\" ++ [c] 
 
 
 -- Number
@@ -117,7 +122,7 @@ parseHexLiteral = do
   try $ string "#x"
   s <- many1 digit
   notFollowedBy alphaNum
-  case readDec s of
+  case readHex s of
     [(x, _)] -> return (Number x)
     _ -> fail "invalid hex number"
 
@@ -133,12 +138,14 @@ parseNumber = parseBinLiteral
 
 -- Float
 
+float :: Parser String
 float = do
   s1 <- many digit
   c  <- char '.'
   s2 <- many digit
   return (s1 ++ c : s2)
 
+floatWithExp :: Parser String
 floatWithExp = do
   s1 <- try float <|> many1 digit
   c  <- char 'e'
@@ -164,8 +171,9 @@ parseRatio = try $ do
 -- Complex
 
 toDouble :: LispVal -> Double
-toDouble (Float f) = f
+toDouble (Float f)  = f
 toDouble (Number n) = fromIntegral n
+toDouble _          = error "Not a number."
 
 parseComplex :: Parser LispVal
 parseComplex = try $ do
@@ -198,9 +206,9 @@ parseListLiteral = List <$> sepEndBy parseExpr spaces
 
 parseDottedListLiteral :: Parser LispVal
 parseDottedListLiteral = do
-  head <- sepEndBy1 parseExpr spaces
-  tail <- char '.' >> spaces >> parseExpr
-  return $ DottedList head tail
+  h <- sepEndBy1 parseExpr spaces
+  t <- char '.' >> spaces >> parseExpr
+  return $ DottedList h t
 
 parseAnyList :: Parser LispVal
 parseAnyList = try $ do

@@ -11,7 +11,7 @@ module Scheme.Error
   ) where
 
 import Scheme.Internal.Type (LispError(..), ThrowsError, IOThrowsError)
-import Scheme.Type
+import Scheme.Type ()
 
 import Control.Monad.Error
 import Text.Parsec (ParseError)

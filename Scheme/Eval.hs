@@ -10,7 +10,7 @@ module Scheme.Eval
 import Scheme.Type
 import Scheme.Env
 import Scheme.Error
-import Scheme.Parser (readExpr, readExprList)
+import Scheme.Parser (readExpr)
 import Scheme.Util (until_)
 import qualified Scheme.Function as F
 
@@ -28,31 +28,31 @@ import System.IO.Error (catchIOError, isEOFError)
 -- | evaluate abstract syntax tree to value
 eval :: Env -> LispVal -> IOThrowsError LispVal
 -- literal
-eval env val@(Character _) = return val
-eval env val@(String _)    = return val
-eval env val@(Number _)    = return val
-eval env val@(Float _)     = return val
-eval env val@(Ratio _)     = return val
-eval env val@(Complex _)   = return val
-eval env val@(Bool _)      = return val
+eval _   val@(Character _) = return val
+eval _   val@(String _)    = return val
+eval _   val@(Number _)    = return val
+eval _   val@(Float _)     = return val
+eval _   val@(Ratio _)     = return val
+eval _   val@(Complex _)   = return val
+eval _   val@(Bool _)      = return val
 -- variable
 eval env (Atom var) = getVar env var
 -- special forms
 eval env (List (Atom "define" : args))   = defineForm env args
 eval env (List (Atom "lambda" : args))   = lambdaForm env args
-eval env (List [Atom "quote", val])      = return val
+eval _   (List [Atom "quote", val])      = return val
 eval env (List [Atom "quasiquote", val]) = quasiquoteForm env val
 eval env (List [Atom "set!", Atom var, form])    = eval env form >>= setVar env var
 eval env (List [Atom "load", String filename])   = F.load filename >>= evalBody env
 eval env (List [Atom "if", p, thenExp, elseExp]) = ifForm env p thenExp elseExp
 eval env (List (Atom "cond" : exps))     = condForm env exps
 eval env (List (Atom "case" : p : exps)) = caseForm env p exps
-eval env val@(List [Atom "unquote", _])  =
+eval _   val@(List [Atom "unquote", _])  =
   throwError $ DefaultError ("unquote appeared outside quasiquote: " ++ show val)
 -- function application
 eval env (List (func : args)) = applyFunc env func args
 -- or error
-eval env badForm = throwError $ BadSpecialFormError "Unrecognized special form" badForm
+eval _   badForm = throwError $ BadSpecialFormError "Unrecognized special form" badForm
 
 
 -- | apply function to arguments
@@ -73,12 +73,13 @@ apply (Func params varargs body closure) args =
     bindVarArgs arg env = case arg of
       Just argName -> liftIO $ bindVars env [(argName, List remainingArgs)]
       Nothing      -> return env
+apply notFunc _ = throwError $ NotFunctionError "invalid application" (show notFunc)
 
 applyFunc :: Env -> LispVal -> IOFunc
 applyFunc env func args = do
-  func <- eval env func
-  vals <- mapM (eval env) args
-  apply func vals
+  func' <- eval env func
+  vals  <- mapM (eval env) args
+  apply func' vals
 
 -- evaluate list of expressions and returns the value from last expression
 evalBody :: Env -> [LispVal] -> IOThrowsError LispVal
@@ -108,7 +109,7 @@ defineForm env (List (Atom var : params) : body) =
 -- varargs function: (define (hoge a . b) ...)
 defineForm env (DottedList (Atom var : params) varargs : body) =
   makeVarargsFunc varargs env params body >>= defineVar env var
-defineForm env badArgs = throwError $ SyntaxError "define" (List (Atom "define" : badArgs))
+defineForm _   badArgs = throwError $ SyntaxError "define" (List (Atom "define" : badArgs))
 
 
 lambdaForm :: Env -> [LispVal] -> IOThrowsError LispVal
@@ -118,7 +119,7 @@ lambdaForm env (List params : body) = makeNormalFunc env params body
 lambdaForm env (DottedList params varargs : body) = makeVarargsFunc varargs env params body
 -- only varargs lambda expression: (lambda a ...)
 lambdaForm env (varargs@(Atom _) : body) = makeVarargsFunc varargs env [] body
-lambdaForm env badArgs = throwError $ SyntaxError "lambda" (List (Atom "lambda" : badArgs))
+lambdaForm _    badArgs = throwError $ SyntaxError "lambda" (List (Atom "lambda" : badArgs))
 
 
 -- quasiquote and unquote
@@ -129,7 +130,7 @@ quasiquoteForm env (DottedList xs x) =
   liftM2 DottedList (mapM (quasiquoteForm env) xs) (quasiquoteForm env x)
 quasiquoteForm env (Vector as) =
   fmap (Vector . listArray (bounds as)) $ mapM (quasiquoteForm env) (elems as)
-quasiquoteForm env exp = return exp    -- quote
+quasiquoteForm _   e = return e    -- quote
 
 
 ifForm :: Env -> LispVal -> LispVal -> LispVal -> IOThrowsError LispVal
@@ -143,12 +144,13 @@ ifForm env p thenExp elseExp =
 
 condForm :: Env -> [LispVal] -> IOThrowsError LispVal
 condForm env exps = case exps of
-  []                   -> return Undefined
+  [] -> return Undefined
   List (p : body) : xs ->
     do result <- eval env p
        case result of
          Bool False -> condForm env xs
          _          -> evalBody env body
+  xs -> throwError $ SyntaxError "cond" (List (Atom "cond" : xs))
 
 
 caseForm :: Env -> LispVal -> [LispVal] -> IOThrowsError LispVal
@@ -167,7 +169,7 @@ caseForm env p exps =
     or' :: PrimitiveFunc
     or' []                = return (Bool False)
     or' (Bool False : xs) = or' xs
-    or' (x:xs)            = return x
+    or' (x : _)           = return x
 
 
 -- Run --------------------------------------------------------------------------------
@@ -178,6 +180,7 @@ evalStringToAST env expr = runErrorT $ do
   result <- eval env parsed
   return result
 
+-- | eval String and return its result as String
 evalString :: Env -> String -> IO String
 evalString env expr = do
   result <- evalStringToAST env expr
@@ -203,6 +206,7 @@ loadLibrary env path = void . runIOThrowsError $
 initModule :: FilePath
 initModule = "./lib/init.scm"
 
+-- | init environment and load initial scheme libraries.
 initEnv :: IO Env
 initEnv = do
   env <- primitiveEnv

@@ -18,7 +18,7 @@ import Scheme.Parser (readExpr, readExprList)
 import Scheme.Type
 
 import Control.Monad
-import Control.Monad.Error (throwError, catchError)
+import Control.Monad.Error (catchError)
 import Control.Monad.IO.Class (liftIO)
 import System.IO
 import qualified Data.List as List
@@ -47,6 +47,7 @@ primitives = [("+", numberBinFunc (+)),
               ("symbol?",  function1 unpackAny (return . Bool) isSymbol),
               ("boolean?", function1 unpackAny (return . Bool) isBoolean),
               ("string?",  function1 unpackAny (return . Bool) isString),
+              ("number?",  function1 unpackAny (return . Bool) isNumber),
               ("list?",    function1 unpackAny (return . Bool) isList),
               ("eq?", eqv),
               ("eqv?", eqv),
@@ -99,12 +100,14 @@ isList _         = False
 
 equalSeq :: LispVal -> LispVal -> PrimitiveFunc -> ThrowsError LispVal
 equalSeq (DottedList xs x) (DottedList ys y) eq = eq [List $ xs ++ [x], List $ ys ++ [y]]
-equalSeq (List xs) (List ys) eq =
+equalSeq (List xs)         (List ys)         eq =
     return $ Bool $ (length xs == length ys) && all eqvPair (zip xs ys)
   where
     eqvPair (x, y) = case eq [x, y] of
       Left _           -> False
       Right (Bool val) -> val
+      _                -> False
+equalSeq _ _ _ = return (Bool False)
 
 eqv :: PrimitiveFunc
 eqv [Bool   arg1, Bool   arg2]  = return $ Bool (arg1 == arg2)
@@ -128,37 +131,38 @@ unpackEquals arg1 arg2 (AnyUnpacker unpacker) =
   
 equal :: PrimitiveFunc
 equal [x@(DottedList {}), y@(DottedList {})] = equalSeq x y equal
-equal [x@(List _), y@(List _)] = equalSeq x y equal
-equal [arg1, arg2] = do
+equal [x@(List _), y@(List _)]               = equalSeq x y equal
+equal [arg1, arg2]                           = do
   primitiveEquals <- liftM List.or $ mapM (unpackEquals arg1 arg2)
                      [AnyUnpacker unpackNumber, AnyUnpacker unpackString, AnyUnpacker unpackBool]
   Bool eqvEqual <- eqv [arg1, arg2]
   return $ Bool (primitiveEquals || eqvEqual)
+equal badArgList = throwError $ NumArgsError 2 badArgList
 
 
 -- List ------------------------------------------------------------------
 
 -- | car a list
 car :: PrimitiveFunc
-car [List (x:xs)] = return x
-car [DottedList (x:xs) _] = return x
-car [badArg]   = throwError $ TypeMismatchError "pair" badArg
-car badArgList = throwError $ NumArgsError 1 badArgList
+car [List (x:_)]         = return x
+car [DottedList (x:_) _] = return x
+car [badArg]             = throwError $ TypeMismatchError "pair" badArg
+car badArgList           = throwError $ NumArgsError 1 badArgList
 
 -- | cdr a list
 cdr :: PrimitiveFunc
-cdr [List (x:xs)] = return $ List xs
-cdr [DottedList [_] x] = return x
+cdr [List (_:xs)]         = return $ List xs
+cdr [DottedList [_] x]    = return x
 cdr [DottedList (_:xs) x] = return $ DottedList xs x
-cdr [badArg] = throwError $ TypeMismatchError "pair" badArg
-cdr badArgList = throwError $ NumArgsError 1 badArgList
+cdr [badArg]              = throwError $ TypeMismatchError "pair" badArg
+cdr badArgList            = throwError $ NumArgsError 1 badArgList
 
 -- | cons a list
 cons :: PrimitiveFunc
-cons [x, List xs] = return $ List (x:xs)
+cons [x, List xs]             = return $ List (x:xs)
 cons [x, DottedList xs xlast] = return $ DottedList (x:xs) xlast
-cons [x, y] = return $ DottedList [x] y
-cons badArgList = throwError $ NumArgsError 2 badArgList
+cons [x, y]                   = return $ DottedList [x] y
+cons badArgList               = throwError $ NumArgsError 2 badArgList
 
 
 -- IO Primitives ---------------------------------------------------------
@@ -166,25 +170,30 @@ cons badArgList = throwError $ NumArgsError 2 badArgList
 applyProc :: IOFunc
 applyProc [func, List args] = apply func args
 applyProc (func:args)       = apply func args
+applyProc _                 = throwError $ DefaultError "Apply Error"
 
 makePort :: IOMode -> IOFunc
 makePort mode [String filename] = liftM Port $ liftIO $ openFile filename mode
+makePort _    badArgList        = throwError $ NumArgsError 1 badArgList
 
 closePort :: IOFunc
 closePort [Port handle] = liftIO (hClose handle) >> return (Bool True)
-closePort _ = return (Bool False)
+closePort _             = return (Bool False)
 
 readProc :: IOFunc
-readProc [] = readProc [Port stdin]
+readProc []            = readProc [Port stdin]
 readProc [Port handle] = liftIO (hGetLine handle)
                          >>= liftThrowsError . readExpr
+readProc badArgList    = throwError $ NumArgsError 1 badArgList
 
 writeProc :: IOFunc
-writeProc [obj] = writeProc [obj, Port stdout]
+writeProc [obj]              = writeProc [obj, Port stdout]
 writeProc [obj, Port handle] = liftIO (hPrint handle obj) >> return (Bool True)
+writeProc badArgList         = throwError $ NumArgsError 2 badArgList
 
 readContents :: IOFunc
 readContents [String filename] = liftM String $ liftIO $ readFile filename
+readContents badArgList        = throwError $ NumArgsError 1 badArgList
 
 -- | evaluate expressions from a file
 load :: String -> IOThrowsError [LispVal]
@@ -193,3 +202,4 @@ load filename = liftIO (readFile filename)
 
 readAll :: IOFunc
 readAll [String filename] = liftM List $ load filename
+readAll badArgList        = throwError $ NumArgsError 1 badArgList

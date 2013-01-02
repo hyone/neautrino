@@ -4,8 +4,8 @@ import Control.Monad (unless)
 
 
 until_ :: Monad m => (a -> Bool) -> m a -> (a -> m ()) -> m ()
-until_ pred prompt action = do
+until_ p prompt action = do
   result <- prompt
-  unless (pred result) $ do
+  unless (p result) $ do
     action result
-    until_ pred prompt action
+    until_ p prompt action

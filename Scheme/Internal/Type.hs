@@ -13,7 +13,6 @@ import Control.Monad.Error (ErrorT)
 import Data.Array (Array)
 import Data.Complex (Complex)
 import Data.IORef (IORef)
-import Data.Ratio (Rational)
 import Text.Parsec (ParseError)
 import System.IO (Handle)
 
@@ -38,10 +37,10 @@ data LispVal = Atom String
              | Undefined
              | PrimitiveFunc PrimitiveFunc
              | IOPrimitiveFunc IOFunc
-             | Func { params :: [String],
-                      vararg :: Maybe String,
-                      body :: [LispVal],
-                      closure :: Env }
+             | Func { fParams :: [String],
+                      fVararg :: Maybe String,
+                      fBody :: [LispVal],
+                      fClosure :: Env }
 
 
 -- Error Types -------------------------------------------------------
