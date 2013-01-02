@@ -1,5 +1,7 @@
 # simple-scheme
 
+[![Build Status](https://travis-ci.org/hyone/simple-scheme.png?branch=master)](https://travis-ci.org/hyone/simple-scheme)
+
 Simple Scheme Implementation
 ( based on [Write Yourself a Scheme in 48 hours](http://jonathan.tang.name/files/scheme_in_48/tutorial/overview.html>) )
 
@@ -77,7 +79,7 @@ scheme> (acc 5)
 scheme> (acc 6)
 19
 
-;; quote and quasiauote
+;; quote and quasiquote
 scheme> '(1 2 3)
 (1 2 3)
 scheme> (define a 5)
