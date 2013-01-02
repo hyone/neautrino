@@ -8,6 +8,7 @@ module Scheme.Env
   ) where
 
 import Scheme.Error
+import Scheme.Internal.Type (Env)
 import Scheme.Type
 import Scheme.Function (primitives, ioPrimitives)
 
@@ -20,7 +21,6 @@ import Data.Maybe (isJust)
 type Var = String
 type VarPair = (Var, LispVal)
 type VarRefPair = (Var, IORef LispVal)
-type Env = IORef [VarRefPair]
 
 
 nullEnv :: IO Env

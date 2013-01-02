@@ -1,43 +1,16 @@
+-- | Scheme Types
 module Scheme.Type
   ( PrimitiveFunc
   , IOFunc
   , LispVal(..)
   ) where
 
-import {-# SOURCE #-} Scheme.Error
-import {-# SOURCE #-} Scheme.Env
+import Scheme.Internal.Type
 
-import Data.Array (Array, elems)
-import Data.Complex (Complex)
-import Data.Ratio (Rational)
-import System.IO (Handle)
+import Data.Array (elems)
 
 
--- Primitive Types
-
-type PrimitiveFunc = [LispVal] -> ThrowsError LispVal
-type IOFunc = [LispVal] -> IOThrowsError LispVal
-
-data LispVal = Atom String
-             | List [LispVal]
-             | DottedList [LispVal] LispVal
-             | Vector (Array Int LispVal)
-             | Number Integer
-             | Float Double
-             | Ratio Rational
-             | Complex (Complex Double)
-             | Character Char
-             | String String
-             | Bool Bool
-             | Port Handle
-             | Undefined
-             | PrimitiveFunc PrimitiveFunc
-             | IOPrimitiveFunc IOFunc
-             | Func { params :: [String],
-                      vararg :: Maybe String,
-                      body :: [LispVal],
-                      closure :: Env }
-
+-- Eq class instance
 
 instance Eq LispVal where
   (Atom x)        == (Atom y)        = x == y 
@@ -54,6 +27,8 @@ instance Eq LispVal where
   Vector xs       == Vector ys       = xs == ys
   _               == _               = False
 
+
+-- Show class instance
 
 instance Show LispVal where
   show = showVal

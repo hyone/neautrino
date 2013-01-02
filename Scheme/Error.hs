@@ -11,27 +11,22 @@ module Scheme.Error
   , throwError
   ) where
 
-import Scheme.Type (LispVal)
+import Scheme.Internal.Type (LispError(..), ThrowsError, IOThrowsError)
+import Scheme.Type
 
 import Control.Monad.Error
 import Text.Parsec (ParseError)
 
 
-data LispError = NumArgsError Int [LispVal]
-               | TypeMismatchError String LispVal
-               | ParserError ParseError
-               | SyntaxError String LispVal
-               | BadSpecialFormError String LispVal
-               | NotFunctionError String String
-               | UnboundVarError String String
-               | DefaultError String
-
+-- Error class instance
 
 instance Error LispError where
   noMsg  = DefaultError "An error has occurred"
   strMsg = DefaultError
 
 
+-- Show class instance
+ 
 instance Show LispError where
   show = showError
 
@@ -47,16 +42,11 @@ showError (TypeMismatchError expected found) = "Invalid type: expected " ++ show
 showError (ParserError parseError) = "Parse error at " ++ show parseError
 
 
-type ThrowsError = Either LispError
-
-trapError :: (Show e, MonadError e m) => m String -> m String
-trapError action = catchError action (return . show)
+-- Functions
 
 extractValue :: ThrowsError String -> String
 extractValue (Right val) = val
 extractValue (Left err)  = show err
-
-type IOThrowsError = ErrorT LispError IO
 
 liftThrowsError :: ThrowsError a -> IOThrowsError a
 liftThrowsError (Left err)  = throwError err
