@@ -33,6 +33,7 @@ library
     Scheme.Util
   other-modules:
     Scheme.Internal.Parser
+    Scheme.Internal.Type
 
 executable simple-scheme
   main-is: run.hs
