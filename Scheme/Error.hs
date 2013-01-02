@@ -39,6 +39,7 @@ showError (NumArgsError expected found) = "Expected " ++ show expected
 showError (TypeMismatchError expected found) = "Invalid type: expected " ++ show expected
                                             ++ ", found " ++ show found
 showError (ParserError parseError) = "Parse error at " ++ show parseError
+showError (DefaultError message) = "Error: " ++ message
 
 
 -- Functions
