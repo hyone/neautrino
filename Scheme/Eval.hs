@@ -42,12 +42,12 @@ eval env (List (Atom "define" : args))   = defineForm env args
 eval env (List (Atom "lambda" : args))   = lambdaForm env args
 eval env (List [Atom "quote", val])      = return val
 eval env (List [Atom "quasiquote", val]) = quasiquoteForm env val
-eval env (List [Atom "set!", Atom var, form])       = eval env form >>= setVar env var
-eval env (List [Atom "load", String filename])      = F.load filename >>= evalBody env
-eval env (List [Atom "if", pred, thenExp, elseExp]) = ifForm env pred thenExp elseExp
-eval env (List (Atom "cond" : exps))        = condForm env exps
-eval env (List (Atom "case" : pred : exps)) = caseForm env pred exps
-eval env val@(List [Atom "unquote", _]) =
+eval env (List [Atom "set!", Atom var, form])    = eval env form >>= setVar env var
+eval env (List [Atom "load", String filename])   = F.load filename >>= evalBody env
+eval env (List [Atom "if", p, thenExp, elseExp]) = ifForm env p thenExp elseExp
+eval env (List (Atom "cond" : exps))     = condForm env exps
+eval env (List (Atom "case" : p : exps)) = caseForm env p exps
+eval env val@(List [Atom "unquote", _])  =
   throwError $ DefaultError ("unquote appeared outside quasiquote: " ++ show val)
 -- function application
 eval env (List (func : args)) = applyFunc env func args
@@ -133,8 +133,8 @@ quasiquoteForm env exp = return exp    -- quote
 
 
 ifForm :: Env -> LispVal -> LispVal -> LispVal -> IOThrowsError LispVal
-ifForm env pred thenExp elseExp =
-  do result <- eval env pred
+ifForm env p thenExp elseExp =
+  do result <- eval env p
      case result of
        Bool True  -> eval env thenExp
        Bool False -> eval env elseExp
@@ -143,17 +143,17 @@ ifForm env pred thenExp elseExp =
 
 condForm :: Env -> [LispVal] -> IOThrowsError LispVal
 condForm env exps = case exps of
-  []                    -> return Undefined
-  List (pred:body) : xs ->
-    do result <- eval env pred
+  []                   -> return Undefined
+  List (p : body) : xs ->
+    do result <- eval env p
        case result of
          Bool False -> condForm env xs
          _          -> evalBody env body
 
 
 caseForm :: Env -> LispVal -> [LispVal] -> IOThrowsError LispVal
-caseForm env pred exps =
-  do base <- eval env pred
+caseForm env p exps =
+  do base <- eval env p
      case exps of
        [] -> return Undefined
        List (List vs : body) : exps' ->
@@ -162,7 +162,7 @@ caseForm env pred exps =
             if matched
               then evalBody env body
               else caseForm env base exps'
-       _  -> throwError $ SyntaxError "case" (List (Atom "case" : pred : exps))
+       _  -> throwError $ SyntaxError "case" (List (Atom "case" : p : exps))
   where
     or' :: PrimitiveFunc
     or' []                = return (Bool False)
