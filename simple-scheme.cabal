@@ -14,6 +14,7 @@ data-files:    lib/*.scm
 extra-source-files:
   test/test.hs
   test/LispCodeSpec.hs
+  test/Scheme/ParserSpec.hs
 
 library
   build-depends: base >= 2.0
