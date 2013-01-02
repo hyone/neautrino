@@ -55,6 +55,16 @@ specs = do
         evalString env "(acc 5)" `shouldReturn` "13"
         evalString env "(acc 6)" `shouldReturn` "19"
 
+    describe "quote" $ do
+      it "quote" $ do
+        env <- initEnv
+        evalString env "'(1 2 3)" `shouldReturn` "(1 2 3)"
+
+      it "quasiquote" $ do
+        env <- initEnv
+        _   <- evalString env "(define a 5)"
+        evalString env "`(1 ,a 3)" `shouldReturn` "(1 5 3)"
+
 
 main :: IO ()
 main = hspec specs
