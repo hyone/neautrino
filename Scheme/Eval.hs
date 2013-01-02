@@ -38,15 +38,17 @@ eval env val@(Bool _)      = return val
 -- variable
 eval env (Atom var) = getVar env var
 -- special forms
-eval env (List (Atom "define" : args)) = defineForm env args
-eval env (List (Atom "lambda" : args)) = lambdaForm env args
-eval env (List [Atom "quote", val]) = return val
-eval env (List [Atom "set!", Atom var, form]) = eval env form >>= setVar env var
-eval env (List [Atom "load", String filename]) = F.load filename >>= evalBody env
+eval env (List (Atom "define" : args))   = defineForm env args
+eval env (List (Atom "lambda" : args))   = lambdaForm env args
+eval env (List [Atom "quote", val])      = return val
 eval env (List [Atom "quasiquote", val]) = quasiquoteForm env val
+eval env (List [Atom "set!", Atom var, form])       = eval env form >>= setVar env var
+eval env (List [Atom "load", String filename])      = F.load filename >>= evalBody env
 eval env (List [Atom "if", pred, thenExp, elseExp]) = ifForm env pred thenExp elseExp
-eval env (List (Atom "cond" : exps)) = condForm env exps
+eval env (List (Atom "cond" : exps))        = condForm env exps
 eval env (List (Atom "case" : pred : exps)) = caseForm env pred exps
+eval env val@(List [Atom "unquote", _]) =
+  throwError $ DefaultError ("unquote appeared outside quasiquote: " ++ show val)
 -- function application
 eval env (List (func : args)) = applyFunc env func args
 -- or error
@@ -142,41 +144,43 @@ ifForm env pred thenExp elseExp =
 condForm :: Env -> [LispVal] -> IOThrowsError LispVal
 condForm env exps = case exps of
   []                    -> return Undefined
-  List (pred:body) : xs -> do result <- eval env pred
-                              case result of
-                                Bool False -> condForm env xs
-                                _          -> evalBody env body
+  List (pred:body) : xs ->
+    do result <- eval env pred
+       case result of
+         Bool False -> condForm env xs
+         _          -> evalBody env body
 
 
 caseForm :: Env -> LispVal -> [LispVal] -> IOThrowsError LispVal
 caseForm env pred exps =
   do base <- eval env pred
      case exps of
-       []                            -> return Undefined
-       List (List vs : body) : exps' -> do results <- liftThrowsError $ mapM (\v -> F.eqv [base, v]) vs
-                                           Bool matched <- liftThrowsError $ or' results
-                                           if matched
-                                             then evalBody env body
-                                             else caseForm env base exps'
-       _                             -> throwError $ SyntaxError "case" (List (Atom "case" : pred : exps))
+       [] -> return Undefined
+       List (List vs : body) : exps' ->
+         do results <- liftThrowsError $ mapM (\v -> F.eqv [base, v]) vs
+            Bool matched <- liftThrowsError $ or' results
+            if matched
+              then evalBody env body
+              else caseForm env base exps'
+       _  -> throwError $ SyntaxError "case" (List (Atom "case" : pred : exps))
   where
     or' :: PrimitiveFunc
-    or' [] = return (Bool False)
+    or' []                = return (Bool False)
     or' (Bool False : xs) = or' xs
-    or' (x:xs) = return x
+    or' (x:xs)            = return x
 
 
 -- Run --------------------------------------------------------------------------------
 
-evalStringToLispVal :: Env -> String -> IO (ThrowsError LispVal)
-evalStringToLispVal env expr = runErrorT $ do
+evalStringToAST :: Env -> String -> IO (ThrowsError LispVal)
+evalStringToAST env expr = runErrorT $ do
   parsed <- liftThrowsError $ readExpr expr
   result <- eval env parsed
   return result
 
 evalString :: Env -> String -> IO String
 evalString env expr = do
-  result <- evalStringToLispVal env expr
+  result <- evalStringToAST env expr
   return $ extractValue (fmap show result)
 
 evalAndPrint :: Env -> String -> IO ()
