@@ -17,6 +17,7 @@ import qualified Scheme.Function as F
 import Control.Monad
 import Control.Monad.Error (runErrorT)
 import Control.Monad.IO.Class (liftIO)
+import Data.Array (bounds, elems, listArray)
 import Data.Maybe (isNothing)
 import System.IO (hFlush, hPutStrLn, stderr, stdout)
 import System.IO.Error (catchIOError, isEOFError)
@@ -42,6 +43,7 @@ eval env (List (Atom "lambda" : args)) = lambdaForm env args
 eval env (List [Atom "quote", val]) = return val
 eval env (List [Atom "set!", Atom var, form]) = eval env form >>= setVar env var
 eval env (List [Atom "load", String filename]) = F.load filename >>= evalBody env
+eval env (List [Atom "quasiquote", val]) = quasiquoteForm env val
 eval env (List [Atom "if", pred, thenExp, elseExp]) = ifForm env pred thenExp elseExp
 eval env (List (Atom "cond" : exps)) = condForm env exps
 eval env (List (Atom "case" : pred : exps)) = caseForm env pred exps
@@ -115,6 +117,17 @@ lambdaForm env (DottedList params varargs : body) = makeVarargsFunc varargs env 
 -- only varargs lambda expression: (lambda a ...)
 lambdaForm env (varargs@(Atom _) : body) = makeVarargsFunc varargs env [] body
 lambdaForm env badArgs = throwError $ SyntaxError "lambda" (List (Atom "lambda" : badArgs))
+
+
+-- quasiquote and unquote
+quasiquoteForm :: Env -> LispVal -> IOThrowsError LispVal
+quasiquoteForm env (List [Atom "unquote", val]) = eval env val
+quasiquoteForm env (List xs) = liftM List $ mapM (quasiquoteForm env) xs
+quasiquoteForm env (DottedList xs x) =
+  liftM2 DottedList (mapM (quasiquoteForm env) xs) (quasiquoteForm env x)
+quasiquoteForm env (Vector as) =
+  fmap (Vector . listArray (bounds as)) $ mapM (quasiquoteForm env) (elems as)
+quasiquoteForm env exp = return exp    -- quote
 
 
 ifForm :: Env -> LispVal -> LispVal -> LispVal -> IOThrowsError LispVal
