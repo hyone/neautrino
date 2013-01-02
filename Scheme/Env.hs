@@ -78,4 +78,3 @@ primitiveEnv = nullEnv >>=
   where
     buildFunc :: (a -> b) -> (c, a) -> (c, b)
     buildFunc constructor (var, func) = (var, constructor func)
-

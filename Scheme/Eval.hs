@@ -22,9 +22,9 @@ import System.IO (hFlush, hPutStrLn, stderr, stdout)
 import System.IO.Error (catchIOError, isEOFError)
 
 
--- ----------------------------------------------------------------------------------------
--- Evaluation
+-- Evaluation -------------------------------------------------------------------------
 
+-- | evaluate abstract syntax tree to value
 eval :: Env -> LispVal -> IOThrowsError LispVal
 -- literal
 eval env val@(Character _) = return val
@@ -51,6 +51,7 @@ eval env (List (func : args)) = applyFunc env func args
 eval env badForm = throwError $ BadSpecialFormError "Unrecognized special form" badForm
 
 
+-- | apply function to arguments
 apply :: LispVal -> IOFunc
 apply (PrimitiveFunc func)   args = liftThrowsError (func args)
 apply (IOPrimitiveFunc func) args = func args
@@ -69,22 +70,18 @@ apply (Func params varargs body closure) args =
       Just argName -> liftIO $ bindVars env [(argName, List remainingArgs)]
       Nothing      -> return env
 
-
--- | apply function
 applyFunc :: Env -> LispVal -> IOFunc
 applyFunc env func args = do
   func <- eval env func
   vals <- mapM (eval env) args
   apply func vals
 
-
 -- evaluate list of expressions and returns the value from last expression
 evalBody :: Env -> [LispVal] -> IOThrowsError LispVal
 evalBody env = liftM last . mapM (eval env)
 
 
--- ----------------------------------------------------------------------------------------
--- Special Form
+-- Special Form -----------------------------------------------------------------------
 
 -- helper to build function 
 makeFunc :: Monad m => Maybe String -> Env -> [LispVal] -> [LispVal] -> m LispVal
@@ -156,8 +153,7 @@ caseForm env pred exps =
     or' (x:xs) = return x
 
 
--- ----------------------------------------------------------------------------------------
--- REPL
+-- Run --------------------------------------------------------------------------------
 
 evalStringToLispVal :: Env -> String -> IO (ThrowsError LispVal)
 evalStringToLispVal env expr = runErrorT $ do

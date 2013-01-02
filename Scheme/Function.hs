@@ -68,7 +68,8 @@ ioPrimitives = [("apply", applyProc),
                 ("read-all", readAll)
                ]
 
--- type check
+
+-- Type Check ------------------------------------------------------------
 
 isSymbol :: LispVal -> Bool
 isSymbol (Atom _) = True
@@ -94,7 +95,7 @@ isList (List _)  = True
 isList _         = False
 
 
--- equality
+-- Equality --------------------------------------------------------------
 
 equalSeq :: LispVal -> LispVal -> PrimitiveFunc -> ThrowsError LispVal
 equalSeq (DottedList xs x) (DottedList ys y) eq = eq [List $ xs ++ [x], List $ ys ++ [y]]
@@ -135,14 +136,16 @@ equal [arg1, arg2] = do
   return $ Bool (primitiveEquals || eqvEqual)
 
 
--- List
+-- List ------------------------------------------------------------------
 
+-- | car a list
 car :: PrimitiveFunc
 car [List (x:xs)] = return x
 car [DottedList (x:xs) _] = return x
 car [badArg]   = throwError $ TypeMismatchError "pair" badArg
 car badArgList = throwError $ NumArgsError 1 badArgList
 
+-- | cdr a list
 cdr :: PrimitiveFunc
 cdr [List (x:xs)] = return $ List xs
 cdr [DottedList [_] x] = return x
@@ -150,6 +153,7 @@ cdr [DottedList (_:xs) x] = return $ DottedList xs x
 cdr [badArg] = throwError $ TypeMismatchError "pair" badArg
 cdr badArgList = throwError $ NumArgsError 1 badArgList
 
+-- | cons a list
 cons :: PrimitiveFunc
 cons [x, List xs] = return $ List (x:xs)
 cons [x, DottedList xs xlast] = return $ DottedList (x:xs) xlast
@@ -157,7 +161,7 @@ cons [x, y] = return $ DottedList [x] y
 cons badArgList = throwError $ NumArgsError 2 badArgList
 
 
--- IO Primitives
+-- IO Primitives ---------------------------------------------------------
 
 applyProc :: IOFunc
 applyProc [func, List args] = apply func args
@@ -182,7 +186,7 @@ writeProc [obj, Port handle] = liftIO (hPrint handle obj) >> return (Bool True)
 readContents :: IOFunc
 readContents [String filename] = liftM String $ liftIO $ readFile filename
 
-
+-- | evaluate expressions from a file
 load :: String -> IOThrowsError [LispVal]
 load filename = liftIO (readFile filename)
                 >>= liftThrowsError . readExprList

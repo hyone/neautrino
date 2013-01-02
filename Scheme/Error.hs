@@ -2,7 +2,6 @@ module Scheme.Error
   ( LispError(..)
   , ThrowsError
   , IOThrowsError
-  , trapError
   , extractValue
   , liftThrowsError
   , runIOThrowsError
@@ -44,13 +43,16 @@ showError (ParserError parseError) = "Parse error at " ++ show parseError
 
 -- Functions
 
+-- | extractValue from ThrowsError to String
 extractValue :: ThrowsError String -> String
 extractValue (Right val) = val
 extractValue (Left err)  = show err
 
+-- | lift ThrowsError to IOThrowsError.
 liftThrowsError :: ThrowsError a -> IOThrowsError a
 liftThrowsError (Left err)  = throwError err
 liftThrowsError (Right val) = return val
 
+-- | run IOThrowsError.
 runIOThrowsError :: IOThrowsError String -> IO String
 runIOThrowsError = liftM extractValue . runErrorT
