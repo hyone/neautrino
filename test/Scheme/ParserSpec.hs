@@ -1,4 +1,4 @@
-module Scheme.ParserSpec where
+module Scheme.ParserSpec (spec) where
 
 import Test.Hspec
 import Test.HUnit (assertFailure)
@@ -21,8 +21,8 @@ assertParseError (Left _) = return ()
 assertParseError x        = assertFailure $ message "ParseError" (show x)
 
 
-specs :: Spec
-specs = do
+spec :: Spec
+spec = do
   describe "Scheme.Parser" $ do
     describe "bool" $ do
       it "should parse: #t" $
@@ -144,4 +144,4 @@ specs = do
     
 
 main :: IO ()
-main = hspec specs
+main = hspec spec

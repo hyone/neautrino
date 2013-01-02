@@ -1,11 +1,11 @@
-module LispCodeSpec (specs) where
+module LispCodeSpec (spec) where
 
 import Test.Hspec
 import Scheme.Eval (initEnv, evalString)
 
 
-specs :: Spec
-specs = do
+spec :: Spec
+spec = do
   describe "LispCode" $ do
     describe "arithmetic" $ do
       it "additional" $ do
@@ -67,4 +67,4 @@ specs = do
 
 
 main :: IO ()
-main = hspec specs
+main = hspec spec
