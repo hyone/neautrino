@@ -1,15 +1,6 @@
 {-# LANGUAGE ExistentialQuantification #-}
 
-module Scheme.Function
-  ( primitives
-  , ioPrimitives
-  , apply
-  , eqv
-  , car
-  , cdr
-  , cons
-  , load
-  ) where
+module Scheme.Function where
 
 import Scheme.Error
 import {-# SOURCE #-} Scheme.Eval (apply)
@@ -20,40 +11,46 @@ import Scheme.Type
 import Control.Monad
 import Control.Monad.Error (catchError)
 import Control.Monad.IO.Class (liftIO)
+import Data.Complex (imagPart, realPart)
+import Data.Ratio (denominator, numerator)
 import System.IO
 import qualified Data.List as List
 
 
 primitives :: [(String, PrimitiveFunc)]
-primitives = [("+", numberBinFunc (+)),
-              ("-", numberBinFunc (-)),
-              ("*", numberBinFunc (*)),
-              ("/", numberBinFunc div),
+primitives = [("+",   numberBinFunc (+)),
+              ("-",   numberBinFunc (-)),
+              ("*",   numberBinFunc (*)),
+              ("/",   numberBinFunc div),
               ("mod", numberBinFunc mod),
               ("remainder", numberBinFunc rem),
-              ("=", numberBoolFunc (==)),
-              ("<", numberBoolFunc (<)),
-              (">", numberBoolFunc (>)),
-              ("/=", numberBoolFunc (/=)),
-              (">=", numberBoolFunc (>=)),
-              ("<=", numberBoolFunc (<=)),
+              ("=",   numberBoolFunc (==)),
+              ("<",   numberBoolFunc (<)),
+              (">",   numberBoolFunc (>)),
+              ("/=",  numberBoolFunc (/=)),
+              (">=",  numberBoolFunc (>=)),
+              ("<=",  numberBoolFunc (<=)),
               ("&&", boolBoolFunc (&&)),
               ("||", boolBoolFunc (||)),
-              ("string=?", stringBoolFunc (==)),
-              ("string<?", stringBoolFunc (<)),
-              ("string>?", stringBoolFunc (>)),
+              ("string=?",  stringBoolFunc (==)),
+              ("string<?",  stringBoolFunc (<)),
+              ("string>?",  stringBoolFunc (>)),
               ("string<=?", stringBoolFunc (<=)),
               ("string>=?", stringBoolFunc (>=)),
-              ("symbol?",  function1 unpackAny (return . Bool) isSymbol),
-              ("boolean?", function1 unpackAny (return . Bool) isBoolean),
-              ("string?",  function1 unpackAny (return . Bool) isString),
-              ("number?",  function1 unpackAny (return . Bool) isNumber),
-              ("list?",    function1 unpackAny (return . Bool) isList),
-              ("eq?", eqv),
-              ("eqv?", eqv),
+              ("symbol?",   function1 unpackAny (return . Bool) isSymbol),
+              ("boolean?",  function1 unpackAny (return . Bool) isBoolean),
+              ("string?",   function1 unpackAny (return . Bool) isString),
+              ("list?",     function1 unpackAny (return . Bool) isList),
+              ("number?",   function1 unpackAny (return . Bool) isNumber),
+              ("complex?",  function1 unpackAny (return . Bool) isComplex),
+              ("real?",     function1 unpackAny (return . Bool) isReal),
+              ("rational?", function1 unpackAny (return . Bool) isRational),
+              ("integer?",  function1 unpackAny (return . Bool) isInteger),
+              ("eq?",    eqv),
+              ("eqv?",   eqv),
               ("equal?", equal),
-              ("car", car),
-              ("cdr", cdr),
+              ("car",  car),
+              ("cdr",  cdr),
               ("cons", cons)
              ]
 
@@ -86,6 +83,30 @@ isNumber (Float _)   = True
 isNumber (Ratio _)   = True
 isNumber (Complex _) = True
 isNumber _           = False
+
+isComplex :: LispVal -> Bool
+isComplex = isNumber
+
+isReal :: LispVal -> Bool
+isReal (Number _)  = True
+isReal (Float _)   = True
+isReal (Ratio _)   = True
+isReal (Complex n) = imagPart n == 0
+isReal _           = False
+                     
+isRational :: LispVal -> Bool
+isRational = isReal
+
+isIntOfDouble :: Double -> Bool
+isIntOfDouble d = realToFrac (round d) == d
+
+isInteger :: LispVal -> Bool
+isInteger (Number _)  = True
+isInteger (Float n)   = isIntOfDouble n
+isInteger (Ratio n)   = numerator n `mod` denominator n == 0
+isInteger (Complex n) = let r = realPart n in
+                        imagPart n == 0 && isIntOfDouble r
+isInteger _           = False
 
 isString :: LispVal -> Bool
 isString (String _)  = True
