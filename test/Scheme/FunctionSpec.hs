@@ -15,7 +15,7 @@ import Scheme.Type
 
 instance Arbitrary (Array Int LispVal) where
   arbitrary = do
-    xs <- (arbitrary :: Gen [LispVal])
+    xs <- arbitrary :: Gen [LispVal]
     return $ listArray (0, length xs - 1) xs
 
 instance Arbitrary LispVal where
@@ -35,7 +35,7 @@ instance Arbitrary LispVal where
     
 
 spec :: Spec
-spec = do
+spec =
   describe "Scheme.Function" $ do
     describe "isNumber" $ do
       it "should be True with 3" $

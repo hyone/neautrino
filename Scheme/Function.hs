@@ -98,7 +98,7 @@ isRational :: LispVal -> Bool
 isRational = isReal
 
 isIntOfDouble :: Double -> Bool
-isIntOfDouble d = realToFrac (round d) == d
+isIntOfDouble d = realToFrac (round d :: Integer) == d
 
 isInteger :: LispVal -> Bool
 isInteger (Number _)  = True
