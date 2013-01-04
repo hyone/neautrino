@@ -2,6 +2,7 @@
 -- | functionality to load a script file
 module Scheme.Load
   ( load
+  , loadFrom
   , loadLibrary
   ) where
 
@@ -46,24 +47,25 @@ findLibrary filename = do
                "Cannot find \"" ++ filename ++ "\" in " ++ show dirs
 
 
--- | read and evaluate a file 
+-- | load a file from specific path
+loadFrom :: Env -> FilePath -> IOThrowsError LispVal
+loadFrom env path = do
+  p <- liftIO $ doesFileExist path
+  if p then
+    readParse path >>= evalBody env
+  else
+    throwError $ DefaultError $
+      "Cannot find \"" ++ path ++ "\""
+
+-- | load a file from specific path or in load-path
 load :: Env -> FilePath -> IOThrowsError LispVal
 load env filename = do
     let filename' = fixFileExtension filename
-    if any (`isPrefixOf` filename) ["./", "../", "/"] then
-      load' filename'
-    else do
-      path <- findLibrary filename'
-      load' path
-  where
-    load' :: FilePath -> IOThrowsError LispVal
-    load' path = do
-      p <- liftIO $ doesFileExist path
-      if p then
-        readParse path >>= evalBody env
-      else
-        throwError $ DefaultError $
-          "Cannot find \"" ++ filename ++ "\""
+    path <- if any (`isPrefixOf` filename') ["./", "../", "/"] then
+      return filename'
+    else 
+      findLibrary filename'
+    loadFrom env path
 
 -- | load and run IOThrowsError
 loadLibrary :: Env -> FilePath -> IO String

@@ -11,7 +11,7 @@ module Scheme.Eval
 import Scheme.Type
 import Scheme.Env
 import Scheme.Error
-import Scheme.Load (load, loadLibrary)
+import Scheme.Load (load, loadFrom, loadLibrary)
 import Scheme.Parser (readExpr)
 import Scheme.Util (until_)
 import qualified Scheme.Function as F
@@ -174,6 +174,7 @@ caseForm env p exps =
     or' (Bool False : xs) = or' xs
     or' (x : _)           = return x
 
+
 -- Run --------------------------------------------------------------------------------
 
 evalStringAST :: Env -> String -> IO (ThrowsError LispVal)
@@ -198,6 +199,7 @@ readPrompt prompt = flushStr prompt >> getLine
     flushStr :: String -> IO ()
     flushStr str = putStr str >> hFlush stdout
 
+
 -- | init environment and load initial scheme libraries.
 initEnv :: IO Env
 initEnv = do
@@ -205,12 +207,15 @@ initEnv = do
   loadLibrary env "init"
   return env
 
+-- | run a script
 runOne :: [String] -> IO ()
 runOne args = do
+  -- assign argumetns to 'args' variable
   env <- initEnv >>= bindVars `flip` [("args", List (map String $ drop 1 args))]
-  runIOThrowsError (liftM show $ eval env $ List [Atom "load", String (head args)])
+  runIOThrowsError $ liftM show (loadFrom env (head args))
   >>= hPutStrLn stderr
 
+-- | run Run Eval Print Loop
 runRepl :: IO ()
 runRepl = do env <- initEnv
              catchIOError (loop env)  

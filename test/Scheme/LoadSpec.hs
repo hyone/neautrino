@@ -1,8 +1,6 @@
 module Scheme.LoadSpec (spec) where
 
 import Test.Hspec
-import Test.Hspec.QuickCheck (prop)
-import Test.QuickCheck
 import Scheme.TestUtil (evalAST, shouldContain, shouldReturnT)
 
 import Scheme.Eval (initEnv)
