@@ -1,1 +1,1 @@
-(load "./lib/base.scm")
+(load "base")

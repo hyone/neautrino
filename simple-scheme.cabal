@@ -14,13 +14,16 @@ data-files:    lib/*.scm
 extra-source-files:
   test/test.hs
   test/LispCodeSpec.hs
+  test/Scheme/LoadSpec.hs
   test/Scheme/ParserSpec.hs
   test/Scheme/TestUtil.hs
 
 library
   build-depends: base >= 2.0
                 ,array >= 0.4.0.0
-                ,mtl >= 2.1.1
+                ,directory >= 1.1.0.2
+                ,filepath >= 1.3.0.0
+                ,mtl >= 2.1.2
                 ,parsec >= 3.1.3
                 ,transformers >= 0.3.0.0
   exposed-modules:
@@ -29,18 +32,22 @@ library
     Scheme.Eval
     Scheme.Function
     Scheme.Function.Helper
+    Scheme.Load
     Scheme.Parser
     Scheme.Type
     Scheme.Util
   other-modules:
     Scheme.Internal.Parser
     Scheme.Internal.Type
+    Paths_simple_scheme 
 
 executable simple-scheme
   main-is: run.hs
   build-depends: base >= 2.0
                 ,array >= 0.4.0.0
-                ,mtl >= 2.1.1
+                ,directory >= 1.1.0.2
+                ,filepath >= 1.3.0.0
+                ,mtl >= 2.1.2
                 ,parsec >= 3.1.3
                 ,transformers >= 0.3.0.0
 

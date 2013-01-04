@@ -1,6 +1,7 @@
 module Scheme.Eval
   ( apply
   , eval
+  , evalBody
   , evalString
   , initEnv
   , runOne
@@ -10,6 +11,7 @@ module Scheme.Eval
 import Scheme.Type
 import Scheme.Env
 import Scheme.Error
+import Scheme.Load (load, loadLibrary)
 import Scheme.Parser (readExpr)
 import Scheme.Util (until_)
 import qualified Scheme.Function as F
@@ -43,7 +45,7 @@ eval env (List (Atom "lambda" : args))   = lambdaForm env args
 eval _   (List [Atom "quote", val])      = return val
 eval env (List [Atom "quasiquote", val]) = quasiquoteForm env val
 eval env (List [Atom "set!", Atom var, form])    = eval env form >>= setVar env var
-eval env (List [Atom "load", String filename])   = F.load filename >>= evalBody env
+eval env (List [Atom "load", String filename])   = load env filename
 eval env (List [Atom "if", p, thenExp, elseExp]) = ifForm env p thenExp elseExp
 eval env (List (Atom "cond" : exps))     = condForm env exps
 eval env (List (Atom "case" : p : exps)) = caseForm env p exps
@@ -196,21 +198,11 @@ readPrompt prompt = flushStr prompt >> getLine
     flushStr :: String -> IO ()
     flushStr str = putStr str >> hFlush stdout
 
-
-loadLibrary :: Env -> FilePath -> IO ()
-loadLibrary env path = void . runIOThrowsError $
-                      liftM show $ eval env $
-                      List [Atom "load", String path]
-
-
-initModule :: FilePath
-initModule = "./lib/init.scm"
-
 -- | init environment and load initial scheme libraries.
 initEnv :: IO Env
 initEnv = do
   env <- primitiveEnv
-  loadLibrary env initModule
+  loadLibrary env "init"
   return env
 
 runOne :: [String] -> IO ()

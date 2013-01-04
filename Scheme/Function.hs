@@ -216,11 +216,11 @@ readContents :: IOFunc
 readContents [String filename] = liftM String $ liftIO $ readFile filename
 readContents badArgList        = throwError $ NumArgsError 1 badArgList
 
--- | evaluate expressions from a file
-load :: String -> IOThrowsError [LispVal]
-load filename = liftIO (readFile filename)
-                >>= liftThrowsError . readExprList
+
+readParse :: String -> IOThrowsError [LispVal]
+readParse path = liftIO (readFile path)
+                    >>= liftThrowsError . readExprList
 
 readAll :: IOFunc
-readAll [String filename] = liftM List $ load filename
+readAll [String filename] = liftM List $ readParse filename
 readAll badArgList        = throwError $ NumArgsError 1 badArgList
