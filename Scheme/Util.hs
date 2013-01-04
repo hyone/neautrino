@@ -1,4 +1,6 @@
-module Scheme.Util (until_) where
+module Scheme.Util
+  (until_
+  ) where
 
 import Control.Monad (unless)
 

@@ -173,11 +173,10 @@ caseForm env p exps =
     or' (Bool False : xs) = or' xs
     or' (x : _)           = return x
 
-
 -- Run --------------------------------------------------------------------------------
 
-evalStringToAST :: Env -> String -> IO (ThrowsError LispVal)
-evalStringToAST env expr = runErrorT $ do
+evalStringAST :: Env -> String -> IO (ThrowsError LispVal)
+evalStringAST env expr = runErrorT $ do
   parsed <- liftThrowsError $ readExpr expr
   result <- eval env parsed
   return result
@@ -185,7 +184,7 @@ evalStringToAST env expr = runErrorT $ do
 -- | eval String and return its result as String
 evalString :: Env -> String -> IO String
 evalString env expr = do
-  result <- evalStringToAST env expr
+  result <- evalStringAST env expr
   return $ extractValue (fmap show result)
 
 evalAndPrint :: Env -> String -> IO ()
