@@ -32,7 +32,7 @@ eval :: Env -> LispVal -> IOThrowsError LispVal
 -- literal
 eval _   val@(Character _) = return val
 eval _   val@(String _)    = return val
-eval _   val@(Number _)    = return val
+eval _   val@(Integer _)   = return val
 eval _   val@(Float _)     = return val
 eval _   val@(Ratio _)     = return val
 eval _   val@(Complex _)   = return val

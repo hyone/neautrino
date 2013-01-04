@@ -15,10 +15,10 @@ spec =
       it "evaluates multi expressions sequentially." $ do
         env <- initEnv
         evalAST env (List [ Atom "begin"
-                          , List [Atom "define", Atom "x", Number 5]
-                          , List [Atom "set!", Atom "x", Number 9]
+                          , List [Atom "define", Atom "x", Integer 5]
+                          , List [Atom "set!", Atom "x", Integer 9]
                           , Atom "x"])
-          `shouldReturnT` Number 9
+          `shouldReturnT` Integer 9
 
 
 main :: IO ()

@@ -14,7 +14,7 @@ import Data.Array (elems)
 
 instance Eq LispVal where
   (Atom x)      == (Atom y)      = x == y 
-  (Number x)    == (Number y)    = x == y 
+  (Integer x)   == (Integer y)   = x == y 
   (Float x)     == (Float y)     = x == y 
   (Ratio x)     == (Ratio y)     = x == y 
   (Complex x)   == (Complex y)   = x == y 
@@ -37,7 +37,7 @@ showVal :: LispVal -> String
 showVal (Character c)      = "#\\" ++ [c]
 showVal (String s)         = "\"" ++ s ++ "\""
 showVal (Atom name)        = name
-showVal (Number i)         = show i
+showVal (Integer i)        = show i
 showVal (Float n)          = show n
 showVal (Ratio n)          = show n
 showVal (Complex n)        = show n

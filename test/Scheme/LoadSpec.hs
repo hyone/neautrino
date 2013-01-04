@@ -13,8 +13,8 @@ loadTest :: FilePath -> IO ()
 loadTest path = do
   env <- initEnv
   loadLibrary env path `shouldReturn` "1"
-  evalAST env (List [Atom "fact", Number 5])
-    `shouldReturnT` Number 120
+  evalAST env (List [Atom "fact", Integer 5])
+    `shouldReturnT` Integer 120
   
 spec :: Spec
 spec =

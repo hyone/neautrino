@@ -85,7 +85,7 @@ parseBoolean = try $ do
     _   -> fail $ "parse error at #\\" ++ [c] 
 
 
--- Number
+-- Integer
 
 readBin :: (Eq a, Num a) => ReadS a
 readBin = readInt 2 (`elem` "o01") digitToInt
@@ -96,7 +96,7 @@ parseBinLiteral = do
   s <- many1 (oneOf "01")
   notFollowedBy alphaNum
   case readBin s of
-    [(x, _)] -> return (Number x)
+    [(x, _)] -> return (Integer x)
     _        -> fail "invalid binary number"
 
 parseOctLiteral :: Parser LispVal
@@ -105,7 +105,7 @@ parseOctLiteral = do
   s <- many1 octDigit
   notFollowedBy alphaNum
   case readOct s of
-    [(x, _)] -> return (Number x)
+    [(x, _)] -> return (Integer x)
     _        -> fail "invalid octal number"
 
 parseDecLiteral :: Parser LispVal
@@ -114,7 +114,7 @@ parseDecLiteral = do
   s <- many1 digit
   notFollowedBy alphaNum
   case readDec s of
-    [(x, _)] -> return (Number x)
+    [(x, _)] -> return (Integer x)
     _        -> fail "invalid decimal number"
 
 parseHexLiteral :: Parser LispVal
@@ -123,11 +123,11 @@ parseHexLiteral = do
   s <- many1 digit
   notFollowedBy alphaNum
   case readHex s of
-    [(x, _)] -> return (Number x)
+    [(x, _)] -> return (Integer x)
     _ -> fail "invalid hex number"
 
 parseDigit :: Parser LispVal
-parseDigit = (Number . read) <$> many1 digit <* notFollowedBy alphaNum
+parseDigit = (Integer . read) <$> many1 digit <* notFollowedBy alphaNum
 
 parseNumber :: Parser LispVal
 parseNumber = parseBinLiteral
@@ -172,7 +172,7 @@ parseRatio = try $ do
 
 toDouble :: LispVal -> Double
 toDouble (Float f)  = f
-toDouble (Number n) = fromIntegral n
+toDouble (Integer n) = fromIntegral n
 toDouble _          = error "Not a number."
 
 parseComplex :: Parser LispVal

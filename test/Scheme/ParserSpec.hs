@@ -51,20 +51,20 @@ spec = do
           
     describe "number" $ do
       it "should parse: 2" $ 
-        readExpr "2" `shouldBeT` Number 2
+        readExpr "2" `shouldBeT` Integer 2
 
       it "should parse: #b110" $ 
-        readExpr "#b110" `shouldBeT` Number 6
+        readExpr "#b110" `shouldBeT` Integer 6
 
       it "should parse: #o37" $ 
-        readExpr "#o37" `shouldBeT` Number 31
+        readExpr "#o37" `shouldBeT` Integer 31
 
       it "should parse: #d37" $ 
-        readExpr "#d37" `shouldBeT` Number 37
+        readExpr "#d37" `shouldBeT` Integer 37
 
       it "should parse: #xA7" $ 
         pending "a bug not to accept 'a' - 'f' characters."
-        -- readExpr "#xA7"  `shouldBeT` Number 167
+        -- readExpr "#xA7"  `shouldBeT` Integer 167
 
     describe "float" $ do
       it "should parse: 3.24" $ 
@@ -80,7 +80,7 @@ spec = do
 
       it "should parse: (+ 1 2 3)" $ 
         readExpr "(+ 1 2 3)" `shouldBeT`
-          List [Atom "+", Number 1, Number 2, Number 3]
+          List [Atom "+", Integer 1, Integer 2, Integer 3]
 
       it "should parse: ()" $ 
         readExpr "()" `shouldBeT` List []
@@ -88,11 +88,11 @@ spec = do
     describe "pairs" $ do
       it "should parse: (a . 2)" $
         readExpr "(a . 2)" `shouldBeT`
-          Pair [Atom "a"] (Number 2)
+          Pair [Atom "a"] (Integer 2)
 
       it "should parse: (a #\\c . 2)" $ 
         readExpr "(a #\\c . 2)" `shouldBeT`
-          Pair [Atom "a", Character 'c'] (Number 2)
+          Pair [Atom "a", Character 'c'] (Integer 2)
 
       it "should parse error: (.)" $ 
         readExpr "(.)" `shouldErrorT` parserError
@@ -100,7 +100,7 @@ spec = do
     describe "vector" $ do
       it "should parse: #(1 2 3)" $ 
         readExpr "#(1 2 3)" `shouldBeT`
-          Vector (listArray (0, 2) [Number 1, Number 2, Number 3])
+          Vector (listArray (0, 2) [Integer 1, Integer 2, Integer 3])
 
       it "should parse: #()" $ 
         readExpr "#()" `shouldBeT`
@@ -109,17 +109,17 @@ spec = do
     describe "quote" $ do
       it "should parse: '(1 2 3)" $
         readExpr "'(1 2 3)" `shouldBeT`
-          List [Atom "quote", List [Number 1, Number 2, Number 3]]
+          List [Atom "quote", List [Integer 1, Integer 2, Integer 3]]
 
       it "should parse: `(1 2 ,a 4)" $
         readExpr "`(1 2 ,a 4)" `shouldBeT`
-          List [Atom "quasiquote", List [Number 1, Number 2, List [Atom "unquote", Atom "a"], Number 4]]
+          List [Atom "quasiquote", List [Integer 1, Integer 2, List [Atom "unquote", Atom "a"], Integer 4]]
 
     describe "comment" $ do
       it "should parse 2 ; comment" $
-         readExpr "2 ; comment"   `shouldBeT` Number 2
+         readExpr "2 ; comment"   `shouldBeT` Integer 2
       it "should parse ; comment\n 2" $
-         readExpr "; comment\n 2" `shouldBeT` Number 2
+         readExpr "; comment\n 2" `shouldBeT` Integer 2
 
 
     describe "pragmatic case" $ do

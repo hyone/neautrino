@@ -26,7 +26,7 @@ data LispVal = Atom String
              | List [LispVal]
              | Pair [LispVal] LispVal
              | Vector (Array Int LispVal)
-             | Number Integer
+             | Integer Integer
              | Float Double
              | Ratio Rational
              | Complex (Complex Double)

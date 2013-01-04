@@ -78,7 +78,7 @@ isBoolean (Bool _) = True
 isBoolean _        = False
 
 isNumber :: LispVal -> Bool
-isNumber (Number _)  = True
+isNumber (Integer _) = True
 isNumber (Float _)   = True
 isNumber (Ratio _)   = True
 isNumber (Complex _) = True
@@ -88,7 +88,7 @@ isComplex :: LispVal -> Bool
 isComplex = isNumber
 
 isReal :: LispVal -> Bool
-isReal (Number _)  = True
+isReal (Integer _) = True
 isReal (Float _)   = True
 isReal (Ratio _)   = True
 isReal (Complex n) = imagPart n == 0
@@ -101,7 +101,7 @@ isIntOfDouble :: Double -> Bool
 isIntOfDouble d = realToFrac (round d :: Integer) == d
 
 isInteger :: LispVal -> Bool
-isInteger (Number _)  = True
+isInteger (Integer _) = True
 isInteger (Float n)   = isIntOfDouble n
 isInteger (Ratio n)   = numerator n `mod` denominator n == 0
 isInteger (Complex n) = let r = realPart n in
@@ -131,10 +131,10 @@ equalSeq (List xs)   (List ys)   eq = return $ Bool $
 equalSeq _            _          _  = return (Bool False)
 
 eqv :: PrimitiveFunc
-eqv [Bool   arg1, Bool   arg2]  = return $ Bool (arg1 == arg2)
-eqv [Number arg1, Number arg2]  = return $ Bool (arg1 == arg2)
-eqv [String arg1, String arg2]  = return $ Bool (arg1 == arg2)
-eqv [Atom   arg1, Atom   arg2]  = return $ Bool (arg1 == arg2)
+eqv [Bool    arg1, Bool    arg2] = return $ Bool (arg1 == arg2)
+eqv [Integer arg1, Integer arg2] = return $ Bool (arg1 == arg2)
+eqv [String  arg1, String  arg2] = return $ Bool (arg1 == arg2)
+eqv [Atom    arg1, Atom    arg2] = return $ Bool (arg1 == arg2)
 eqv [xs@(Pair {}), ys@(Pair {})] = equalSeq xs ys eqv
 eqv [xs@(List _), ys@(List _)]   = equalSeq xs ys eqv
 eqv [_, _] = return (Bool False)

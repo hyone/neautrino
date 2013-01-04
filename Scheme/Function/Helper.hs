@@ -37,7 +37,7 @@ functionFold unpacker packer op params = do
 
 
 numberBinFunc :: (Integer -> Integer -> Integer) -> PrimitiveFunc
-numberBinFunc = functionFold unpackNumber (return . Number)
+numberBinFunc = functionFold unpackNumber (return . Integer)
 
 boolBinFunc :: (LispVal -> ThrowsError a) -> (a -> a -> Bool) -> PrimitiveFunc
 boolBinFunc = function2 `flip` (return . Bool)
@@ -59,7 +59,7 @@ unpackAny :: LispVal -> ThrowsError LispVal
 unpackAny = return
 
 unpackNumber :: LispVal -> ThrowsError Integer
-unpackNumber (Number n) = return n
+unpackNumber (Integer n) = return n
 unpackNumber notNum = throwError $ TypeMismatchError "number" notNum
 
 unpackString :: LispVal -> ThrowsError String

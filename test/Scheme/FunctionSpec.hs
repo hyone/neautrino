@@ -23,7 +23,7 @@ instance Arbitrary LispVal where
       liftM Bool arbitrary
     , liftM Character arbitrary
     , liftM String arbitrary
-    , liftM Number arbitrary
+    , liftM Integer arbitrary
     , liftM Float arbitrary
     , liftM Ratio arbitrary
     , liftM Complex arbitrary
@@ -39,7 +39,7 @@ spec =
   describe "Scheme.Function" $ do
     describe "isNumber" $ do
       it "should be True with 3" $
-        isNumber (Number 3) `shouldBe` True
+        isNumber (Integer 3) `shouldBe` True
 
       it "should be True with 3.2+5i" $
         isNumber (Complex (3.2 :+ 5)) `shouldBe` True
@@ -65,7 +65,7 @@ spec =
 
     describe "isInteger" $ do
       it "should be True with 5" $
-         isInteger (Number 5) `shouldBe` True
+         isInteger (Integer 5) `shouldBe` True
 
       it "should be True with 3.0" $
          isInteger (Float 3.2) `shouldBe` False
