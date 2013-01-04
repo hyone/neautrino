@@ -47,6 +47,7 @@ eval env (List [Atom "quasiquote", val]) = quasiquoteForm env val
 eval env (List [Atom "set!", Atom var, form])    = eval env form >>= setVar env var
 eval env (List [Atom "load", String filename])   = load env filename
 eval env (List [Atom "if", p, thenExp, elseExp]) = ifForm env p thenExp elseExp
+eval env (List (Atom "begin" : args))    = evalBody env args
 eval env (List (Atom "cond" : exps))     = condForm env exps
 eval env (List (Atom "case" : p : exps)) = caseForm env p exps
 eval _   val@(List [Atom "unquote", _])  =
