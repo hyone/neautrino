@@ -97,4 +97,4 @@ scheme> `(1 (2 ,a) 3)
     $ cabal test
 
     # to run single test
-    $ runhaskell test/LispCodeSpec.hs
+    $ runhaskell -itest test/LispCodeSpec.hs
