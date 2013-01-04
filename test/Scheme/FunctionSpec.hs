@@ -28,7 +28,7 @@ instance Arbitrary LispVal where
     , liftM Ratio arbitrary
     , liftM Complex arbitrary
     , liftM List arbitrary
-    , liftM2 DottedList arbitrary arbitrary
+    , liftM2 Pair arbitrary arbitrary
     , liftM Vector arbitrary
     , return Undefined
     ]

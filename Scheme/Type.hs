@@ -13,19 +13,19 @@ import Data.Array (elems)
 -- Eq class instance
 
 instance Eq LispVal where
-  (Atom x)        == (Atom y)        = x == y 
-  (Number x)      == (Number y)      = x == y 
-  (Float x)       == (Float y)       = x == y 
-  (Ratio x)       == (Ratio y)       = x == y 
-  (Complex x)     == (Complex y)     = x == y 
-  (Character x)   == (Character y)   = x == y 
-  (String x)      == (String y)      = x == y 
-  (Bool x)        == (Bool y)        = x == y 
-  Undefined       == Undefined       = True
-  List xs         == List ys         = xs == ys
-  DottedList xs x == DottedList ys y = xs == ys && x == y
-  Vector xs       == Vector ys       = xs == ys
-  _               == _               = False
+  (Atom x)      == (Atom y)      = x == y 
+  (Number x)    == (Number y)    = x == y 
+  (Float x)     == (Float y)     = x == y 
+  (Ratio x)     == (Ratio y)     = x == y 
+  (Complex x)   == (Complex y)   = x == y 
+  (Character x) == (Character y) = x == y 
+  (String x)    == (String y)    = x == y 
+  (Bool x)      == (Bool y)      = x == y 
+  Undefined     == Undefined     = True
+  List xs       == List ys       = xs == ys
+  Pair xs x     == Pair ys y     = xs == ys && x == y
+  Vector xs     == Vector ys     = xs == ys
+  _             == _             = False
 
 
 -- Show class instance
@@ -50,7 +50,7 @@ showVal IOPrimitiveFunc {} = "#<io primitive>"
 showVal Func {}            = "#<closure>"
 showVal (List contents)    = "("  ++ unwordsList contents ++ ")"
 showVal (Vector arr)       = "#(" ++ unwordsList (elems arr) ++ ")"
-showVal (DottedList h t)   = "("  ++ unwordsList h ++ " . " ++ showVal t ++ ")"
+showVal (Pair h t)         = "("  ++ unwordsList h ++ " . " ++ showVal t ++ ")"
 
 unwordsList :: [LispVal] -> String
 unwordsList =  unwords . map showVal

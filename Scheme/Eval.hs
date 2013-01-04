@@ -110,7 +110,7 @@ defineForm env [Atom var, form] = eval env form >>= defineVar env var
 defineForm env (List (Atom var : params) : body) =
   makeNormalFunc env params body >>= defineVar env var
 -- varargs function: (define (hoge a . b) ...)
-defineForm env (DottedList (Atom var : params) varargs : body) =
+defineForm env (Pair (Atom var : params) varargs : body) =
   makeVarargsFunc varargs env params body >>= defineVar env var
 defineForm _   badArgs = throwError $ SyntaxError "define" (List (Atom "define" : badArgs))
 
@@ -119,7 +119,7 @@ lambdaForm :: Env -> [LispVal] -> IOThrowsError LispVal
 -- normal lambda expression: (lambda (a b) ...)
 lambdaForm env (List params : body) = makeNormalFunc env params body
 -- varargs lambda expression: (lambda (a . b) ...)
-lambdaForm env (DottedList params varargs : body) = makeVarargsFunc varargs env params body
+lambdaForm env (Pair params varargs : body) = makeVarargsFunc varargs env params body
 -- only varargs lambda expression: (lambda a ...)
 lambdaForm env (varargs@(Atom _) : body) = makeVarargsFunc varargs env [] body
 lambdaForm _    badArgs = throwError $ SyntaxError "lambda" (List (Atom "lambda" : badArgs))
@@ -129,8 +129,8 @@ lambdaForm _    badArgs = throwError $ SyntaxError "lambda" (List (Atom "lambda"
 quasiquoteForm :: Env -> LispVal -> IOThrowsError LispVal
 quasiquoteForm env (List [Atom "unquote", val]) = eval env val
 quasiquoteForm env (List xs) = liftM List $ mapM (quasiquoteForm env) xs
-quasiquoteForm env (DottedList xs x) =
-  liftM2 DottedList (mapM (quasiquoteForm env) xs) (quasiquoteForm env x)
+quasiquoteForm env (Pair xs x) =
+  liftM2 Pair (mapM (quasiquoteForm env) xs) (quasiquoteForm env x)
 quasiquoteForm env (Vector as) =
   fmap (Vector . listArray (bounds as)) $ mapM (quasiquoteForm env) (elems as)
 quasiquoteForm _   e = return e    -- quote

@@ -88,11 +88,11 @@ spec = do
     describe "pairs" $ do
       it "should parse: (a . 2)" $
         readExpr "(a . 2)" `shouldBeT`
-          DottedList [Atom "a"] (Number 2)
+          Pair [Atom "a"] (Number 2)
 
       it "should parse: (a #\\c . 2)" $ 
         readExpr "(a #\\c . 2)" `shouldBeT`
-          DottedList [Atom "a", Character 'c'] (Number 2)
+          Pair [Atom "a", Character 'c'] (Number 2)
 
       it "should parse error: (.)" $ 
         readExpr "(.)" `shouldErrorT` parserError

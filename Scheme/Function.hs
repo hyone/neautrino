@@ -120,23 +120,23 @@ isList _         = False
 -- Equality --------------------------------------------------------------
 
 equalSeq :: LispVal -> LispVal -> PrimitiveFunc -> ThrowsError LispVal
-equalSeq (DottedList xs x) (DottedList ys y) eq = eq [List $ xs ++ [x], List $ ys ++ [y]]
-equalSeq (List xs)         (List ys)         eq =
-    return $ Bool $ (length xs == length ys) && all eqvPair (zip xs ys)
+equalSeq (Pair xs x) (Pair ys y) eq = eq [List $ xs ++ [x], List $ ys ++ [y]]
+equalSeq (List xs)   (List ys)   eq = return $ Bool $
+    (length xs == length ys) && all eqTuple (zip xs ys)
   where
-    eqvPair (x, y) = case eq [x, y] of
-      Left _           -> False
+    eqTuple :: (LispVal, LispVal) -> Bool
+    eqTuple (x, y) = case eq [x, y] of
       Right (Bool val) -> val
       _                -> False
-equalSeq _ _ _ = return (Bool False)
+equalSeq _            _          _  = return (Bool False)
 
 eqv :: PrimitiveFunc
 eqv [Bool   arg1, Bool   arg2]  = return $ Bool (arg1 == arg2)
 eqv [Number arg1, Number arg2]  = return $ Bool (arg1 == arg2)
 eqv [String arg1, String arg2]  = return $ Bool (arg1 == arg2)
 eqv [Atom   arg1, Atom   arg2]  = return $ Bool (arg1 == arg2)
-eqv [xs@(DottedList {}), ys@(DottedList {})] = equalSeq xs ys eqv
-eqv [xs@(List _), ys@(List _)] = equalSeq xs ys eqv
+eqv [xs@(Pair {}), ys@(Pair {})] = equalSeq xs ys eqv
+eqv [xs@(List _), ys@(List _)]   = equalSeq xs ys eqv
 eqv [_, _] = return (Bool False)
 eqv badArgList = throwError $ NumArgsError 2 badArgList
 
@@ -151,7 +151,7 @@ unpackEquals arg1 arg2 (AnyUnpacker unpacker) =
    `catchError` const (return False)
   
 equal :: PrimitiveFunc
-equal [x@(DottedList {}), y@(DottedList {})] = equalSeq x y equal
+equal [x@(Pair {}), y@(Pair {})] = equalSeq x y equal
 equal [x@(List _), y@(List _)]               = equalSeq x y equal
 equal [arg1, arg2]                           = do
   primitiveEquals <- liftM List.or $ mapM (unpackEquals arg1 arg2)
@@ -165,25 +165,25 @@ equal badArgList = throwError $ NumArgsError 2 badArgList
 
 -- | car a list
 car :: PrimitiveFunc
-car [List (x:_)]         = return x
-car [DottedList (x:_) _] = return x
-car [badArg]             = throwError $ TypeMismatchError "pair" badArg
-car badArgList           = throwError $ NumArgsError 1 badArgList
+car [List (x:_)]   = return x
+car [Pair (x:_) _] = return x
+car [badArg]       = throwError $ TypeMismatchError "pair" badArg
+car badArgList     = throwError $ NumArgsError 1 badArgList
 
 -- | cdr a list
 cdr :: PrimitiveFunc
-cdr [List (_:xs)]         = return $ List xs
-cdr [DottedList [_] x]    = return x
-cdr [DottedList (_:xs) x] = return $ DottedList xs x
-cdr [badArg]              = throwError $ TypeMismatchError "pair" badArg
-cdr badArgList            = throwError $ NumArgsError 1 badArgList
+cdr [List (_:xs)]   = return $ List xs
+cdr [Pair [_] x]    = return x
+cdr [Pair (_:xs) x] = return $ Pair xs x
+cdr [badArg]        = throwError $ TypeMismatchError "pair" badArg
+cdr badArgList      = throwError $ NumArgsError 1 badArgList
 
 -- | cons a list
 cons :: PrimitiveFunc
-cons [x, List xs]             = return $ List (x:xs)
-cons [x, DottedList xs xlast] = return $ DottedList (x:xs) xlast
-cons [x, y]                   = return $ DottedList [x] y
-cons badArgList               = throwError $ NumArgsError 2 badArgList
+cons [x, List xs]       = return $ List (x:xs)
+cons [x, Pair xs xlast] = return $ Pair (x:xs) xlast
+cons [x, y]             = return $ Pair [x] y
+cons badArgList         = throwError $ NumArgsError 2 badArgList
 
 
 -- IO Primitives ---------------------------------------------------------

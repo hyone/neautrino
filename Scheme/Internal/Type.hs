@@ -24,7 +24,7 @@ type IOFunc = [LispVal] -> IOThrowsError LispVal
 
 data LispVal = Atom String
              | List [LispVal]
-             | DottedList [LispVal] LispVal
+             | Pair [LispVal] LispVal
              | Vector (Array Int LispVal)
              | Number Integer
              | Float Double

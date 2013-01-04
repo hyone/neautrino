@@ -191,7 +191,7 @@ parseNumeric = parseComplex
            <|> parseNumber
 
 
--- Vector, List, DottedList
+-- Vector, List, Pair
 
 parseVector :: Parser LispVal
 parseVector = try $ string "#(" *> parseVector' <* char ')'
@@ -204,17 +204,17 @@ parseVector = try $ string "#(" *> parseVector' <* char ')'
 parseListLiteral :: Parser LispVal
 parseListLiteral = List <$> sepEndBy parseExpr spaces
 
-parseDottedListLiteral :: Parser LispVal
-parseDottedListLiteral = do
+parsePairLiteral :: Parser LispVal
+parsePairLiteral = do
   h <- sepEndBy1 parseExpr spaces
   t <- char '.' >> spaces >> parseExpr
-  return $ DottedList h t
+  return $ Pair h t
 
 parseAnyList :: Parser LispVal
 parseAnyList = try $ do
   char '('
   optional spaces
-  e <- try parseDottedListLiteral <|> parseListLiteral
+  e <- try parsePairLiteral <|> parseListLiteral
   optional spaces
   char ')'
   return e
