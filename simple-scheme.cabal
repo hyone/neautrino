@@ -14,6 +14,7 @@ data-files:    lib/*.scm
 extra-source-files:
   test/test.hs
   test/LispCodeSpec.hs
+  test/Scheme/FunctionSpec.hs
   test/Scheme/LoadSpec.hs
   test/Scheme/ParserSpec.hs
   test/Scheme/TestUtil.hs
