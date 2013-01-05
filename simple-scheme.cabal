@@ -15,6 +15,7 @@ extra-source-files:
   test/test.hs
   test/LispCodeSpec.hs
   test/Scheme/FunctionSpec.hs
+  test/Scheme/Function/EqualSpec.hs
   test/Scheme/LoadSpec.hs
   test/Scheme/ParserSpec.hs
   test/Scheme/TestUtil.hs
@@ -32,6 +33,7 @@ library
     Scheme.Error
     Scheme.Eval
     Scheme.Function
+    Scheme.Function.Equal
     Scheme.Function.Helper
     Scheme.Load
     Scheme.Parser

@@ -11,10 +11,10 @@ module Scheme.Eval
 import Scheme.Type
 import Scheme.Env
 import Scheme.Error
+import Scheme.Function.Equal (eqvP)
 import Scheme.Load (load, loadFrom, loadLibrary)
 import Scheme.Parser (readExpr)
 import Scheme.Util (until_)
-import qualified Scheme.Function as F
 
 import Control.Monad
 import Control.Monad.Error (runErrorT)
@@ -162,7 +162,7 @@ caseForm env p exps =
      case exps of
        [] -> return Undefined
        List (List vs : body) : exps' ->
-         do results <- liftThrowsError $ mapM (\v -> F.eqv [base, v]) vs
+         do results <- liftThrowsError $ mapM (\v -> eqvP [base, v]) vs
             Bool matched <- liftThrowsError $ or' results
             if matched
               then evalBody env body

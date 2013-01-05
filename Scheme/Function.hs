@@ -1,10 +1,9 @@
-{-# LANGUAGE ExistentialQuantification #-}
-
 module Scheme.Function where
 
 import Scheme.Error
 import {-# SOURCE #-} Scheme.Eval (apply)
 import Scheme.Function.Helper
+import Scheme.Function.Equal (eqvP, equalP)
 import Scheme.Parser (readExpr, readExprList)
 import Scheme.Type
 
@@ -46,9 +45,9 @@ primitives = [("+",   numberBinFunc (+)),
               ("real?",     function1 unpackAny (return . Bool) isReal),
               ("rational?", function1 unpackAny (return . Bool) isRational),
               ("integer?",  function1 unpackAny (return . Bool) isInteger),
-              ("eq?",    eqv),
-              ("eqv?",   eqv),
-              ("equal?", equal),
+              ("eq?",    eqvP),
+              ("eqv?",   eqvP),
+              ("equal?", equalP),
               ("car",  car),
               ("cdr",  cdr),
               ("cons", cons)
@@ -115,50 +114,6 @@ isString _           = False
 isList :: LispVal -> Bool
 isList (List _)  = True
 isList _         = False
-
-
--- Equality --------------------------------------------------------------
-
-equalSeq :: LispVal -> LispVal -> PrimitiveFunc -> ThrowsError LispVal
-equalSeq (Pair xs x) (Pair ys y) eq = eq [List $ xs ++ [x], List $ ys ++ [y]]
-equalSeq (List xs)   (List ys)   eq = return $ Bool $
-    (length xs == length ys) && all eqTuple (zip xs ys)
-  where
-    eqTuple :: (LispVal, LispVal) -> Bool
-    eqTuple (x, y) = case eq [x, y] of
-      Right (Bool val) -> val
-      _                -> False
-equalSeq _            _          _  = return (Bool False)
-
-eqv :: PrimitiveFunc
-eqv [Bool    arg1, Bool    arg2] = return $ Bool (arg1 == arg2)
-eqv [Integer arg1, Integer arg2] = return $ Bool (arg1 == arg2)
-eqv [String  arg1, String  arg2] = return $ Bool (arg1 == arg2)
-eqv [Atom    arg1, Atom    arg2] = return $ Bool (arg1 == arg2)
-eqv [xs@(Pair {}), ys@(Pair {})] = equalSeq xs ys eqv
-eqv [xs@(List _), ys@(List _)]   = equalSeq xs ys eqv
-eqv [_, _] = return (Bool False)
-eqv badArgList = throwError $ NumArgsError 2 badArgList
-
-
-data AnyUnpacker = forall a. Eq a => AnyUnpacker (Unpacker a)
-
-unpackEquals :: LispVal -> LispVal -> AnyUnpacker -> ThrowsError Bool
-unpackEquals arg1 arg2 (AnyUnpacker unpacker) =
-  do unpacked1 <- unpacker arg1
-     unpacked2 <- unpacker arg2
-     return $ unpacked1 == unpacked2
-   `catchError` const (return False)
-  
-equal :: PrimitiveFunc
-equal [x@(Pair {}), y@(Pair {})] = equalSeq x y equal
-equal [x@(List _), y@(List _)]               = equalSeq x y equal
-equal [arg1, arg2]                           = do
-  primitiveEquals <- liftM List.or $ mapM (unpackEquals arg1 arg2)
-                     [AnyUnpacker unpackNumber, AnyUnpacker unpackString, AnyUnpacker unpackBool]
-  Bool eqvEqual <- eqv [arg1, arg2]
-  return $ Bool (primitiveEquals || eqvEqual)
-equal badArgList = throwError $ NumArgsError 2 badArgList
 
 
 -- List ------------------------------------------------------------------

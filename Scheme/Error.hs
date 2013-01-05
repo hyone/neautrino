@@ -7,13 +7,14 @@ module Scheme.Error
   , runIOThrowsError
   -- * Convenience re-exports
   , ParseError
+  , catchError
   , throwError
   ) where
 
 import Scheme.Internal.Type (LispError(..), ThrowsError, IOThrowsError)
 
 import Control.Monad (liftM)
-import Control.Monad.Error (throwError, runErrorT)
+import Control.Monad.Error (catchError, throwError, runErrorT)
 import Text.Parsec (ParseError)
 
 
