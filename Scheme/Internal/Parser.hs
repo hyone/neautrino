@@ -159,10 +159,10 @@ parseFloat = try $ do
 
 parseRatio :: Parser LispVal
 parseRatio = try $ do
-  x <- many1 digit
+  Integer x <- parseNumber
   char '/'
   y <- many1 digit
-  return $ Ratio (read x % read y)
+  return $ Ratio (x % read y)
 
 -- Complex
 

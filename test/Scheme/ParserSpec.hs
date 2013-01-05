@@ -3,6 +3,7 @@ module Scheme.ParserSpec (spec) where
 import Test.Hspec
 import Scheme.TestUtil (shouldBeT, shouldErrorT)
 import Data.Array (listArray)
+import Data.Ratio ((%))
 import Data.Complex (Complex(..))
 
 import Scheme.Parser
@@ -73,6 +74,13 @@ spec = do
 
       it "should parse: 3.2e3" $
         readExpr "3.24e3" `shouldBeT` Float 3240.0
+
+    describe "ratio" $ do
+      it "should parse: 4/2" $ 
+        readExpr "4/2" `shouldBeT` Ratio (4 % 2)
+
+      it "should parse: #x22/5" $ 
+        readExpr "#x22/5" `shouldBeT` Ratio (34 % 5)
 
     describe "complex" $ do
       it "should parse: 5.2+3i" $ 
