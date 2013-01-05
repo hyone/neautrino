@@ -25,7 +25,7 @@ equalSeq (List xs)   (List ys)   eq = return $ Bool $
 equalSeq _            _          _  = return (Bool False)
 
 -- |
--- equality of same type
+-- implementation of eqv?
 -- 
 -- >>> eqvP [Integer 22, Integer 22]
 -- Right #t
@@ -51,9 +51,9 @@ unpackEquals arg1 arg2 (AnyUnpacker unpacker) =
    `catchError` const (return False)
   
 -- |
--- equality between both same and diffent types
+-- implementation of equal?
 -- 
--- >>> equalP [Integer 22, Integer 22]
+-- >>> equalP [List [Integer 22, String "hello"], List [Integer 22, String "hello"]]
 -- Right #t
 equalP :: PrimitiveFunc
 equalP [xs@(Pair _ _), ys@(Pair _ _)] = equalSeq xs ys equalP
