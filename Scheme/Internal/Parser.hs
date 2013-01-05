@@ -117,7 +117,7 @@ parseDecLiteral = do
 parseHexLiteral :: Parser LispVal
 parseHexLiteral = do
   try $ string "#x"
-  s <- many1 digit
+  s <- many1 hexDigit
   case readHex s of
     [(x, _)] -> return (Integer x)
     _ -> fail "invalid hex number"

@@ -65,8 +65,7 @@ spec = do
         readExpr "#d37" `shouldBeT` Integer 37
 
       it "should parse: #xA7" $ 
-        pending "a bug not to accept 'a' - 'f' characters."
-        -- readExpr "#xA7"  `shouldBeT` Integer 167
+        readExpr "#xA7"  `shouldBeT` Integer 167
 
     describe "float" $ do
       it "should parse: 3.24" $ 
