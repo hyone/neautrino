@@ -1,4 +1,4 @@
-cabal-version: >= 1.8
+cabal-version: >= 1.10
 name:          simple-scheme
 version:       0.1
 synopsis:      Simple Scheme Implemention
@@ -47,30 +47,38 @@ library
 executable simple-scheme
   main-is: run.hs
   build-depends: base >= 2.0
-                ,array >= 0.4.0.0
-                ,directory >= 1.1.0.2
-                ,filepath >= 1.3.0.0
-                ,mtl >= 2.1.2
-                ,parsec >= 3.1.3
-                ,transformers >= 0.3.0.0
+               , array >= 0.4.0.0
+               , directory >= 1.1.0.2
+               , filepath >= 1.3.0.0
+               , mtl >= 2.1.2
+               , parsec >= 3.1.3
+               , transformers >= 0.3.0.0
 
-test-suite tests
+test-Suite doctest
+  type: exitcode-stdio-1.0
+  default-language: Haskell2010
+  main-is: doctest.hs
+  hs-source-dirs: test
+  ghc-options: -threaded -Wall
+  build-depends: base
+               , doctest >= 0.9.5
+
+test-suite spec
   type: exitcode-stdio-1.0
   main-is: test.hs
   hs-source-dirs: test, .
-
-  build-depends: base >= 2.0
-                ,array >= 0.4.0.0
-                ,directory >= 1.1.0.2
-                ,filepath >= 1.3.0.0
-                ,hspec >= 1.4.3
-                ,HUnit >= 1.2.5.1
-                ,mtl >= 2.1.2
-                ,parsec >= 3.1.3
-                ,QuickCheck >= 2.5.1
-                ,transformers >= 0.3.0.0
-                ,simple-scheme
   ghc-options: -Wall
+  build-depends: base >= 2.0
+               , array >= 0.4.0.0
+               , directory >= 1.1.0.2
+               , filepath >= 1.3.0.0
+               , hspec >= 1.4.3
+               , HUnit >= 1.2.5.1
+               , mtl >= 2.1.2
+               , parsec >= 3.1.3
+               , QuickCheck >= 2.5.1
+               , transformers >= 0.3.0.0
+               , simple-scheme
 
 source-repository head
   type: git
