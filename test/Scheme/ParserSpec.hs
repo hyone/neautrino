@@ -3,6 +3,7 @@ module Scheme.ParserSpec (spec) where
 import Test.Hspec
 import Scheme.TestUtil (shouldBeT, shouldErrorT)
 import Data.Array (listArray)
+import Data.Complex (Complex(..))
 
 import Scheme.Parser
 import Scheme.Error (LispError(..))
@@ -72,6 +73,13 @@ spec = do
 
       it "should parse: 3.2e3" $
         readExpr "3.24e3" `shouldBeT` Float 3240.0
+
+    describe "complex" $ do
+      it "should parse: 5.2+3i" $ 
+        readExpr "5.2+3i" `shouldBeT` Complex (5.2 :+ 3)
+
+      it "should parse: #x52+#d53i" $
+        readExpr "#x52+#d53i" `shouldBeT` Complex (82.0 :+ 53.0)
 
     describe "list" $ do
       it "should parse: (hoge)" $ 

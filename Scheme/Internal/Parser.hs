@@ -94,7 +94,6 @@ parseBinLiteral :: Parser LispVal
 parseBinLiteral = do
   try $ string "#b"
   s <- many1 (oneOf "01")
-  notFollowedBy alphaNum
   case readBin s of
     [(x, _)] -> return (Integer x)
     _        -> fail "invalid binary number"
@@ -103,7 +102,6 @@ parseOctLiteral :: Parser LispVal
 parseOctLiteral = do
   try $ string "#o"
   s <- many1 octDigit
-  notFollowedBy alphaNum
   case readOct s of
     [(x, _)] -> return (Integer x)
     _        -> fail "invalid octal number"
@@ -112,7 +110,6 @@ parseDecLiteral :: Parser LispVal
 parseDecLiteral = do
   try $ string "#d"
   s <- many1 digit
-  notFollowedBy alphaNum
   case readDec s of
     [(x, _)] -> return (Integer x)
     _        -> fail "invalid decimal number"
@@ -121,13 +118,12 @@ parseHexLiteral :: Parser LispVal
 parseHexLiteral = do
   try $ string "#x"
   s <- many1 digit
-  notFollowedBy alphaNum
   case readHex s of
     [(x, _)] -> return (Integer x)
     _ -> fail "invalid hex number"
 
 parseDigit :: Parser LispVal
-parseDigit = (Integer . read) <$> many1 digit <* notFollowedBy alphaNum
+parseDigit = (Integer . read) <$> many1 digit
 
 parseNumber :: Parser LispVal
 parseNumber = parseBinLiteral
