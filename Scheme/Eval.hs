@@ -47,6 +47,7 @@ eval env (List [Atom "quasiquote", val]) = quasiquoteForm env val
 eval env (List [Atom "set!", Atom var, form])    = eval env form >>= setVar env var
 eval env (List [Atom "load", String filename])   = load env filename
 eval env (List [Atom "if", p, thenExp, elseExp]) = ifForm env p thenExp elseExp
+eval env (List (Atom "let" : exps))      = letForm env exps
 eval env (List (Atom "begin" : args))    = evalBody env args
 eval env (List (Atom "cond" : exps))     = condForm env exps
 eval env (List (Atom "case" : p : exps)) = caseForm env p exps
@@ -134,6 +135,26 @@ quasiquoteForm env (Pair xs x) =
 quasiquoteForm env (Vector as) =
   fmap (Vector . listArray (bounds as)) $ mapM (quasiquoteForm env) (elems as)
 quasiquoteForm _   e = return e    -- quote
+
+
+-- let bindings:
+-- (let ((a 3) (b 5))
+--   (print a) (print b) (* a b))
+letForm :: Env -> [LispVal] -> IOThrowsError LispVal
+letForm env exps = case exps of
+    []                   -> letError
+    (_ : [])             -> return Undefined
+    (List params : body) -> do
+      params' <- mapM extractVarName params
+      liftIO (bindVars env params')
+             >>= (evalBody `flip` body)
+    _ -> letError
+  where
+    extractVarName :: LispVal -> IOThrowsError (Var, LispVal)
+    extractVarName (List (Atom x : y : _)) = return (x, y)
+    extractVarName _ = letError
+    letError :: IOThrowsError a
+    letError = throwError $ SyntaxError "let" (List (Atom "let" : exps))
 
 
 ifForm :: Env -> LispVal -> LispVal -> LispVal -> IOThrowsError LispVal

@@ -1,5 +1,8 @@
 module Scheme.Env
   ( Env
+  , Var
+  , VarPair
+  , VarRefPair
   , getVar
   , setVar
   , defineVar
