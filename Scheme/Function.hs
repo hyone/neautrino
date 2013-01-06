@@ -7,63 +7,63 @@ import Scheme.Function.Equal (eqvP, equalP)
 import Scheme.Parser (readExpr, readExprList)
 import Scheme.Type
 
-import Control.Monad
-import Control.Monad.Error (catchError)
+import Control.Monad (liftM)
 import Control.Monad.IO.Class (liftIO)
 import Data.Complex (imagPart, realPart)
 import Data.Ratio (denominator, numerator)
 import System.IO
-import qualified Data.List as List
 
 
-primitives :: [(String, PrimitiveFunc)]
-primitives = [("+",   numberBinFunc (+)),
-              ("-",   numberBinFunc (-)),
-              ("*",   numberBinFunc (*)),
-              ("/",   numberBinFunc div),
-              ("mod", numberBinFunc mod),
-              ("remainder", numberBinFunc rem),
-              ("=",   numberBoolFunc (==)),
-              ("<",   numberBoolFunc (<)),
-              (">",   numberBoolFunc (>)),
-              ("/=",  numberBoolFunc (/=)),
-              (">=",  numberBoolFunc (>=)),
-              ("<=",  numberBoolFunc (<=)),
-              ("&&", boolBoolFunc (&&)),
-              ("||", boolBoolFunc (||)),
-              ("string=?",  stringBoolFunc (==)),
-              ("string<?",  stringBoolFunc (<)),
-              ("string>?",  stringBoolFunc (>)),
-              ("string<=?", stringBoolFunc (<=)),
-              ("string>=?", stringBoolFunc (>=)),
-              ("symbol?",   function1 unpackAny (return . Bool) isSymbol),
-              ("boolean?",  function1 unpackAny (return . Bool) isBoolean),
-              ("string?",   function1 unpackAny (return . Bool) isString),
-              ("list?",     function1 unpackAny (return . Bool) isList),
-              ("number?",   function1 unpackAny (return . Bool) isNumber),
-              ("complex?",  function1 unpackAny (return . Bool) isComplex),
-              ("real?",     function1 unpackAny (return . Bool) isReal),
-              ("rational?", function1 unpackAny (return . Bool) isRational),
-              ("integer?",  function1 unpackAny (return . Bool) isInteger),
-              ("eq?",    eqvP),
-              ("eqv?",   eqvP),
-              ("equal?", equalP),
-              ("car",  car),
-              ("cdr",  cdr),
-              ("cons", cons)
-             ]
+primitiveFuncs :: [(String, PrimitiveFunc)]
+primitiveFuncs =
+  [ ("+",   numberBinFunc (+))
+  , ("-",   numberBinFunc (-))
+  , ("*",   numberBinFunc (*))
+  , ("/",   numberBinFunc div)
+  , ("mod", numberBinFunc mod)
+  , ("remainder", numberBinFunc rem)
+  , ("=",   numberBoolFunc (==))
+  , ("<",   numberBoolFunc (<))
+  , (">",   numberBoolFunc (>))
+  , ("/=",  numberBoolFunc (/=))
+  , (">=",  numberBoolFunc (>=))
+  , ("<=",  numberBoolFunc (<=))
+  , ("&&", boolBoolFunc (&&))
+  , ("||", boolBoolFunc (||))
+  , ("string=?",  stringBoolFunc (==))
+  , ("string<?",  stringBoolFunc (<))
+  , ("string>?",  stringBoolFunc (>))
+  , ("string<=?", stringBoolFunc (<=))
+  , ("string>=?", stringBoolFunc (>=))
+  , ("symbol?",   function1 unpackAny (return . Bool) isSymbol)
+  , ("boolean?",  function1 unpackAny (return . Bool) isBoolean)
+  , ("string?",   function1 unpackAny (return . Bool) isString)
+  , ("list?",     function1 unpackAny (return . Bool) isList)
+  , ("number?",   function1 unpackAny (return . Bool) isNumber)
+  , ("complex?",  function1 unpackAny (return . Bool) isComplex)
+  , ("real?",     function1 unpackAny (return . Bool) isReal)
+  , ("rational?", function1 unpackAny (return . Bool) isRational)
+  , ("integer?",  function1 unpackAny (return . Bool) isInteger)
+  , ("eq?",    eqvP)
+  , ("eqv?",   eqvP)
+  , ("equal?", equalP)
+  , ("car",  car)
+  , ("cdr",  cdr)
+  , ("cons", cons)
+  ]
 
-ioPrimitives :: [(String, IOPrimitiveFunc)]
-ioPrimitives = [("apply", applyProc),
-                ("open-input-file", makePort ReadMode),
-                ("open-output-file", makePort WriteMode),
-                ("close-input-file", closePort),
-                ("close-output-file", closePort),
-                ("read", readProc),
-                ("write", writeProc),
-                ("read-contents", readContents),
-                ("read-all", readAll)
-               ]
+ioPrimitiveFuncs :: [(String, IOPrimitiveFunc)]
+ioPrimitiveFuncs =
+  [ ("apply", applyProc)
+  , ("open-input-file", makePort ReadMode)
+  , ("open-output-file", makePort WriteMode)
+  , ("close-input-file", closePort)
+  , ("close-output-file", closePort)
+  , ("read", readProc)
+  , ("write", writeProc)
+  , ("read-contents", readContents)
+  , ("read-all", readAll)
+  ]
 
 
 -- Type Check ------------------------------------------------------------

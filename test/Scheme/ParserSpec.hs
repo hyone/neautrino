@@ -9,7 +9,6 @@ import Data.Complex (Complex(..))
 import Scheme.Parser
 import Scheme.Error (LispError(..))
 import Scheme.Type (LispVal(..))
-import Scheme.Error (ThrowsError)
 
 
 parserError :: LispError

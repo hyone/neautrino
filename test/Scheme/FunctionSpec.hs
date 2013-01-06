@@ -6,7 +6,7 @@ import Test.Hspec.QuickCheck (prop)
 import Test.QuickCheck
 import Control.Monad (liftM, liftM2)
 import Data.Array (Array, listArray)
-import Data.Complex (Complex(..), imagPart)
+import Data.Complex (Complex(..))
 import Data.Ratio ((%))
 
 import Scheme.Function

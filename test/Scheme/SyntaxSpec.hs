@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fno-warn-unused-do-bind #-}
 module Scheme.SyntaxSpec (spec) where
 
 import Test.Hspec

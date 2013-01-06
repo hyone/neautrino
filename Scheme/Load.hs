@@ -6,7 +6,7 @@ module Scheme.Load
   , loadLibrary
   ) where
 
-import Control.Monad (filterM, liftM, void)
+import Control.Monad (filterM, liftM)
 import Control.Monad.IO.Class (liftIO)
 import Data.List (isPrefixOf)
 import System.Directory (doesFileExist)

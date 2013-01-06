@@ -8,13 +8,13 @@ module Scheme.Eval
   , runRepl
   ) where
 
-import Scheme.Type (LispVal(..), PrimitiveFunc, IOPrimitiveFunc, SyntaxHandler)
+import Scheme.Type (LispVal(..), SyntaxHandler)
 import Scheme.Env (Env, bindVars, getVar, nullEnv)
 import Scheme.Error
-import Scheme.Function (primitives, ioPrimitives)
-import Scheme.Load (load, loadFrom, loadLibrary)
+import Scheme.Function (primitiveFuncs, ioPrimitiveFuncs)
+import Scheme.Load (loadFrom, loadLibrary)
 import Scheme.Parser (readExpr)
-import Scheme.Syntax (primitiveSyntax)
+import Scheme.Syntax (primitiveSyntaxes)
 import Scheme.Util (until_)
 
 import Control.Monad (liftM, unless)
@@ -30,9 +30,9 @@ primitiveEnv :: IO Env
 primitiveEnv =
     nullEnv >>=
       flip bindVars
-        (  map (buildSyntax Syntax) primitiveSyntax
-        ++ map (buildFunc IOPrimitiveFunc) ioPrimitives
-        ++ map (buildFunc PrimitiveFunc) primitives)
+        (  map (buildSyntax Syntax) primitiveSyntaxes
+        ++ map (buildFunc IOPrimitiveFunc) ioPrimitiveFuncs
+        ++ map (buildFunc PrimitiveFunc) primitiveFuncs )
   where
     buildSyntax :: (a -> b -> c) -> (a, b) -> (a, c)
     buildSyntax constructor (var, handler) = (var, constructor var handler)
@@ -124,7 +124,7 @@ readPrompt prompt = flushStr prompt >> getLine
 initEnv :: IO Env
 initEnv = do
   env <- primitiveEnv
-  loadLibrary env "init"
+  _   <- loadLibrary env "init"
   return env
 
 -- | run a script

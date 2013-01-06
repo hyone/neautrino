@@ -4,7 +4,6 @@ import Test.Hspec
 import Scheme.TestUtil (evalAST, shouldContain, shouldReturnT)
 
 import Scheme.Eval (initEnv)
-import Scheme.Error (LispError(..))
 import Scheme.Type (LispVal(..))
 import Scheme.Load (loadLibrary)
 

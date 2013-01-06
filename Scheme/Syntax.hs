@@ -1,14 +1,5 @@
 module Scheme.Syntax
-  ( primitiveSyntax
-  , defineForm
-  , lambdaForm
-  , quoteForm
-  , quasiquoteForm
-  , letForm
-  , ifForm
-  , condForm
-  , caseForm
-  ) where
+  ( primitiveSyntaxes ) where
 
 import Scheme.Type (LispVal(..), PrimitiveFunc, SyntaxHandler)
 import Scheme.Env (Env, Var, bindVars, defineVar, setVar)
@@ -48,8 +39,8 @@ makeVarargsFunc = makeFunc . Just . show
 
 -- Primitive Syntax
 
-primitiveSyntax :: [(String, SyntaxHandler)]
-primitiveSyntax =
+primitiveSyntaxes :: [(String, SyntaxHandler)]
+primitiveSyntaxes =
   [ ("define", defineForm)
   , ("lambda", lambdaForm)
   , ("quote", quoteForm)

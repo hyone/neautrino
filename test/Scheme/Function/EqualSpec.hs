@@ -1,7 +1,7 @@
 module Scheme.Function.EqualSpec (spec) where
 
 import Test.Hspec
-import Scheme.TestUtil (evalAST, shouldBeT, shouldReturnT)
+import Scheme.TestUtil (shouldBeT)
 
 import Scheme.Function.Equal (eqvP, equalP)
 import Scheme.Type (LispVal(..))
