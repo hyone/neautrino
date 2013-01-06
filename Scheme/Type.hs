@@ -1,6 +1,7 @@
 -- | Scheme Types
 module Scheme.Type
-  ( PrimitiveFunc
+  ( SyntaxHandler
+  , PrimitiveFunc
   , IOPrimitiveFunc
   , LispVal(..)
   ) where

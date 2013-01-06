@@ -1,6 +1,7 @@
 -- | Internal DataType module.
 module Scheme.Internal.Type
-  ( PrimitiveFunc
+  ( SyntaxHandler
+  , PrimitiveFunc
   , IOPrimitiveFunc
   , LispVal(..)
   , LispError(..)
@@ -18,6 +19,8 @@ import System.IO (Handle)
 
 
 -- Primitive Types -------------------------------------------------------
+
+type SyntaxHandler = Env -> [LispVal] -> IOThrowsError LispVal
 
 type PrimitiveFunc   = [LispVal] -> ThrowsError LispVal
 type IOPrimitiveFunc = [LispVal] -> IOThrowsError LispVal
@@ -37,10 +40,12 @@ data LispVal = Atom String
              | Undefined
              | PrimitiveFunc PrimitiveFunc
              | IOPrimitiveFunc IOPrimitiveFunc
-             | Func { fParams :: [String],
-                      fVararg :: Maybe String,
-                      fBody :: [LispVal],
-                      fClosure :: Env }
+             | Syntax { syntaxName    :: String
+                      , syntaxHandler :: SyntaxHandler }
+             | Func { funcParams  :: [String]
+                    , funcVararg  :: Maybe String
+                    , funcBody    :: [LispVal]
+                    , funcClosure :: Env }
 
 -- Eq class instance
 
@@ -76,6 +81,7 @@ showVal (Bool True)        = "#t"
 showVal (Bool False)       = "#f"
 showVal (Port _)           = "#<io port>"
 showVal Undefined          = "#<undef>"
+showVal (Syntax name _)    = "#<syntax " ++ name ++ ">"
 showVal PrimitiveFunc {}   = "#<primitive>"
 showVal IOPrimitiveFunc {} = "#<io primitive>"
 showVal Func {}            = "#<closure>"

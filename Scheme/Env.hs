@@ -3,17 +3,16 @@ module Scheme.Env
   , Var
   , VarPair
   , VarRefPair
+  , nullEnv
   , getVar
   , setVar
   , defineVar
   , bindVars
-  , primitiveEnv
   ) where
 
 import Scheme.Error
 import Scheme.Internal.Type (Env)
 import Scheme.Type
-import Scheme.Function (primitives, ioPrimitives)
 
 import Data.IORef
 import Control.Monad (liftM)
@@ -71,13 +70,3 @@ bindVars envRef bindings = readIORef envRef >>= extendEnv bindings >>= newIORef
 
     addBinding :: VarPair -> IO VarRefPair
     addBinding (var, value) = liftM (\ref -> (var, ref)) $ newIORef value
-
-
-primitiveEnv :: IO Env
-primitiveEnv = nullEnv >>=
-                (flip bindVars $
-                  map (buildFunc IOPrimitiveFunc) ioPrimitives ++
-                  map (buildFunc PrimitiveFunc) primitives)
-  where
-    buildFunc :: (a -> b) -> (c, a) -> (c, b)
-    buildFunc constructor (var, func) = (var, constructor func)

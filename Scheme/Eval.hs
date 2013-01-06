@@ -8,12 +8,13 @@ module Scheme.Eval
   , runRepl
   ) where
 
-import Scheme.Type (LispVal(..), PrimitiveFunc, IOPrimitiveFunc)
-import Scheme.Env (Env, primitiveEnv, bindVars, getVar, setVar)
+import Scheme.Type (LispVal(..), PrimitiveFunc, IOPrimitiveFunc, SyntaxHandler)
+import Scheme.Env (Env, bindVars, getVar, nullEnv)
 import Scheme.Error
+import Scheme.Function (primitives, ioPrimitives)
 import Scheme.Load (load, loadFrom, loadLibrary)
 import Scheme.Parser (readExpr)
-import Scheme.Syntax
+import Scheme.Syntax (primitiveSyntax)
 import Scheme.Util (until_)
 
 import Control.Monad (liftM, unless)
@@ -22,6 +23,22 @@ import Control.Monad.IO.Class (liftIO)
 import Data.Maybe (isNothing)
 import System.IO (hFlush, hPutStrLn, stderr, stdout)
 import System.IO.Error (catchIOError, isEOFError)
+
+
+-- primitive variables
+primitiveEnv :: IO Env
+primitiveEnv =
+    nullEnv >>=
+      flip bindVars
+        (  map (buildSyntax Syntax) primitiveSyntax
+        ++ map (buildFunc IOPrimitiveFunc) ioPrimitives
+        ++ map (buildFunc PrimitiveFunc) primitives)
+  where
+    buildSyntax :: (a -> b -> c) -> (a, b) -> (a, c)
+    buildSyntax constructor (var, handler) = (var, constructor var handler)
+
+    buildFunc :: (a -> b) -> (c, a) -> (c, b)
+    buildFunc constructor (var, func) = (var, constructor func)
 
 
 -- | evaluate abstract syntax tree to value
@@ -36,30 +53,16 @@ eval _   val@(Complex _)   = return val
 eval _   val@(Bool _)      = return val
 -- variable
 eval env (Atom var) = getVar env var
--- special forms
-eval env (List (Atom "define" : exps))     = defineForm env exps
-eval env (List (Atom "lambda" : exps))     = lambdaForm env exps
-eval env (List (Atom "quote" : exps))      = quoteForm env exps
-eval env (List (Atom "quasiquote" : exps)) = quasiquoteForm env exps
-eval env (List [Atom "set!", Atom var, form])  = eval env form >>= setVar env var
-eval env (List [Atom "load", String filename]) = load env filename
-eval env (List (Atom "if" : exps))    = ifForm env exps
-eval env (List (Atom "let" : exps))   = letForm env exps
-eval env (List (Atom "begin" : exps)) = evalBody env exps
-eval env (List (Atom "cond" : exps))  = condForm env exps
-eval env (List (Atom "case" : exps))  = caseForm env exps
-eval _   val@(List [Atom "unquote", _])  =
-  throwError $ DefaultError ("unquote appeared outside quasiquote: " ++ show val)
--- function application
-eval env (List (func : args)) = applyFunc env func args
+-- special forms evaluation or function application
+eval env (List (procedure : args)) = applyProcedure env procedure args
 -- or error
 eval _   badForm = throwError $ BadSpecialFormError "Unrecognized special form" badForm
 
 
 -- | apply function to arguments
-apply :: LispVal -> IOPrimitiveFunc
-apply (PrimitiveFunc func)   args = liftThrowsError (func args)
-apply (IOPrimitiveFunc func) args = func args
+apply :: LispVal -> [LispVal] -> IOThrowsError LispVal
+apply (PrimitiveFunc func)               args = liftThrowsError (func args)
+apply (IOPrimitiveFunc func)             args = func args
 apply (Func params varargs body closure) args =
     if length params /= length args && isNothing varargs
     then throwError $ NumArgsError (length params) args
@@ -76,13 +79,20 @@ apply (Func params varargs body closure) args =
       Nothing      -> return env
 apply notFunc _ = throwError $ NotFunctionError "invalid application" (show notFunc)
 
-applyFunc :: Env -> LispVal -> IOPrimitiveFunc
-applyFunc env func args = do
-  func' <- eval env func
-  vals  <- mapM (eval env) args
-  apply func' vals
 
--- evaluate list of expressions and returns the value from last expression
+applyProcedure :: Env -> LispVal -> [LispVal] -> IOThrowsError LispVal
+applyProcedure env procedure args = do
+    f    <- eval env procedure
+    case f of
+      (Syntax _ handler) -> applySyntax handler env args
+      _                  -> do vals <- mapM (eval env) args
+                               apply f vals
+  where
+    applySyntax :: SyntaxHandler -> Env -> [LispVal] -> IOThrowsError LispVal
+    applySyntax = id
+
+
+-- | evaluate list of expressions and returns the value from last expression
 evalBody :: Env -> [LispVal] -> IOThrowsError LispVal
 evalBody env = liftM last . mapM (eval env)
 

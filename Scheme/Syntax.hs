@@ -1,5 +1,6 @@
 module Scheme.Syntax
-  ( defineForm
+  ( primitiveSyntax
+  , defineForm
   , lambdaForm
   , quoteForm
   , quasiquoteForm
@@ -9,18 +10,17 @@ module Scheme.Syntax
   , caseForm
   ) where
 
-import Scheme.Type (LispVal(..), PrimitiveFunc)
-import Scheme.Env (Env, Var, bindVars, defineVar)
-import Scheme.Error (IOThrowsError, LispError(..), throwError, liftThrowsError)
+import Scheme.Type (LispVal(..), PrimitiveFunc, SyntaxHandler)
+import Scheme.Env (Env, Var, bindVars, defineVar, setVar)
+import Scheme.Error
 import {-# SOURCE #-} Scheme.Eval (eval, evalBody)
 import Scheme.Function.Equal (eqvP)
+import Scheme.Load (load)
 
 import Control.Monad (liftM, liftM2)
 import Control.Monad.IO.Class (liftIO)
 import Data.Array (bounds, elems, listArray)
 
-
-type SyntaxHandler = Env -> [LispVal] -> IOThrowsError LispVal
 
 type UnarySyntaxHandler = Env -> LispVal -> IOThrowsError LispVal
 
@@ -44,6 +44,25 @@ makeNormalFunc = makeFunc Nothing
 
 makeVarargsFunc :: Monad m => LispVal -> Env -> [LispVal] -> [LispVal] -> m LispVal
 makeVarargsFunc = makeFunc . Just . show
+
+
+-- Primitive Syntax
+
+primitiveSyntax :: [(String, SyntaxHandler)]
+primitiveSyntax =
+  [ ("define", defineForm)
+  , ("lambda", lambdaForm)
+  , ("quote", quoteForm)
+  , ("quasiquote", quasiquoteForm)
+  , ("set!", setForm)
+  , ("load", loadForm)
+  , ("if", ifForm)
+  , ("let", letForm)
+  , ("begin", beginForm)
+  , ("cond", condForm)
+  , ("case", caseForm)
+  , ("unquote", unquoteForm)
+  ]
 
 
 defineForm :: SyntaxHandler
@@ -89,6 +108,26 @@ quasiquoteForm' env (Vector as) =
 quasiquoteForm' _   e = return e    -- quote
 
 
+unquoteForm :: SyntaxHandler
+unquoteForm _ args =
+  throwError $ DefaultError $
+    "unquote appeared outside quasiquote: " ++ show (List (Atom "unquote" : args))
+
+
+setForm :: SyntaxHandler
+setForm env [Atom var, form] = eval env form >>= setVar env var
+setForm _   args             = syntaxError "set!" args
+
+
+loadForm :: SyntaxHandler
+loadForm env [String filename] = load env filename
+loadForm _   args              = syntaxError "load" args
+
+
+beginForm :: SyntaxHandler
+beginForm = evalBody 
+
+
 -- let bindings:
 -- (let ((a 3) (b 5))
 --   (print a) (print b) (* a b))
@@ -109,22 +148,22 @@ letForm env exps = case exps of
     letError = syntaxError "let" exps
 
 ifForm :: SyntaxHandler
-ifForm env [p, thenExp, elseExp] =
-  do result <- eval env p
-     case result of
-       Bool True  -> eval env thenExp
-       Bool False -> eval env elseExp
-       val        -> throwError $ TypeMismatchError "bool" val
-ifForm env badArgs = syntaxError "if" badArgs
+ifForm env [p, thenExp, elseExp] = do
+  result <- eval env p
+  case result of
+    Bool True  -> eval env thenExp
+    Bool False -> eval env elseExp
+    val        -> throwError $ TypeMismatchError "bool" val
+ifForm _   badArgs = syntaxError "if" badArgs
 
 
 condForm :: SyntaxHandler
 condForm _   [] = return Undefined
-condForm env (List (p : body) : xs) = 
-  do result <- eval env p
-     case result of
-       Bool False -> condForm env xs
-       _          -> evalBody env body
+condForm env (List (p : body) : xs) = do
+  result <- eval env p
+  case result of
+    Bool False -> condForm env xs
+    _          -> evalBody env body
 condForm _   exps = syntaxError "cond" exps
 
 
@@ -134,7 +173,7 @@ or' (Bool False : xs) = or' xs
 or' (x : _)           = return x
 
 caseForm :: SyntaxHandler
-caseForm env [_] = return Undefined
+caseForm _   [_] = return Undefined
 caseForm env (p : List (List vs : body) : rest) =
   do base         <- eval env p
      results      <- liftThrowsError $ mapM (\v -> eqvP [base, v]) vs
@@ -143,4 +182,4 @@ caseForm env (p : List (List vs : body) : rest) =
        evalBody env body
      else
        caseForm env (base:rest)
-caseForm env exps = syntaxError "case" exps
+caseForm _    exps = syntaxError "case" exps
