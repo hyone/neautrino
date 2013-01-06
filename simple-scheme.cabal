@@ -18,6 +18,7 @@ extra-source-files:
   test/Scheme/Function/EqualSpec.hs
   test/Scheme/LoadSpec.hs
   test/Scheme/ParserSpec.hs
+  test/Scheme/SyntaxSpec.hs
   test/Scheme/TestUtil.hs
 
 library
@@ -39,6 +40,7 @@ library
     Scheme.Function.Helper
     Scheme.Load
     Scheme.Parser
+    Scheme.Syntax
     Scheme.Type
     Scheme.Util
   other-modules:

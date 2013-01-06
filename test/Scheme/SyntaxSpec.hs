@@ -1,16 +1,15 @@
-module Scheme.EvalSpec (spec) where
+module Scheme.SyntaxSpec (spec) where
 
 import Test.Hspec
 import Scheme.TestUtil (evalAST, shouldReturnT)
 
 import Scheme.Eval (initEnv)
 import Scheme.Type (LispVal(..))
-import Scheme.Load (loadLibrary)
 
   
 spec :: Spec
 spec =
-  describe "Scheme.Eval" $ do
+  describe "Scheme.Syntax" $ do
     describe "begin" $ do
       it "evaluates multi expressions sequentially." $ do
         env <- initEnv
