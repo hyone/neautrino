@@ -1,7 +1,7 @@
 -- | Internal DataType module.
 module Scheme.Internal.Type
   ( PrimitiveFunc
-  , IOFunc
+  , IOPrimitiveFunc
   , LispVal(..)
   , LispError(..)
   , ThrowsError
@@ -19,8 +19,8 @@ import System.IO (Handle)
 
 -- Primitive Types -------------------------------------------------------
 
-type PrimitiveFunc = [LispVal] -> ThrowsError LispVal
-type IOFunc = [LispVal] -> IOThrowsError LispVal
+type PrimitiveFunc   = [LispVal] -> ThrowsError LispVal
+type IOPrimitiveFunc = [LispVal] -> IOThrowsError LispVal
 
 data LispVal = Atom String
              | List [LispVal]
@@ -36,7 +36,7 @@ data LispVal = Atom String
              | Port Handle
              | Undefined
              | PrimitiveFunc PrimitiveFunc
-             | IOPrimitiveFunc IOFunc
+             | IOPrimitiveFunc IOPrimitiveFunc
              | Func { fParams :: [String],
                       fVararg :: Maybe String,
                       fBody :: [LispVal],

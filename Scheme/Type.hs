@@ -1,7 +1,7 @@
 -- | Scheme Types
 module Scheme.Type
   ( PrimitiveFunc
-  , IOFunc
+  , IOPrimitiveFunc
   , LispVal(..)
   ) where
 

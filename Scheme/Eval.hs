@@ -8,7 +8,7 @@ module Scheme.Eval
   , runRepl
   ) where
 
-import Scheme.Type (LispVal(..), PrimitiveFunc, IOFunc)
+import Scheme.Type (LispVal(..), PrimitiveFunc, IOPrimitiveFunc)
 import Scheme.Env (Env, primitiveEnv, bindVars, getVar, setVar)
 import Scheme.Error
 import Scheme.Load (load, loadFrom, loadLibrary)
@@ -57,7 +57,7 @@ eval _   badForm = throwError $ BadSpecialFormError "Unrecognized special form" 
 
 
 -- | apply function to arguments
-apply :: LispVal -> IOFunc
+apply :: LispVal -> IOPrimitiveFunc
 apply (PrimitiveFunc func)   args = liftThrowsError (func args)
 apply (IOPrimitiveFunc func) args = func args
 apply (Func params varargs body closure) args =
@@ -76,7 +76,7 @@ apply (Func params varargs body closure) args =
       Nothing      -> return env
 apply notFunc _ = throwError $ NotFunctionError "invalid application" (show notFunc)
 
-applyFunc :: Env -> LispVal -> IOFunc
+applyFunc :: Env -> LispVal -> IOPrimitiveFunc
 applyFunc env func args = do
   func' <- eval env func
   vals  <- mapM (eval env) args

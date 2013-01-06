@@ -53,7 +53,7 @@ primitives = [("+",   numberBinFunc (+)),
               ("cons", cons)
              ]
 
-ioPrimitives :: [(String, IOFunc)]
+ioPrimitives :: [(String, IOPrimitiveFunc)]
 ioPrimitives = [("apply", applyProc),
                 ("open-input-file", makePort ReadMode),
                 ("open-output-file", makePort WriteMode),
@@ -143,31 +143,31 @@ cons badArgList         = throwError $ NumArgsError 2 badArgList
 
 -- IO Primitives ---------------------------------------------------------
 
-applyProc :: IOFunc
+applyProc :: IOPrimitiveFunc
 applyProc [func, List args] = apply func args
 applyProc (func:args)       = apply func args
 applyProc _                 = throwError $ DefaultError "Apply Error"
 
-makePort :: IOMode -> IOFunc
+makePort :: IOMode -> IOPrimitiveFunc
 makePort mode [String filename] = liftM Port $ liftIO $ openFile filename mode
 makePort _    badArgList        = throwError $ NumArgsError 1 badArgList
 
-closePort :: IOFunc
+closePort :: IOPrimitiveFunc
 closePort [Port handle] = liftIO (hClose handle) >> return (Bool True)
 closePort _             = return (Bool False)
 
-readProc :: IOFunc
+readProc :: IOPrimitiveFunc
 readProc []            = readProc [Port stdin]
 readProc [Port handle] = liftIO (hGetLine handle)
                          >>= liftThrowsError . readExpr
 readProc badArgList    = throwError $ NumArgsError 1 badArgList
 
-writeProc :: IOFunc
+writeProc :: IOPrimitiveFunc
 writeProc [obj]              = writeProc [obj, Port stdout]
 writeProc [obj, Port handle] = liftIO (hPrint handle obj) >> return (Bool True)
 writeProc badArgList         = throwError $ NumArgsError 2 badArgList
 
-readContents :: IOFunc
+readContents :: IOPrimitiveFunc
 readContents [String filename] = liftM String $ liftIO $ readFile filename
 readContents badArgList        = throwError $ NumArgsError 1 badArgList
 
@@ -176,6 +176,6 @@ readParse :: String -> IOThrowsError [LispVal]
 readParse path = liftIO (readFile path)
                     >>= liftThrowsError . readExprList
 
-readAll :: IOFunc
+readAll :: IOPrimitiveFunc
 readAll [String filename] = liftM List $ readParse filename
 readAll badArgList        = throwError $ NumArgsError 1 badArgList
