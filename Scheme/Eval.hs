@@ -37,17 +37,17 @@ eval _   val@(Bool _)      = return val
 -- variable
 eval env (Atom var) = getVar env var
 -- special forms
-eval env (List (Atom "define" : exps))   = defineForm env exps
-eval env (List (Atom "lambda" : exps))   = lambdaForm env exps
-eval env (List [Atom "quote", exp])      = quoteForm env exp
-eval env (List [Atom "quasiquote", exp]) = quasiquoteForm env exp
-eval env (List [Atom "set!", Atom var, form])    = eval env form >>= setVar env var
-eval env (List [Atom "load", String filename])   = load env filename
-eval env (List [Atom "if", p, thenExp, elseExp]) = ifForm env p thenExp elseExp
-eval env (List (Atom "let" : exps))      = letForm env exps
-eval env (List (Atom "begin" : exps))    = evalBody env exps
-eval env (List (Atom "cond" : exps))     = condForm env exps
-eval env (List (Atom "case" : p : exps)) = caseForm env p exps
+eval env (List (Atom "define" : exps))     = defineForm env exps
+eval env (List (Atom "lambda" : exps))     = lambdaForm env exps
+eval env (List (Atom "quote" : exps))      = quoteForm env exps
+eval env (List (Atom "quasiquote" : exps)) = quasiquoteForm env exps
+eval env (List [Atom "set!", Atom var, form])  = eval env form >>= setVar env var
+eval env (List [Atom "load", String filename]) = load env filename
+eval env (List (Atom "if" : exps))    = ifForm env exps
+eval env (List (Atom "let" : exps))   = letForm env exps
+eval env (List (Atom "begin" : exps)) = evalBody env exps
+eval env (List (Atom "cond" : exps))  = condForm env exps
+eval env (List (Atom "case" : exps))  = caseForm env exps
 eval _   val@(List [Atom "unquote", _])  =
   throwError $ DefaultError ("unquote appeared outside quasiquote: " ++ show val)
 -- function application
