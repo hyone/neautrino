@@ -142,9 +142,8 @@ ifForm :: SyntaxHandler
 ifForm env [p, thenExp, elseExp] = do
   result <- eval env p
   case result of
-    Bool True  -> eval env thenExp
     Bool False -> eval env elseExp
-    val        -> throwError $ TypeMismatchError "bool" val
+    _          -> eval env thenExp
 ifForm _   badArgs = syntaxError "if" badArgs
 
 
