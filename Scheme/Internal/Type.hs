@@ -1,3 +1,7 @@
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+
 -- | Internal DataType module.
 module Scheme.Internal.Type
   ( SyntaxHandler
@@ -13,7 +17,9 @@ module Scheme.Internal.Type
 import Control.Monad.Error (Error(..), ErrorT)
 import Data.Array (Array, elems)
 import Data.Complex (Complex)
+import Data.Generics (Data(..), Typeable(..))
 import Data.IORef (IORef)
+import Data.Typeable (mkTyCon3, mkTyConApp)
 import Text.Parsec (ParseError)
 import System.IO (Handle)
 
@@ -46,6 +52,7 @@ data LispVal = Atom String
                     , funcVararg  :: Maybe String
                     , funcBody    :: [LispVal]
                     , funcClosure :: Env }
+  deriving (Data, Typeable)
 
 -- Eq class instance
 
@@ -103,6 +110,7 @@ data LispError = NumArgsError Int [LispVal]
                | NotFunctionError String String
                | UnboundVarError String String
                | DefaultError String
+  deriving (Data, Typeable)
 
 type ThrowsError = Either LispError
 
@@ -113,6 +121,31 @@ type IOThrowsError = ErrorT LispError IO
 instance Error LispError where
   noMsg  = DefaultError "An error has occurred"
   strMsg = DefaultError
+
+-- Data class instance
+
+-- NOTE: not yet implmented
+instance Data ParseError where
+  gunfold    = undefined
+  dataTypeOf = undefined
+  toConstr   = undefined
+
+-- NOTE: not yet implmented
+instance Data a => Data (IOThrowsError a) where
+  gunfold    = undefined
+  dataTypeOf = undefined
+  toConstr   = undefined
+
+-- Typeable class instance
+
+parseErrorTc = mkTyCon3 "Text.Parsec" "Error" "ParseError"
+instance Typeable ParseError where
+  typeOf _ = mkTyConApp parseErrorTc []
+
+ioThrowsErrorTc = mkTyCon3 "Scheme" "Error" "IOThrowsError"
+instance Typeable a => Typeable (IOThrowsError a) where
+  typeOf _ = mkTyConApp ioThrowsErrorTc [typeOf (undefined :: a)]
+  
 
 -- Show class instance
  
