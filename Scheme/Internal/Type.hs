@@ -17,9 +17,9 @@ module Scheme.Internal.Type
 import Control.Monad.Error (Error(..), ErrorT)
 import Data.Array (Array, elems)
 import Data.Complex (Complex)
-import Data.Generics (Data(..), Typeable(..))
+import Data.Generics ( Data(..), Fixity(Prefix), Typeable(..), TyCon
+                     , mkConstr, mkDataType, mkTyCon3, mkTyConApp)
 import Data.IORef (IORef)
-import Data.Typeable (TyCon, mkTyCon3, mkTyConApp)
 import Text.Parsec (ParseError)
 import System.IO (Handle)
 
@@ -124,17 +124,17 @@ instance Error LispError where
 
 -- Data class instance
 
--- NOTE: not yet implmented
+parseErrorConstr = mkConstr parseErrorDataType "ParseError" [] Prefix
+parseErrorDataType = mkDataType "Text.Parsec.Error.ParseError" [parseErrorConstr]
 instance Data ParseError where
-  gunfold    = undefined
-  dataTypeOf = undefined
-  toConstr   = undefined
+  gunfold _ _  = error "gunfold"
+  dataTypeOf _ = parseErrorDataType
+  toConstr   _ = parseErrorConstr
 
--- NOTE: not yet implmented
 instance Data a => Data (IOThrowsError a) where
-  gunfold    = undefined
-  dataTypeOf = undefined
-  toConstr   = undefined
+  gunfold _ _  = error "gunfold"
+  dataTypeOf _ = error "dataTypeOf IOThrowsError"
+  toConstr   _ = error "toConstr IOThrowsError"
 
 -- Typeable class instance
 
