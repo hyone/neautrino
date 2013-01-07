@@ -3,7 +3,6 @@
 module Scheme.THSpec ( spec ) where
 
 import Test.Hspec
-import Scheme.TestUtil (evalAST, shouldReturnT)
 
 import Scheme.Eval (initEnv)
 import Scheme.Type (LispVal(..))

@@ -59,14 +59,14 @@ eval env (List (procedure : args)) = applyProcedure env procedure args
 eval _   badForm = throwError $ BadSpecialFormError "Unrecognized special form" badForm
 
 
--- | apply function to arguments
+-- | apply function to argument list
 apply :: LispVal -> [LispVal] -> IOThrowsError LispVal
-apply (PrimitiveFunc func)               args = liftThrowsError (func args)
-apply (IOPrimitiveFunc func)             args = func args
-apply (Func params varargs body closure) args =
+apply (PrimitiveFunc   func) args = liftThrowsError (func args)
+apply (IOPrimitiveFunc func) args = func args
+apply (Func params varargs body env) args =
     if length params /= length args && isNothing varargs
     then throwError $ NumArgsError (length params) args
-    else liftIO (bindVars closure (zip params args))
+    else liftIO (bindVars env (zip params args))
          >>= bindVarArgs varargs
          >>= (evalBody `flip` body)
   where
@@ -74,9 +74,9 @@ apply (Func params varargs body closure) args =
     remainingArgs = drop (length params) args
 
     bindVarArgs :: Maybe String -> Env -> IOThrowsError Env
-    bindVarArgs arg env = case arg of
+    bindVarArgs arg env' = case arg of
       Just argName -> liftIO $ bindVars env [(argName, List remainingArgs)]
-      Nothing      -> return env
+      Nothing      -> return env'
 apply notFunc _ = throwError $ NotFunctionError "invalid application" (show notFunc)
 
 

@@ -19,7 +19,7 @@ import Data.Array (Array, elems)
 import Data.Complex (Complex)
 import Data.Generics (Data(..), Typeable(..))
 import Data.IORef (IORef)
-import Data.Typeable (mkTyCon3, mkTyConApp)
+import Data.Typeable (TyCon, mkTyCon3, mkTyConApp)
 import Text.Parsec (ParseError)
 import System.IO (Handle)
 
@@ -138,10 +138,12 @@ instance Data a => Data (IOThrowsError a) where
 
 -- Typeable class instance
 
+parseErrorTc :: TyCon
 parseErrorTc = mkTyCon3 "Text.Parsec" "Error" "ParseError"
 instance Typeable ParseError where
   typeOf _ = mkTyConApp parseErrorTc []
 
+ioThrowsErrorTc :: TyCon
 ioThrowsErrorTc = mkTyCon3 "Scheme" "Error" "IOThrowsError"
 instance Typeable a => Typeable (IOThrowsError a) where
   typeOf _ = mkTyConApp ioThrowsErrorTc [typeOf (undefined :: a)]
