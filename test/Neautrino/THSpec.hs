@@ -20,5 +20,9 @@ spec =
                            , List [Atom "set!", Atom "x", Integer 9]
                            , Atom "x"]
 
+      it "should parse vector literal" $
+          peinding "raise error on Data.Data.toConstr(Array)"
+          -- evalAST env [scheme| #(1 2 3) |]
+
 main :: IO ()
 main = hspec spec
