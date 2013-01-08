@@ -17,7 +17,8 @@ module Scheme.Internal.Type
 import Control.Monad.Error (Error(..), ErrorT)
 import Data.Array (Array, elems)
 import Data.Complex (Complex)
-import Data.Generics ( Data(..), Fixity(Prefix), Typeable(..), TyCon
+import Data.Generics ( Constr, Data(..), DataType
+                     , Fixity(Prefix), Typeable(..), TyCon
                      , mkConstr, mkDataType, mkTyCon3, mkTyConApp)
 import Data.IORef (IORef)
 import Text.Parsec (ParseError)
@@ -124,7 +125,9 @@ instance Error LispError where
 
 -- Data class instance
 
+parseErrorConstr :: Constr
 parseErrorConstr = mkConstr parseErrorDataType "ParseError" [] Prefix
+parseErrorDataType :: DataType
 parseErrorDataType = mkDataType "Text.Parsec.Error.ParseError" [parseErrorConstr]
 instance Data ParseError where
   gunfold _ _  = error "gunfold"

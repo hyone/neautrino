@@ -2,6 +2,8 @@ module Main where
 
 import Test.DocTest
 
+srcdir = "src" :: String
+
 main :: IO ()
 main = do
-  doctest ["Scheme/Function/Equal.hs"]
+  doctest [ "-i" ++ srcdir, srcdir ++ "/Scheme/Function/Equal.hs" ]

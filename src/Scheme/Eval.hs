@@ -8,7 +8,7 @@ module Scheme.Eval
   , runRepl
   ) where
 
-import Scheme.Type (LispVal(..), SyntaxHandler)
+import Scheme.Type (LispVal(..))
 import Scheme.Env (Env, bindVars, getVar, nullEnv)
 import Scheme.Error
 import Scheme.Function (primitiveFuncs, ioPrimitiveFuncs)
