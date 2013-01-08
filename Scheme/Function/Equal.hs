@@ -37,8 +37,9 @@ eqvP [Ratio     x, Ratio     y] = return $ Bool (x == y)
 eqvP [Complex   x, Complex   y] = return $ Bool (x == y)
 eqvP [Character x, Character y] = return $ Bool (x == y)
 eqvP [Atom      x, Atom      y] = return $ Bool (x == y)
-eqvP [_, _]                     = return (Bool False)
-eqvP badArgList = throwError $ NumArgsError 2 badArgList
+eqvP [List [], List []] = return (Bool True)
+eqvP [_, _]             = return (Bool False)
+eqvP badArgList         = throwError $ NumArgsError 2 badArgList
 
 
 data AnyUnpacker = forall a. Eq a => AnyUnpacker (Unpacker a)

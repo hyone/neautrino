@@ -20,6 +20,9 @@ spec =
       it "should be true when ['a, 'a]" $
          eqvP [Atom "foo", Atom "foo"] `shouldBeT` Bool True
 
+      it "should be true when ['(), '()]" $
+         eqvP [List [], List []] `shouldBeT` Bool True
+
       it "should be true when [5, 5]" $
          eqvP [Integer 5, Integer 5] `shouldBeT` Bool True
 
