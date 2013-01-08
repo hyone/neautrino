@@ -34,8 +34,7 @@ spec =
          -- eqvP [Integer 5, Ratio (10 % 2)] `shouldBeT` Bool True
 
       it "should be true when [5, 5+0i]" $
-         pending "TODO: fix bug"
-         -- eqvP [Integer 5, Complex (5 :+ 0)] `shouldBeT` Bool True
+         eqvP [Integer 5, Complex (5 :+ 0)] `shouldBeT` Bool False
 
       it "should be false when [String, String]" $
          eqvP [String "hello", String "hello"] `shouldBeT` Bool False

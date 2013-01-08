@@ -18,7 +18,6 @@ import Scheme.Syntax (primitiveSyntaxes)
 import Scheme.Util (until_)
 
 import Control.Monad (liftM, unless)
-import Control.Monad.Error (runErrorT)
 import Control.Monad.IO.Class (liftIO)
 import Data.Maybe (isNothing)
 import System.IO (hFlush, hPutStrLn, stderr, stdout)
@@ -53,7 +52,7 @@ eval _   val@(Complex _)   = return val
 eval _   val@(Bool _)      = return val
 -- variable
 eval env (Atom var) = getVar env var
--- special forms evaluation or function application
+-- special form or function application
 eval env (List (procedure : args)) = applyProcedure env procedure args
 -- or error
 eval _   badForm = throwError $ BadSpecialFormError "Unrecognized special form" badForm
@@ -84,12 +83,9 @@ applyProcedure :: Env -> LispVal -> [LispVal] -> IOThrowsError LispVal
 applyProcedure env procedure args = do
     f    <- eval env procedure
     case f of
-      (Syntax _ handler) -> applySyntax handler env args
+      (Syntax _ handler) -> handler env args
       _                  -> do vals <- mapM (eval env) args
                                apply f vals
-  where
-    applySyntax :: SyntaxHandler -> Env -> [LispVal] -> IOThrowsError LispVal
-    applySyntax = id
 
 
 -- | evaluate list of expressions and returns the value from last expression

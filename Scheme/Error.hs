@@ -8,6 +8,7 @@ module Scheme.Error
   -- * Convenience re-exports
   , ParseError
   , catchError
+  , runErrorT
   , throwError
   ) where
 
