@@ -4,6 +4,9 @@ module Neautrino.Type
   , PrimitiveFunc
   , IOPrimitiveFunc
   , LispVal(..)
+  , EvalExprMonad
+  , liftEvalExprM
+  , runEvalExprMonad
   ) where
 
 import Neautrino.Internal.Type

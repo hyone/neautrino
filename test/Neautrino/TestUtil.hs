@@ -10,12 +10,11 @@ module Neautrino.TestUtil (
 
 import Test.Hspec
 import Test.HUnit
-import Control.Monad.Error (runErrorT)
 import Data.List (isInfixOf)
 
 import Neautrino.Error (LispError(..), ThrowsError)
 import Neautrino.Env (Env)
-import Neautrino.Type (LispVal)
+import Neautrino.Type (LispVal, runEvalExprMonad)
 import Neautrino.Eval (eval)
 
 
@@ -44,7 +43,7 @@ instance Show ErrorType where
 
 
 evalAST :: Env -> LispVal -> IO (ThrowsError LispVal)
-evalAST env = runErrorT . eval env
+evalAST env = runEvalExprMonad env . eval
 
 
 message :: String -> String -> String

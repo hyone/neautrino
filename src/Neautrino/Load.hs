@@ -8,6 +8,7 @@ module Neautrino.Load
 
 import Control.Monad (filterM, liftM)
 import Control.Monad.IO.Class (liftIO)
+import Control.Monad.Trans.Class (lift)
 import Data.List (isPrefixOf)
 import System.Directory (doesFileExist)
 import System.FilePath (combine, addExtension, takeExtension)
@@ -48,25 +49,25 @@ findLibrary filename = do
 
 
 -- | load a file from specific path
-loadFrom :: Env -> FilePath -> IOThrowsError LispVal
-loadFrom env path = do
+loadFrom :: FilePath -> EvalExprMonad LispVal
+loadFrom path = do
   p <- liftIO $ doesFileExist path
   if p then
-    readParse path >>= evalBody env
+    lift (readParse path) >>= evalBody
   else
     throwError $ DefaultError $
       "Cannot find \"" ++ path ++ "\""
 
 -- | load a file from specific path or in load-path
-load :: Env -> FilePath -> IOThrowsError LispVal
-load env filename = do
+load :: FilePath -> EvalExprMonad LispVal
+load filename = do
     let filename' = fixFileExtension filename
     path <- if any (`isPrefixOf` filename') ["./", "../", "/"] then
       return filename'
     else 
-      findLibrary filename'
-    loadFrom env path
+      lift (findLibrary filename')
+    loadFrom path
 
--- | load and run IOThrowsError
+-- | load and runEvalExprMonad
 loadLibrary :: Env -> FilePath -> IO String
-loadLibrary env = runIOThrowsError . liftM show . load env
+loadLibrary env path = liftM extractValue $ runEvalExprMonad env (load path)

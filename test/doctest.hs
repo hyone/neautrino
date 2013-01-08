@@ -2,7 +2,8 @@ module Main where
 
 import Test.DocTest
 
-srcdir = "src" :: String
+srcdir :: String
+srcdir = "src"
 
 main :: IO ()
 main = do

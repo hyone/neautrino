@@ -11,12 +11,12 @@ module Neautrino.Env
   ) where
 
 import Neautrino.Error
-import Neautrino.Internal.Type (Env)
-import Neautrino.Type
+import Neautrino.Internal.Type (Env, EvalExprMonad, LispVal)
 
 import Data.IORef
 import Control.Monad (liftM)
 import Control.Monad.IO.Class (liftIO)
+import Control.Monad.Reader (ask)
 import Data.Maybe (isJust)
 
 
@@ -33,33 +33,37 @@ isBound :: Env -> Var -> IO Bool
 isBound envRef var = liftM (isJust . lookup var) (readIORef envRef)
 
 -- | get value of variable
-getVar :: Env -> Var -> IOThrowsError LispVal
-getVar envRef var = do
-  env <- liftIO $ readIORef envRef
+getVar :: Var -> EvalExprMonad LispVal
+getVar var = do
+  envRef <- ask
+  env    <- liftIO $ readIORef envRef
   maybe (throwError $ UnboundVarError "Getting an unbound variable" var)
         (liftIO . readIORef)
         (lookup var env)
 
 -- | set value of variable
-setVar :: Env -> Var -> LispVal -> IOThrowsError LispVal
-setVar envRef var value = do
-  env <- liftIO $ readIORef envRef
+setVar :: Var -> LispVal -> EvalExprMonad LispVal
+setVar var value = do
+  envRef <- ask
+  env    <- liftIO $ readIORef envRef
   maybe (throwError $ UnboundVarError "Setting an unbound variable" var)
         (liftIO . (`writeIORef` value))
         (lookup var env)
   return value
 
 -- | modify value of an existing variable or create new one
-defineVar :: Env -> Var -> LispVal -> IOThrowsError LispVal
-defineVar envRef var value = do
+defineVar :: Var -> LispVal -> EvalExprMonad LispVal
+defineVar var value = do
+  envRef  <- ask
   defined <- liftIO $ isBound envRef var
   if defined
-     then setVar envRef var value
+     then setVar var value
      else liftIO $ do
        valueRef <- newIORef value
        env <- readIORef envRef
        writeIORef envRef ((var, valueRef) : env)
        return value
+
 
 -- | extend env with bindings
 bindVars :: Env -> [VarPair] -> IO Env

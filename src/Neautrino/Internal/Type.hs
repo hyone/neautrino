@@ -11,10 +11,18 @@ module Neautrino.Internal.Type
   , LispError(..)
   , ThrowsError
   , IOThrowsError
+  , extractValue
+  , liftThrowsError
   , Env
+  , EvalExprMonad
+  , liftEvalExprM
+  , runEvalExprMonad
   ) where
 
-import Control.Monad.Error (Error(..), ErrorT)
+
+import Control.Monad.Error (Error(..), ErrorT, MonadError, throwError, runErrorT)
+import Control.Monad.Reader (ReaderT, runReaderT)
+import Control.Monad.Trans.Class (lift)
 import Data.Array (Array, elems)
 import Data.Complex (Complex)
 import Data.Generics ( Constr, Data(..), DataType
@@ -27,7 +35,7 @@ import System.IO (Handle)
 
 -- Primitive Types -------------------------------------------------------
 
-type SyntaxHandler = Env -> [LispVal] -> IOThrowsError LispVal
+type SyntaxHandler = [LispVal] -> EvalExprMonad LispVal
 
 type PrimitiveFunc   = [LispVal] -> ThrowsError LispVal
 type IOPrimitiveFunc = [LispVal] -> IOThrowsError LispVal
@@ -53,7 +61,7 @@ data LispVal = Atom String
                     , funcVararg  :: Maybe String
                     , funcBody    :: [LispVal]
                     , funcClosure :: Env }
-  deriving (Data, Typeable)
+  deriving (Typeable)
 
 -- Eq class instance
 
@@ -100,6 +108,71 @@ showVal (Pair h t)         = "("  ++ unwordsList h ++ " . " ++ showVal t ++ ")"
 unwordsList :: [LispVal] -> String
 unwordsList =  unwords . map showVal
 
+-- Data class instance
+
+atomConstr, listConstr, pairConstr, vectorConstr :: Constr
+characterConstr, stringConstr, integerConstr, floatConstr :: Constr
+ratioConstr,complexConstr, boolConstr, undefinedConstr :: Constr
+atomConstr      = mkConstr lispValDataType "Atom"      [] Prefix
+listConstr      = mkConstr lispValDataType "List"      [] Prefix
+pairConstr      = mkConstr lispValDataType "Pair"      [] Prefix
+vectorConstr    = mkConstr lispValDataType "Vector"    [] Prefix
+characterConstr = mkConstr lispValDataType "Character" [] Prefix
+stringConstr    = mkConstr lispValDataType "String"    [] Prefix
+integerConstr   = mkConstr lispValDataType "Integer"   [] Prefix
+floatConstr     = mkConstr lispValDataType "Float"     [] Prefix
+ratioConstr     = mkConstr lispValDataType "Ratio"     [] Prefix
+complexConstr   = mkConstr lispValDataType "Complex"   [] Prefix
+boolConstr      = mkConstr lispValDataType "Bool"      [] Prefix
+undefinedConstr = mkConstr lispValDataType "Undefined" [] Prefix
+
+lispValDataType :: DataType
+lispValDataType = mkDataType "Neautrino.Internal.Type.LispVal"
+                             [ atomConstr
+                             , listConstr
+                             , pairConstr
+                             , vectorConstr
+                             , characterConstr
+                             , stringConstr
+                             , integerConstr
+                             , floatConstr
+                             , ratioConstr
+                             , complexConstr
+                             , boolConstr
+                             , undefinedConstr
+                             ]
+instance Data LispVal where
+  gfoldl k z (Atom x)      = z Atom `k` x
+  gfoldl k z (Integer x)   = z Integer `k` x
+  gfoldl k z (Float x)     = z Float `k` x
+  gfoldl k z (Ratio x)     = z Ratio `k` x
+  gfoldl k z (Complex x)   = z Complex `k` x
+  gfoldl k z (Character x) = z Character `k` x
+  gfoldl k z (String x)    = z String `k` x
+  gfoldl k z (Bool x)      = z Bool `k` x
+  gfoldl k z (List xs)     = z List `k` xs
+  gfoldl k z (Pair x xs)   = z Pair `k` x `k` xs
+  gfoldl _ z Undefined     = z Undefined
+  gfoldl _ _ x             = error $ "gfoldl: not implemented for " ++ show x
+
+  gunfold _ _ _ = undefined
+
+  toConstr (Atom _)      = atomConstr
+  toConstr (Integer _)   = integerConstr
+  toConstr (Float _)     = floatConstr
+  toConstr (Ratio _)     = ratioConstr
+  toConstr (Complex _)   = complexConstr
+  toConstr (Character _) = characterConstr
+  toConstr (String _)    = stringConstr
+  toConstr (Bool _)      = boolConstr
+  toConstr Undefined     = undefinedConstr
+  toConstr (List _)      = listConstr
+  toConstr (Pair _ _)    = pairConstr
+  toConstr (Vector _)    = vectorConstr
+  toConstr x             = error $ "toConstr: not implemented: " ++ show x
+
+  dataTypeOf _ = lispValDataType
+
 
 -- Error Types -------------------------------------------------------
 
@@ -111,11 +184,11 @@ data LispError = NumArgsError Int [LispVal]
                | NotFunctionError String String
                | UnboundVarError String String
                | DefaultError String
-  deriving (Data, Typeable)
+  deriving (Typeable)
 
 type ThrowsError = Either LispError
+type IOThrowsError = ErrorT LispError IO 
 
-type IOThrowsError = ErrorT LispError IO
 
 -- Error class instance
 
@@ -169,7 +242,29 @@ showError (TypeMismatchError expected found) = "Invalid type: expected " ++ show
 showError (ParserError parseError) = "Parse error at " ++ show parseError
 showError (DefaultError message) = "Error: " ++ message
 
+-- Functions
+
+-- | extractValue from ThrowsError to String
+extractValue :: (Show a) => ThrowsError a -> String
+extractValue (Right val) = show val
+extractValue (Left err)  = show err
 
 -- Env Types -------------------------------------------------------
 
 type Env = IORef [(String, IORef LispVal)]
+
+
+-- EvalExprMonad ---------------------------------------------------
+
+type EvalExprMonad a = ReaderT Env (ErrorT LispError IO) a
+
+runEvalExprMonad :: Env -> EvalExprMonad a -> IO (ThrowsError a)
+runEvalExprMonad env expr = runErrorT (runReaderT expr env)
+
+liftEvalExprM :: ThrowsError a -> EvalExprMonad a
+liftEvalExprM = lift . liftThrowsError
+
+-- | lift ThrowsError to IOThrowsError.
+liftThrowsError :: (MonadError e m) => Either e a -> m a
+liftThrowsError (Left err)  = throwError err
+liftThrowsError (Right val) = return val

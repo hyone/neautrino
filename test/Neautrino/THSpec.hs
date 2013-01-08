@@ -11,7 +11,7 @@ import Neautrino.TH (scheme)
 spec :: Spec
 spec =
   describe "Neautrino.HT" $
-    describe "scheme" $
+    describe "scheme" $ do
       it "should parse s-expression and generate abtract syntax tree" $
         [scheme|
           (begin (define x 5) (set! x 9) x)
@@ -21,7 +21,7 @@ spec =
                            , Atom "x"]
 
       it "should parse vector literal" $
-          peinding "raise error on Data.Data.toConstr(Array)"
+          pending "raise error on Data.Data.toConstr(Array)"
           -- evalAST env [scheme| #(1 2 3) |]
 
 main :: IO ()

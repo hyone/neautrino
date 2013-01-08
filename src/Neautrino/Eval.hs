@@ -8,7 +8,7 @@ module Neautrino.Eval
   , runRepl
   ) where
 
-import Neautrino.Type (LispVal(..))
+import Neautrino.Type (LispVal(..), EvalExprMonad, liftEvalExprM, runEvalExprMonad)
 import Neautrino.Env (Env, bindVars, getVar, nullEnv)
 import Neautrino.Error
 import Neautrino.Function (primitiveFuncs, ioPrimitiveFuncs)
@@ -19,6 +19,8 @@ import Neautrino.Util (until_)
 
 import Control.Monad (liftM, unless)
 import Control.Monad.IO.Class (liftIO)
+import Control.Monad.Trans.Class (lift)
+import Control.Monad.Reader (runReaderT)
 import Data.Maybe (isNothing)
 import System.IO (hFlush, hPutStrLn, stderr, stdout)
 import System.IO.Error (catchIOError, isEOFError)
@@ -41,22 +43,22 @@ primitiveEnv =
 
 
 -- | evaluate abstract syntax tree to value
-eval :: Env -> LispVal -> IOThrowsError LispVal
+eval :: LispVal -> EvalExprMonad LispVal
 -- literal
-eval _   val@(Character _) = return val
-eval _   val@(String _)    = return val
-eval _   val@(Integer _)   = return val
-eval _   val@(Float _)     = return val
-eval _   val@(Ratio _)     = return val
-eval _   val@(Complex _)   = return val
-eval _   val@(Bool _)      = return val
-eval _   val@(Vector _)    = return val
+eval val@(Character _) = return val
+eval val@(String _)    = return val
+eval val@(Integer _)   = return val
+eval val@(Float _)     = return val
+eval val@(Ratio _)     = return val
+eval val@(Complex _)   = return val
+eval val@(Bool _)      = return val
+eval val@(Vector _)    = return val
 -- variable
-eval env (Atom var) = getVar env var
+eval (Atom var) = getVar var
 -- special form or function application
-eval env (List (procedure : args)) = applyProcedure env procedure args
+eval (List (procedure : args)) = applyProcedure procedure args
 -- or error
-eval _   badForm = throwError $ BadSpecialFormError "Unrecognized special form" badForm
+eval badForm = throwError $ BadSpecialFormError "Unrecognized special form" badForm
 
 
 -- | apply function to argument list
@@ -66,9 +68,10 @@ apply (IOPrimitiveFunc func) args = func args
 apply (Func params varargs body env) args =
     if length params /= length args && isNothing varargs
     then throwError $ NumArgsError (length params) args
-    else liftIO (bindVars env (zip params args))
-         >>= bindVarArgs varargs
-         >>= (evalBody `flip` body)
+    else do
+      liftIO (bindVars env (zip params args))
+        >>= bindVarArgs varargs
+        >>= runReaderT (evalBody body)
   where
     remainingArgs :: [LispVal]
     remainingArgs = drop (length params) args
@@ -80,31 +83,31 @@ apply (Func params varargs body env) args =
 apply notFunc _ = throwError $ NotFunctionError "invalid application" (show notFunc)
 
 
-applyProcedure :: Env -> LispVal -> [LispVal] -> IOThrowsError LispVal
-applyProcedure env procedure args = do
-    f    <- eval env procedure
+applyProcedure :: LispVal -> [LispVal] -> EvalExprMonad LispVal
+applyProcedure procedure args = do
+    f    <- eval procedure
     case f of
-      (Syntax _ handler) -> handler env args
-      _                  -> do vals <- mapM (eval env) args
-                               apply f vals
+      (Syntax _ handler) -> handler args
+      _                  -> do vals <- mapM eval args
+                               lift $ apply f vals
 
 
 -- | evaluate list of expressions and returns the value from last expression
-evalBody :: Env -> [LispVal] -> IOThrowsError LispVal
-evalBody env = liftM last . mapM (eval env)
+evalBody :: [LispVal] -> EvalExprMonad LispVal
+evalBody = liftM last . mapM eval
 
 
 evalStringAST :: Env -> String -> IO (ThrowsError LispVal)
-evalStringAST env expr = runErrorT $ do
+evalStringAST env expr = runEvalExprMonad env $ do
   parsed <- liftThrowsError $ readExpr expr
-  result <- eval env parsed
+  result <- eval parsed
   return result
 
 -- | eval String and return its result as String
 evalString :: Env -> String -> IO String
 evalString env expr = do
   result <- evalStringAST env expr
-  return $ extractValue (fmap show result)
+  return $ extractValue result
 
 evalAndPrint :: Env -> String -> IO ()
 evalAndPrint env expr = evalString env expr >>= putStrLn 
@@ -128,9 +131,10 @@ initEnv = do
 runOne :: [String] -> IO ()
 runOne args = do
   -- assign argumetns to 'args' variable
-  env <- initEnv >>= bindVars `flip` [("args", List (map String $ drop 1 args))]
-  runIOThrowsError $ liftM show (loadFrom env (head args))
-  >>= hPutStrLn stderr
+  env <- initEnv
+         >>= \env' -> bindVars env' [("args", List (map String $ drop 1 args))]
+  ret  <- runEvalExprMonad env $ loadFrom (head args)
+  hPutStrLn stderr (extractValue ret)
 
 -- | run Run Eval Print Loop
 runRepl :: IO ()

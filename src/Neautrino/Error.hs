@@ -4,7 +4,6 @@ module Neautrino.Error
   , IOThrowsError
   , extractValue
   , liftThrowsError
-  , runIOThrowsError
   -- * Convenience re-exports
   , ParseError
   , catchError
@@ -12,25 +11,7 @@ module Neautrino.Error
   , throwError
   ) where
 
-import Neautrino.Internal.Type (LispError(..), ThrowsError, IOThrowsError)
-
-import Control.Monad (liftM)
+import Neautrino.Internal.Type ( LispError(..), ThrowsError, IOThrowsError
+                               , extractValue, liftThrowsError )
 import Control.Monad.Error (catchError, throwError, runErrorT)
 import Text.Parsec (ParseError)
-
-
--- Functions
-
--- | extractValue from ThrowsError to String
-extractValue :: ThrowsError String -> String
-extractValue (Right val) = val
-extractValue (Left err)  = show err
-
--- | lift ThrowsError to IOThrowsError.
-liftThrowsError :: ThrowsError a -> IOThrowsError a
-liftThrowsError (Left err)  = throwError err
-liftThrowsError (Right val) = return val
-
--- | run IOThrowsError.
-runIOThrowsError :: IOThrowsError String -> IO String
-runIOThrowsError = liftM extractValue . runErrorT

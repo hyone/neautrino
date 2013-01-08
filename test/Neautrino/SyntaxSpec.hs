@@ -8,9 +8,8 @@ import Neautrino.TestUtil (evalAST, shouldReturnT)
 
 import Neautrino.Env (getVar)
 import Neautrino.Eval (initEnv)
-import Neautrino.Type (LispVal(..))
+import Neautrino.Type (LispVal(..), runEvalExprMonad)
 import Neautrino.TH (scheme)
-import Control.Monad.Error (runErrorT)
 
   
 spec :: Spec
@@ -20,7 +19,7 @@ spec =
       it "should bind value to new variable: (define a 22)" $ do
         env <- initEnv
         evalAST env [scheme| (define a 22) |]
-        runErrorT (getVar env "a") `shouldReturnT` Integer 22
+        runEvalExprMonad env (getVar "a") `shouldReturnT` Integer 22
 
       it "should bind lambda to new variable: (define (foo x) (* x 2))" $ do
         env <- initEnv

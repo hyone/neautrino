@@ -174,7 +174,7 @@ readContents badArgList        = throwError $ NumArgsError 1 badArgList
 
 readParse :: String -> IOThrowsError [LispVal]
 readParse path = liftIO (readFile path)
-                    >>= liftThrowsError . readExprList
+                   >>= liftThrowsError . readExprList
 
 readAll :: IOPrimitiveFunc
 readAll [String filename] = liftM List $ readParse filename
