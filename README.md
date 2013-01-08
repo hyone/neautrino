@@ -1,6 +1,6 @@
 # Neautrino
 
-[![Build Status](https://travis-ci.org/hyone/simple-scheme.png?branch=master)](https://travis-ci.org/hyone/simple-scheme)
+[![Build Status](https://travis-ci.org/hyone/neautrino.png?branch=master)](https://travis-ci.org/hyone/neautrino)
 
 Simple Scheme Intepreter
 ( based on [Write Yourself a Scheme in 48 hours](http://jonathan.tang.name/files/scheme_in_48/tutorial/overview.html>) )
