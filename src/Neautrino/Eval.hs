@@ -50,6 +50,7 @@ eval _   val@(Float _)     = return val
 eval _   val@(Ratio _)     = return val
 eval _   val@(Complex _)   = return val
 eval _   val@(Bool _)      = return val
+eval _   val@(Vector _)    = return val
 -- variable
 eval env (Atom var) = getVar env var
 -- special form or function application
