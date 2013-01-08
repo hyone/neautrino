@@ -3,7 +3,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
 -- | Internal DataType module.
-module Scheme.Internal.Type
+module Neautrino.Internal.Type
   ( SyntaxHandler
   , PrimitiveFunc
   , IOPrimitiveFunc
@@ -147,7 +147,7 @@ instance Typeable ParseError where
   typeOf _ = mkTyConApp parseErrorTc []
 
 ioThrowsErrorTc :: TyCon
-ioThrowsErrorTc = mkTyCon3 "Scheme" "Error" "IOThrowsError"
+ioThrowsErrorTc = mkTyCon3 "Neautrino" "Error" "IOThrowsError"
 instance Typeable a => Typeable (IOThrowsError a) where
   typeOf _ = mkTyConApp ioThrowsErrorTc [typeOf (undefined :: a)]
   

@@ -1,4 +1,4 @@
-module Scheme.Eval
+module Neautrino.Eval
   ( apply
   , eval
   , evalBody
@@ -8,14 +8,14 @@ module Scheme.Eval
   , runRepl
   ) where
 
-import Scheme.Type (LispVal(..))
-import Scheme.Env (Env, bindVars, getVar, nullEnv)
-import Scheme.Error
-import Scheme.Function (primitiveFuncs, ioPrimitiveFuncs)
-import Scheme.Load (loadFrom, loadLibrary)
-import Scheme.Parser (readExpr)
-import Scheme.Syntax (primitiveSyntaxes)
-import Scheme.Util (until_)
+import Neautrino.Type (LispVal(..))
+import Neautrino.Env (Env, bindVars, getVar, nullEnv)
+import Neautrino.Error
+import Neautrino.Function (primitiveFuncs, ioPrimitiveFuncs)
+import Neautrino.Load (loadFrom, loadLibrary)
+import Neautrino.Parser (readExpr)
+import Neautrino.Syntax (primitiveSyntaxes)
+import Neautrino.Util (until_)
 
 import Control.Monad (liftM, unless)
 import Control.Monad.IO.Class (liftIO)
@@ -138,4 +138,4 @@ runRepl = do env <- initEnv
               ( \e -> unless (isEOFError e) $ ioError e )
   where
     loop :: Env -> IO ()
-    loop env = until_ (== "quit") (readPrompt "scheme> ") (evalAndPrint env)
+    loop env = until_ (== "quit") (readPrompt "neautrino> ") (evalAndPrint env)

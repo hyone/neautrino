@@ -1,4 +1,4 @@
-TARGET = simple-scheme
+TARGET = neautrino
 RM = /bin/rm
 FIND = gfind
 XARGS = gxargs

@@ -1,9 +1,9 @@
 cabal-version: >= 1.10
-name:          simple-scheme
+name:          neautrino
 version:       0.1
-synopsis:      Simple Scheme Implemention
+synopsis:      Simple Scheme Interpreter
 description:
-  Simple Scheme Implemention
+  Simple Scheme Interpreter
 author:        hyone
 maintainer:    hyone
 license:       BSD3
@@ -15,13 +15,13 @@ extra-source-files:
   test/doctest.hs
   test/test.hs
   test/LispCodeSpec.hs
-  test/Scheme/FunctionSpec.hs
-  test/Scheme/Function/EqualSpec.hs
-  test/Scheme/LoadSpec.hs
-  test/Scheme/ParserSpec.hs
-  test/Scheme/SyntaxSpec.hs
-  test/Scheme/THSpec.hs.hs
-  test/Scheme/TestUtil.hs
+  test/Neautrino/FunctionSpec.hs
+  test/Neautrino/Function/EqualSpec.hs
+  test/Neautrino/LoadSpec.hs
+  test/Neautrino/ParserSpec.hs
+  test/Neautrino/SyntaxSpec.hs
+  test/Neautrino/THSpec.hs.hs
+  test/Neautrino/TestUtil.hs
 
 library
   default-language: Haskell2010
@@ -37,24 +37,24 @@ library
                , template-haskell >= 2.7.0
                , transformers >= 0.3.0.0
   exposed-modules:
-    Scheme.Env
-    Scheme.Error
-    Scheme.Eval
-    Scheme.Function
-    Scheme.Function.Equal
-    Scheme.Function.Helper
-    Scheme.Load
-    Scheme.Parser
-    Scheme.Syntax
-    Scheme.TH
-    Scheme.Type
-    Scheme.Util
+    Neautrino.Env
+    Neautrino.Error
+    Neautrino.Eval
+    Neautrino.Function
+    Neautrino.Function.Equal
+    Neautrino.Function.Helper
+    Neautrino.Load
+    Neautrino.Parser
+    Neautrino.Syntax
+    Neautrino.TH
+    Neautrino.Type
+    Neautrino.Util
   other-modules:
-    Scheme.Internal.Parser
-    Scheme.Internal.Type
-    Paths_simple_scheme 
+    Neautrino.Internal.Parser
+    Neautrino.Internal.Type
+    Paths_neautrino 
 
-executable simple-scheme
+executable neautrino
   default-language: Haskell2010
   main-is: run.hs
   hs-source-dirs: src
@@ -96,8 +96,8 @@ test-suite spec
                , syb >= 0.3.7
                , template-haskell >= 2.7.0
                , transformers >= 0.3.0.0
-               , simple-scheme
+               , neautrino
 
 source-repository head
   type: git
-  location: https://github.com/hyone/simple-scheme
+  location: https://github.com/hyone/neautrino

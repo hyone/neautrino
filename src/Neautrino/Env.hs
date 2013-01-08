@@ -1,4 +1,4 @@
-module Scheme.Env
+module Neautrino.Env
   ( Env
   , Var
   , VarPair
@@ -10,9 +10,9 @@ module Scheme.Env
   , bindVars
   ) where
 
-import Scheme.Error
-import Scheme.Internal.Type (Env)
-import Scheme.Type
+import Neautrino.Error
+import Neautrino.Internal.Type (Env)
+import Neautrino.Type
 
 import Data.IORef
 import Control.Monad (liftM)

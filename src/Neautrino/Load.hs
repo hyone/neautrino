@@ -1,6 +1,6 @@
 {-# LANGUAGE DoAndIfThenElse #-}
 -- | functionality to load a script file
-module Scheme.Load
+module Neautrino.Load
   ( load
   , loadFrom
   , loadLibrary
@@ -12,12 +12,12 @@ import Data.List (isPrefixOf)
 import System.Directory (doesFileExist)
 import System.FilePath (combine, addExtension, takeExtension)
 
-import Paths_simple_scheme (getDataFileName)
-import Scheme.Env (Env)
-import Scheme.Error
-import {-# SOURCE #-} Scheme.Eval (evalBody)
-import Scheme.Function (readParse)
-import Scheme.Type
+import Paths_neautrino (getDataFileName)
+import Neautrino.Env (Env)
+import Neautrino.Error
+import {-# SOURCE #-} Neautrino.Eval (evalBody)
+import Neautrino.Function (readParse)
+import Neautrino.Type
 
 
 systemLoadPath :: IO FilePath

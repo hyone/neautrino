@@ -1,11 +1,11 @@
-module Scheme.TH
+module Neautrino.TH
   ( scheme ) where
 
 import qualified Language.Haskell.TH as TH
 import Language.Haskell.TH.Quote
 
-import Scheme.Parser (readExpr)
-import Scheme.Type (LispVal(..))
+import Neautrino.Parser (readExpr)
+import Neautrino.Type (LispVal(..))
 
 
 quoteParseLispValExp :: String -> TH.ExpQ

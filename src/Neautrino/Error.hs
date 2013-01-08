@@ -1,4 +1,4 @@
-module Scheme.Error
+module Neautrino.Error
   ( LispError(..)
   , ThrowsError
   , IOThrowsError
@@ -12,7 +12,7 @@ module Scheme.Error
   , throwError
   ) where
 
-import Scheme.Internal.Type (LispError(..), ThrowsError, IOThrowsError)
+import Neautrino.Internal.Type (LispError(..), ThrowsError, IOThrowsError)
 
 import Control.Monad (liftM)
 import Control.Monad.Error (catchError, throwError, runErrorT)

@@ -1,5 +1,5 @@
 {-# LANGUAGE FlexibleInstances #-}
-module Scheme.FunctionSpec (spec) where
+module Neautrino.FunctionSpec (spec) where
 
 import Test.Hspec
 import Test.Hspec.QuickCheck (prop)
@@ -9,8 +9,8 @@ import Data.Array (Array, listArray)
 import Data.Complex (Complex(..))
 import Data.Ratio ((%))
 
-import Scheme.Function
-import Scheme.Type
+import Neautrino.Function
+import Neautrino.Type
 
 
 instance Arbitrary (Array Int LispVal) where
@@ -36,7 +36,7 @@ instance Arbitrary LispVal where
 
 spec :: Spec
 spec =
-  describe "Scheme.Function" $ do
+  describe "Neautrino.Function" $ do
     describe "isNumber" $ do
       it "should be True with 3" $
         isNumber (Integer 3) `shouldBe` True

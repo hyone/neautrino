@@ -1,12 +1,12 @@
-module Scheme.Syntax
+module Neautrino.Syntax
   ( primitiveSyntaxes ) where
 
-import Scheme.Type (LispVal(..), PrimitiveFunc, SyntaxHandler)
-import Scheme.Env (Env, Var, bindVars, defineVar, setVar)
-import Scheme.Error
-import {-# SOURCE #-} Scheme.Eval (eval, evalBody)
-import Scheme.Function.Equal (eqvP)
-import Scheme.Load (load)
+import Neautrino.Type (LispVal(..), PrimitiveFunc, SyntaxHandler)
+import Neautrino.Env (Env, Var, bindVars, defineVar, setVar)
+import Neautrino.Error
+import {-# SOURCE #-} Neautrino.Eval (eval, evalBody)
+import Neautrino.Function.Equal (eqvP)
+import Neautrino.Load (load)
 
 import Control.Monad (liftM, liftM2)
 import Control.Monad.IO.Class (liftIO)

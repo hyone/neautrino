@@ -1,92 +1,92 @@
-# simple-scheme
+# Neautrino
 
 [![Build Status](https://travis-ci.org/hyone/simple-scheme.png?branch=master)](https://travis-ci.org/hyone/simple-scheme)
 
-Simple Scheme Implementation
+Simple Scheme Intepreter
 ( based on [Write Yourself a Scheme in 48 hours](http://jonathan.tang.name/files/scheme_in_48/tutorial/overview.html>) )
 
 ## Build App 
 
-    $ cd simple-scheme
+    $ cd neautrino
     $ cabal configure
     $ cabal build
 
     # For convenience
-    $ cp dist/build/simple-scheme/simple-scheme .
+    $ cp dist/build/neautrino/neautrino .
 
 ## Run App
 
 REPL:
 
-    $ ./simple-scheme
+    $ ./neautrino
 
 Run a script file:
 
-    $ ./simple-scheme script.scm
+    $ ./neautrino script.scm
 
 ## Usage
 
 ```scheme
 ;; arithmetic
-scheme> (+ 1 2)
+neautrino> (+ 1 2)
 3
-scheme> (* 3 4 5)
+neautrino> (* 3 4 5)
 60
 
 ;; list operation
-scheme> (define a (cons 1 '(2 3)))
+neautrino> (define a (cons 1 '(2 3)))
 (1 2 3)
-scheme> (car a)
+neautrino> (car a)
 1
-scheme> (cdr a)
+neautrino> (cdr a)
 (2 3)
 
 ;; using high order function
-scheme> (define b (map (lambda (i) (+ i 5)) '(1 2 3 4 5))))
+neautrino> (define b (map (lambda (i) (+ i 5)) '(1 2 3 4 5))))
 (6 7 8 9 10)
-scheme> (filter even? b)
+neautrino> (filter even? b)
 (6 8 10)
-scheme> (foldr + 0 b)
+neautrino> (foldr + 0 b)
 40
-scheme> (define c (unfold (lambda (n) (+ n 2)) 0 (lambda (n) (>= n 10))))
+neautrino> (define c (unfold (lambda (n) (+ n 2)) 0 (lambda (n) (>= n 10))))
 (0 2 4 6 8 10)
-scheme> (apply sum c)
+neautrino> (apply sum c)
 30
 
 ;; define a function
-scheme> (define (f x y) (+ x y))
+neautrino> (define (f x y) (+ x y))
 #<closure>
-scheme> (f 1 2)
+neautrino> (f 1 2)
 3
-scheme> (f 5)
+neautrino> (f 5)
 Expected 2 args; found values 5
 
 ;; define recursive function
-scheme> (define (factorial x) (if (= x 1) 1 (* x (factorial (- x 1)))))
+neautrino> (define (factorial x) (if (= x 1) 1 (* x (factorial (- x 1)))))
 #<closure>
-scheme> (factorial 10)
+neautrino> (factorial 10)
 3628800
 
 ;; define closure
-scheme> (define (gen-accumulator n) (lambda (i) (set! n (+ n i))))
+neautrino> (define (gen-accumulator n) (lambda (i) (set! n (+ n i))))
 #<closure>
-scheme> (define acc (gen-accumulator 5))
+neautrino> (define acc (gen-accumulator 5))
 #<closure>
-scheme> (acc 3)
+neautrino> (acc 3)
 8
-scheme> (acc 5)
+neautrino> (acc 5)
 13
-scheme> (acc 6)
+neautrino> (acc 6)
 19
 
 ;; quote and quasiquote
-scheme> '(1 2 3)
+neautrino> '(1 2 3)
 (1 2 3)
-scheme> (define a 5)
+neautrino> (define a 5)
 5
-scheme> `(1 2 ,a . 9)
+neautrino> `(1 2 ,a . 9)
 (1 2 5 . 9)
-scheme> `(1 (2 ,a) 3)
+neautrino> `(1 (2 ,a) 3)
 (1 (2 5) 3)
 ```
 
@@ -97,4 +97,4 @@ scheme> `(1 (2 ,a) 3)
     $ cabal test
 
     # to run single test
-    $ runhaskell -itest test/LispCodeSpec.hs
+    $ runhaskell -Wall -isrc:test test/LispCodeSpec.hs

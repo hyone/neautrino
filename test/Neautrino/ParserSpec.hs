@@ -1,14 +1,14 @@
-module Scheme.ParserSpec (spec) where
+module Neautrino.ParserSpec (spec) where
 
 import Test.Hspec
-import Scheme.TestUtil (shouldBeT, shouldErrorT)
+import Neautrino.TestUtil (shouldBeT, shouldErrorT)
 import Data.Array (listArray)
 import Data.Ratio ((%))
 import Data.Complex (Complex(..))
 
-import Scheme.Parser
-import Scheme.Error (LispError(..))
-import Scheme.Type (LispVal(..))
+import Neautrino.Parser
+import Neautrino.Error (LispError(..))
+import Neautrino.Type (LispVal(..))
 
 
 parserError :: LispError
@@ -16,7 +16,7 @@ parserError = ParserError undefined
 
 spec :: Spec
 spec = do
-  describe "Scheme.Parser" $ do
+  describe "Neautrino.Parser" $ do
     describe "bool" $ do
       it "should parse: #t" $
         readExpr "#t" `shouldBeT` Bool True

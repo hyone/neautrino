@@ -1,21 +1,21 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# OPTIONS_GHC -fno-warn-unused-do-bind #-}
-module Scheme.SyntaxSpec (spec) where
+module Neautrino.SyntaxSpec (spec) where
 
 import Test.Hspec
-import Scheme.TestUtil (evalAST, shouldReturnT)
+import Neautrino.TestUtil (evalAST, shouldReturnT)
 
-import Scheme.Env (getVar)
-import Scheme.Eval (initEnv)
-import Scheme.Type (LispVal(..))
-import Scheme.TH (scheme)
+import Neautrino.Env (getVar)
+import Neautrino.Eval (initEnv)
+import Neautrino.Type (LispVal(..))
+import Neautrino.TH (scheme)
 import Control.Monad.Error (runErrorT)
 
   
 spec :: Spec
 spec =
-  describe "Scheme.Syntax" $ do
+  describe "Neautrino.Syntax" $ do
     describe "define" $ do
       it "should bind value to new variable: (define a 22)" $ do
         env <- initEnv

@@ -1,9 +1,9 @@
 {-# OPTIONS_GHC -fno-warn-unused-do-bind #-}
 -- | Parser implementation for Scheme language
-module Scheme.Internal.Parser where
+module Neautrino.Internal.Parser where
 
-import Scheme.Type
-import Scheme.Error (throwError, ThrowsError, LispError(ParserError))
+import Neautrino.Type
+import Neautrino.Error (throwError, ThrowsError, LispError(ParserError))
 
 import Control.Applicative ((<*), (*>), (<$>))
 import Control.Monad

@@ -1,11 +1,11 @@
-module Scheme.LoadSpec (spec) where
+module Neautrino.LoadSpec (spec) where
 
 import Test.Hspec
-import Scheme.TestUtil (evalAST, shouldContain, shouldReturnT)
+import Neautrino.TestUtil (evalAST, shouldContain, shouldReturnT)
 
-import Scheme.Eval (initEnv)
-import Scheme.Type (LispVal(..))
-import Scheme.Load (loadLibrary)
+import Neautrino.Eval (initEnv)
+import Neautrino.Type (LispVal(..))
+import Neautrino.Load (loadLibrary)
 
 
 loadTest :: FilePath -> IO ()
@@ -17,13 +17,13 @@ loadTest path = do
   
 spec :: Spec
 spec =
-  describe "Scheme.Load" $ do
+  describe "Neautrino.Load" $ do
     describe "loadLibrary" $ do
       it "handle relative path starts with \"./\"." $ 
         loadTest "./lib/test_fact.scm" 
 
       it "handle relative path starts with \"../\"." $ 
-        loadTest "../simple-scheme/lib/test_fact.scm" 
+        loadTest "../neautrino/lib/test_fact.scm" 
 
       it "handle absolute path." $ 
         pending "TODO: detect automatically abosolute path of fact.scm"

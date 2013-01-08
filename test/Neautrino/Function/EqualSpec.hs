@@ -1,10 +1,10 @@
-module Scheme.Function.EqualSpec (spec) where
+module Neautrino.Function.EqualSpec (spec) where
 
 import Test.Hspec
-import Scheme.TestUtil (shouldBeT)
+import Neautrino.TestUtil (shouldBeT)
 
-import Scheme.Function.Equal (eqvP, equalP)
-import Scheme.Type (LispVal(..))
+import Neautrino.Function.Equal (eqvP, equalP)
+import Neautrino.Type (LispVal(..))
 import Data.Array (listArray)
 import Data.Complex (Complex(..))
 import Data.Ratio ((%))
@@ -12,7 +12,7 @@ import Data.Ratio ((%))
   
 spec :: Spec
 spec =
-  describe "Scheme.Function.Equal" $ do
+  describe "Neautrino.Function.Equal" $ do
     describe "eqvP" $ do
       it "should be true when [True, True]" $
          eqvP [Bool True, Bool True] `shouldBeT` Bool True

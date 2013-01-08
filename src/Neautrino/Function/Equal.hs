@@ -1,12 +1,12 @@
 {-# LANGUAGE ExistentialQuantification #-}
-module Scheme.Function.Equal (
+module Neautrino.Function.Equal (
   eqvP
 , equalP
 ) where
 
-import Scheme.Function.Helper
-import Scheme.Type (LispVal(..), PrimitiveFunc)
-import Scheme.Error (LispError(..), ThrowsError, catchError, throwError)
+import Neautrino.Function.Helper
+import Neautrino.Type (LispVal(..), PrimitiveFunc)
+import Neautrino.Error (LispError(..), ThrowsError, catchError, throwError)
 
 import Control.Monad (liftM)
 import Data.Array (elems)

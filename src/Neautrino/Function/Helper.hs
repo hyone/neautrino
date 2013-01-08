@@ -1,7 +1,7 @@
-module Scheme.Function.Helper where
+module Neautrino.Function.Helper where
 
-import Scheme.Type
-import Scheme.Error
+import Neautrino.Type
+import Neautrino.Error
 
 
 type Unpacker a = LispVal -> ThrowsError a

@@ -1,11 +1,11 @@
-module Scheme.Function where
+module Neautrino.Function where
 
-import Scheme.Error
-import {-# SOURCE #-} Scheme.Eval (apply)
-import Scheme.Function.Helper
-import Scheme.Function.Equal (eqvP, equalP)
-import Scheme.Parser (readExpr, readExprList)
-import Scheme.Type
+import Neautrino.Error
+import {-# SOURCE #-} Neautrino.Eval (apply)
+import Neautrino.Function.Helper
+import Neautrino.Function.Equal (eqvP, equalP)
+import Neautrino.Parser (readExpr, readExprList)
+import Neautrino.Type
 
 import Control.Monad (liftM)
 import Control.Monad.IO.Class (liftIO)

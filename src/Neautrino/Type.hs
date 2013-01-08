@@ -1,9 +1,9 @@
--- | Scheme Types
-module Scheme.Type
+-- | Neautrino Types
+module Neautrino.Type
   ( SyntaxHandler
   , PrimitiveFunc
   , IOPrimitiveFunc
   , LispVal(..)
   ) where
 
-import Scheme.Internal.Type
+import Neautrino.Internal.Type

@@ -1,6 +1,6 @@
 module Main where
 
-import Scheme.Eval (runOne, runRepl)
+import Neautrino.Eval (runOne, runRepl)
 import System.Environment (getArgs)
 
 main :: IO ()

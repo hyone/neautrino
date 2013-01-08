@@ -6,4 +6,4 @@ srcdir = "src" :: String
 
 main :: IO ()
 main = do
-  doctest [ "-i" ++ srcdir, srcdir ++ "/Scheme/Function/Equal.hs" ]
+  doctest [ "-i" ++ srcdir, srcdir ++ "/Neautrino/Function/Equal.hs" ]

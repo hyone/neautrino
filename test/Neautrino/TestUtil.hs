@@ -1,4 +1,4 @@
-module Scheme.TestUtil (
+module Neautrino.TestUtil (
   evalAST
 , shouldContain    
 , shouldEitherT
@@ -13,10 +13,10 @@ import Test.HUnit
 import Control.Monad.Error (runErrorT)
 import Data.List (isInfixOf)
 
-import Scheme.Error (LispError(..), ThrowsError)
-import Scheme.Env (Env)
-import Scheme.Type (LispVal)
-import Scheme.Eval (eval)
+import Neautrino.Error (LispError(..), ThrowsError)
+import Neautrino.Env (Env)
+import Neautrino.Type (LispVal)
+import Neautrino.Eval (eval)
 
 
 newtype ErrorType = ErrorType { getErrorHolder ::  LispError }
