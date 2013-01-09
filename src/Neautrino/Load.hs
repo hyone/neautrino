@@ -16,7 +16,7 @@ import System.FilePath (combine, addExtension, takeExtension)
 import Paths_neautrino (getDataFileName)
 import Neautrino.Env (Env)
 import Neautrino.Error
-import {-# SOURCE #-} Neautrino.Eval (evalBody)
+import Neautrino.Eval (evalBody)
 import Neautrino.Function (readParse)
 import Neautrino.Type
 

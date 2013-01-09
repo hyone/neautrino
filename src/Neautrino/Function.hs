@@ -1,7 +1,7 @@
 module Neautrino.Function where
 
 import Neautrino.Error
-import {-# SOURCE #-} Neautrino.Eval (apply)
+import Neautrino.Eval (apply)
 import Neautrino.Function.Helper
 import Neautrino.Function.Equal (eqvP, equalP)
 import Neautrino.Parser (readExpr, readExprList)

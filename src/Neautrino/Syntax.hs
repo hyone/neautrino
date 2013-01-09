@@ -5,7 +5,7 @@ module Neautrino.Syntax
 import Neautrino.Type (LispVal(..), EvalExprMonad, PrimitiveFunc, SyntaxHandler)
 import Neautrino.Env (Env, Var, bindVars, defineVar, setVar)
 import Neautrino.Error
-import {-# SOURCE #-} Neautrino.Eval (eval, evalBody)
+import Neautrino.Eval (eval, evalBody)
 import Neautrino.Function.Equal (eqvP)
 import Neautrino.Load (load)
 
