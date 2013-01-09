@@ -61,6 +61,8 @@ ioPrimitiveFuncs =
   , ("close-output-file", closePort)
   , ("read", readProc)
   , ("write", writeProc)
+  , ("display", displayProc)
+  , ("newline", newlineProc)
   , ("read-contents", readContents)
   , ("read-all", readAll)
   ]
@@ -164,8 +166,20 @@ readProc badArgList    = throwError $ NumArgsError 1 badArgList
 
 writeProc :: IOPrimitiveFunc
 writeProc [obj]              = writeProc [obj, Port stdout]
-writeProc [obj, Port handle] = liftIO (hPrint handle obj) >> return (Bool True)
+writeProc [obj, Port handle] = liftIO $ hPutStr handle (show obj) >> return Undefined
 writeProc badArgList         = throwError $ NumArgsError 2 badArgList
+
+displayProc :: IOPrimitiveFunc
+displayProc [obj]                   = displayProc [obj, Port stdout]
+displayProc [String s, Port handle] = liftIO $ hPutStr handle s  >> return Undefined
+displayProc [obj,      Port handle] = liftIO $ hPutStr handle (show obj) >> return Undefined
+displayProc badArgList              = throwError $ NumArgsError 2 badArgList
+
+newlineProc :: IOPrimitiveFunc
+newlineProc []            = newlineProc [Port stdout]
+newlineProc [Port handle] = liftIO $ hPutStr handle "\n" >> return Undefined
+newlineProc badArgList    = throwError $ NumArgsError 1 badArgList
+
 
 readContents :: IOPrimitiveFunc
 readContents [String filename] = liftM String $ liftIO $ readFile filename
