@@ -29,6 +29,7 @@ eval val@(Ratio _)     = return val
 eval val@(Complex _)   = return val
 eval val@(Bool _)      = return val
 eval val@(Vector _)    = return val
+eval Undefined         = return Undefined
 -- variable
 eval (Atom var) = getVar var
 -- special form or function application
