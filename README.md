@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/hyone/neautrino.png?branch=master)](https://travis-ci.org/hyone/neautrino)
 
 Simple Scheme Intepreter
-( based on [Write Yourself a Scheme in 48 hours](http://jonathan.tang.name/files/scheme_in_48/tutorial/overview.html>) )
+( develop based on [Write Yourself a Scheme in 48 hours](http://jonathan.tang.name/files/scheme_in_48/tutorial/overview.html>) )
 
 ## Build App 
 
@@ -19,6 +19,8 @@ Simple Scheme Intepreter
 REPL:
 
     $ ./neautrino
+    # if use readline
+    $ rlwrap ./neautrino
 
 Run a script file:
 
@@ -62,9 +64,9 @@ neautrino> (f 5)
 Expected 2 args; found values 5
 
 ;; define recursive function
-neautrino> (define (factorial x) (if (= x 1) 1 (* x (factorial (- x 1)))))
+neautrino> (define (fact x) (if (= x 1) 1 (* x (fact (- x 1)))))
 #<closure>
-neautrino> (factorial 10)
+neautrino> (fact 10)
 3628800
 
 ;; define closure
@@ -88,6 +90,26 @@ neautrino> `(1 2 ,a . 9)
 (1 2 5 . 9)
 neautrino> `(1 (2 ,a) 3)
 (1 (2 5) 3)
+```
+
+## Using scheme as DSL in Haskell Code
+```haskell
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE QuasiQuotes #-}
+
+import Neautrino (evalAST, initEnv, scheme)
+
+main :: IO ()
+main = do
+  env <- initEnv
+  ret <- evalAST env [scheme|
+    (begin
+      (define x 5)
+      (set! x 9)
+      x)
+  |]
+  print ret
+  -- => Right 9
 ```
 
 ## Run Unit Test
