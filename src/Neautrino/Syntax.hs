@@ -28,19 +28,23 @@ fromUnarySyntaxHandler name _       badArgs = syntaxError name badArgs
 
 
 -- helper to build function 
-makeFunc :: (Monad m, MonadReader Env m)
-         => Maybe String -> [LispVal] -> [LispVal] -> m LispVal
-makeFunc varargs params body = do
+makeClojure :: (Monad m, MonadReader Env m)
+         => ([String] -> Maybe String -> [LispVal] -> Env -> LispVal)
+         -> Maybe String -> [LispVal] -> [LispVal]
+         -> m LispVal
+makeClojure constructor varargs params body  = do
   env <- ask
-  return $ Func (map show params) varargs body env
+  return $ constructor (map show params) varargs body env
 
-makeNormalFunc :: (Monad m, MonadReader Env m)
-               => [LispVal] -> [LispVal] -> m LispVal
-makeNormalFunc = makeFunc Nothing
+makeNormalClojure :: (Monad m, MonadReader Env m)
+                  => ([String] -> Maybe String -> [LispVal] -> Env -> LispVal)
+                  -> [LispVal] -> [LispVal] -> m LispVal
+makeNormalClojure constructor = makeClojure constructor Nothing
 
-makeVarargsFunc :: (Monad m, MonadReader Env m)
-                => LispVal -> [LispVal] -> [LispVal] -> m LispVal
-makeVarargsFunc = makeFunc . Just . show
+makeVarargsClojure :: (Monad m, MonadReader Env m)
+                   => ([String] -> Maybe String -> [LispVal] -> Env -> LispVal)
+                   -> LispVal -> [LispVal] -> [LispVal] -> m LispVal
+makeVarargsClojure constructor = makeClojure constructor . Just . show
 
 
 -- Primitive Syntax
@@ -49,6 +53,7 @@ primitiveSyntaxes :: [(String, SyntaxHandler)]
 primitiveSyntaxes =
   [ ("define", defineForm)
   , ("lambda", lambdaForm)
+  , ("define-macro", defineMacroForm)
   , ("quote", quoteForm)
   , ("quasiquote", quasiquoteForm)
   , ("set!", setForm)
@@ -67,21 +72,39 @@ defineForm :: SyntaxHandler
 defineForm [Atom var, form] = eval form >>= defineVar var
 -- normal function: (define (hoge a b) ...)
 defineForm (List (Atom var : params) : body) =
-  makeNormalFunc params body >>= defineVar var
+  makeNormalClojure Func params body >>= defineVar var
 -- varargs function: (define (hoge a . b) ...)
 defineForm (Pair (Atom var : params) varargs : body) =
-  makeVarargsFunc varargs params body >>= defineVar var
+  makeVarargsClojure Func varargs params body >>= defineVar var
 defineForm badArgs = throwError $ SyntaxError "define" (List (Atom "define" : badArgs))
 
 
 lambdaForm :: SyntaxHandler
 -- normal lambda expression: (lambda (a b) ...)
-lambdaForm (List params : body) = makeNormalFunc params body
+lambdaForm (List params : body) = makeNormalClojure Func params body
 -- varargs lambda expression: (lambda (a . b) ...)
-lambdaForm (Pair params varargs : body) = makeVarargsFunc varargs params body
+lambdaForm (Pair params varargs : body) = makeVarargsClojure Func varargs params body
 -- only varargs lambda expression: (lambda a ...)
-lambdaForm (varargs@(Atom _) : body) = makeVarargsFunc varargs [] body
+lambdaForm (varargs@(Atom _) : body) = makeVarargsClojure Func varargs [] body
 lambdaForm badArgs = throwError $ SyntaxError "lambda" (List (Atom "lambda" : badArgs))
+
+
+defineMacroForm :: SyntaxHandler
+-- define-macro with normal lambda expression: (define-macro hoge (lambda (a b) ...)
+defineMacroForm [Atom name, List (Atom "lambda" : List params : body)] =
+  makeNormalClojure (Macro name) params body >>= defineVar name
+-- varargs lambda expression: (define-macro hoge (lambda (a . b) ...)
+defineMacroForm [Atom name, List (Atom "lambda" : Pair params varargs : body)] =
+  makeVarargsClojure (Macro name) varargs params body >>= defineVar name
+-- normal macro: (define-macro (hoge a b) ...)
+defineMacroForm (List (Atom name : params) : body) =
+  makeNormalClojure (Macro name) params body >>= defineVar name
+-- varargs macro: (define-macro (hoge a . b) ...)
+defineMacroForm (Pair (Atom name : params) varargs : body) =
+  makeVarargsClojure (Macro name) varargs params body >>= defineVar name
+-- otherwise, error
+defineMacroForm badArgs
+  = throwError $ SyntaxError "define-macro" (List (Atom "define-macro" : badArgs))
 
 
 quoteForm :: SyntaxHandler

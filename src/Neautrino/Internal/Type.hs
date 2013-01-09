@@ -59,6 +59,11 @@ data LispVal = Atom String
                     , funcVararg  :: Maybe String
                     , funcBody    :: [LispVal]
                     , funcClosure :: Env }
+             | Macro { macroName        :: String
+                     , macroParams      :: [String]
+                     , macroVarg        :: Maybe String
+                     , macroTransformer :: [LispVal]
+                     , macroClosure     :: Env }
   deriving (Typeable)
 
 -- Eq class instance
@@ -102,6 +107,7 @@ showVal Func {}            = "#<closure>"
 showVal (List contents)    = "("  ++ unwordsList contents ++ ")"
 showVal (Vector arr)       = "#(" ++ unwordsList (elems arr) ++ ")"
 showVal (Pair h t)         = "("  ++ unwordsList h ++ " . " ++ showVal t ++ ")"
+showVal Macro { macroName = name } = "#<macro " ++ name ++ ">"
 
 unwordsList :: [LispVal] -> String
 unwordsList =  unwords . map showVal

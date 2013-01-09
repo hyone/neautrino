@@ -32,17 +32,33 @@ eval val@(Vector _)    = return val
 eval Undefined         = return Undefined
 -- variable
 eval (Atom var) = getVar var
--- special form or function application
-eval (List (procedure : args)) = applyProcedure procedure args
--- or error
+-- special form, macro and procedure application
+eval (List (app : args)) = evalApplication app args
+-- otherwise error
 eval badForm = throwError $ BadSpecialFormError "Unrecognized special form" badForm
 
 
--- | apply function to argument list
-apply :: LispVal -> [LispVal] -> IOErrorM LispVal
-apply (PrimitiveFunc   func) args = liftErrorM (func args)
-apply (IOPrimitiveFunc func) args = func args
-apply (Func params varargs body env) args =
+evalApplication :: LispVal -> [LispVal] -> EvalExprMonad LispVal
+evalApplication app args = do
+    f <- eval app
+    case f of
+      (Syntax _ handler) -> handler args
+      (Macro _ params varargs transformer env) -> do
+        -- expand macro
+        expandedExp <- lift $ applyClosure params varargs transformer env args
+        -- and eval once
+        eval expandedExp
+      -- procedure
+      _ -> do vals <- mapM eval args
+              lift $ apply f vals
+
+applyClosure :: [String]
+             -> Maybe String
+             -> [LispVal]
+             -> Env
+             -> [LispVal]
+             -> IOErrorM LispVal
+applyClosure params varargs body env args =
     if length params /= length args && isNothing varargs then
       throwError $ NumArgsError (length params) args
     else
@@ -50,23 +66,20 @@ apply (Func params varargs body env) args =
         >>= bindVarArgs varargs
         >>= runReaderT (evalBody body)
   where
+    bindVarArgs :: Maybe String -> Env -> IOErrorM Env
+    bindVarArgs varg env' = case varg of
+      Just argName -> liftIO $ bindVars env' [(argName, List remainingArgs)]
+      Nothing      -> return env'
     remainingArgs :: [LispVal]
     remainingArgs = drop (length params) args
 
-    bindVarArgs :: Maybe String -> Env -> IOErrorM Env
-    bindVarArgs arg env' = case arg of
-      Just argName -> liftIO $ bindVars env [(argName, List remainingArgs)]
-      Nothing      -> return env'
-apply notFunc _ = throwError $ NotFunctionError "invalid application" (show notFunc)
-
-
-applyProcedure :: LispVal -> [LispVal] -> EvalExprMonad LispVal
-applyProcedure procedure args = do
-    f <- eval procedure
-    case f of
-      (Syntax _ handler) -> handler args
-      _                  -> do vals <- mapM eval args
-                               lift $ apply f vals
+-- | apply function to argument list
+apply :: LispVal -> [LispVal] -> IOErrorM LispVal
+apply (PrimitiveFunc   func)         args = liftErrorM (func args)
+apply (IOPrimitiveFunc func)         args = func args
+apply (Func params varargs body env) args = applyClosure params varargs body env args
+apply notFunc                        _    =
+  throwError $ NotFunctionError "invalid application" (show notFunc)
 
 
 -- | evaluate list of expressions and returns the value from last expression

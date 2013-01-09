@@ -26,6 +26,38 @@ spec =
         evalAST env [scheme| (foo 5) |]
           `shouldReturnT` Integer 10
 
+    describe "define-macro" $ do
+      it "should define normal macro with MIT style" $ do
+        env <- initEnv
+        evalAST env [scheme| (define-macro (mymacro a b) (list 'begin a b)) |]
+        evalAST env [scheme| (mymacro 2 3) |]
+          `shouldReturnT` Integer 3
+
+      it "should define varargs macro with MIT style" $ do
+        env <- initEnv
+        evalAST env [scheme|
+          (define-macro (when t . body)
+             (list 'if t (cons 'begin body)))
+        |]
+        evalAST env [scheme| (when #t 2 3) |]
+          `shouldReturnT` Integer 3
+
+      it "should define normal macro with lambda expression" $ do
+        env <- initEnv
+        evalAST env [scheme| (define-macro mymacro (lambda (a b) (list 'begin a b))) |]
+        evalAST env [scheme| (mymacro 2 3) |]
+          `shouldReturnT` Integer 3
+
+      it "should define varargs macro with lambda expression" $ do
+        env <- initEnv
+        evalAST env [scheme|
+          (define-macro when
+            (lambda (t . body)
+              (list 'if t (cons 'begin body))))
+        |]
+        evalAST env [scheme| (when #t 2 3) |]
+          `shouldReturnT` Integer 3
+
     describe "if" $ do
       it "should evaluate \"else\" if pred is evaluated to anthing else #f: (if #f \"then\" \"else\")" $ do
         env <- initEnv
