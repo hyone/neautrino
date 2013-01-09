@@ -1,7 +1,8 @@
 module LispCodeSpec (spec) where
 
 import Test.Hspec
-import Neautrino.Eval (initEnv, evalString)
+import Neautrino.Eval (evalString)
+import Neautrino.Run (initEnv)
 
 
 spec :: Spec

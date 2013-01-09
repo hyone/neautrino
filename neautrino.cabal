@@ -45,6 +45,7 @@ library
     Neautrino.Function.Helper
     Neautrino.Load
     Neautrino.Parser
+    Neautrino.Run
     Neautrino.Syntax
     Neautrino.TH
     Neautrino.Type

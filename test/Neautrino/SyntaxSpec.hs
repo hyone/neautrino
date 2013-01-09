@@ -7,7 +7,7 @@ import Test.Hspec
 import Neautrino.TestUtil (evalAST, shouldReturnT)
 
 import Neautrino.Env (getVar)
-import Neautrino.Eval (initEnv)
+import Neautrino.Run (initEnv)
 import Neautrino.Type (LispVal(..), runEvalExprMonad)
 import Neautrino.TH (scheme)
 

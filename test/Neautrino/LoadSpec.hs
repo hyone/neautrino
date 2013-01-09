@@ -3,9 +3,9 @@ module Neautrino.LoadSpec (spec) where
 import Test.Hspec
 import Neautrino.TestUtil (evalAST, shouldContain, shouldReturnT)
 
-import Neautrino.Eval (initEnv)
-import Neautrino.Type (LispVal(..))
 import Neautrino.Load (loadLibrary)
+import Neautrino.Run (initEnv)
+import Neautrino.Type (LispVal(..))
 
 
 loadTest :: FilePath -> IO ()
