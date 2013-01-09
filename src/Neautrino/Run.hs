@@ -10,7 +10,7 @@ import Neautrino.Eval (evalString)
 import Neautrino.Function (primitiveFuncs, ioPrimitiveFuncs)
 import Neautrino.Load (loadFrom, loadLibrary)
 import Neautrino.Syntax (primitiveSyntaxes)
-import Neautrino.Type (LispVal(..), EvalExprMonad, runEvalExprMonad)
+import Neautrino.Type (LispVal(..), runEvalExprMonad)
 import Neautrino.Util (until_)
 
 import Control.Monad (unless)

@@ -38,9 +38,6 @@ spec =
       it "handle path without file extension #2: \"test_fact\"" $ 
         loadTest "test_fact" 
 
-      it "handle path without file extension #2: \"test_fact\"" $ 
-        loadTest "test_fact" 
-
       it "raise an error when the file did not found." $ do
         env <- initEnv
         loadLibrary env "no_such_file" >>= \got ->
