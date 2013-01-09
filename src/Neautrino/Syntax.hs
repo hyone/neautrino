@@ -147,6 +147,7 @@ letForm exps = case exps of
 
 
 ifForm :: SyntaxHandler
+ifForm  [p, thenExp] = ifForm [p, thenExp, Undefined]
 ifForm  [p, thenExp, elseExp] = do
   result <- eval p
   case result of

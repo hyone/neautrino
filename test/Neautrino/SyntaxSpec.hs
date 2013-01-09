@@ -45,6 +45,12 @@ spec =
           (if #f "then" "else")
         |] `shouldReturnT` String "else"
 
+      it "should return #undef when pred is evaluated to false and do not supply \"else\": (if #f \"then\")" $ do
+        env <- initEnv
+        evalAST env [scheme|
+          (if #f "then")
+        |] `shouldReturnT` Undefined
+
     describe "quote" $ do
       it "should stay an expression on uneval state" $ do
         env <- initEnv
