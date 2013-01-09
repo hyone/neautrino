@@ -4,8 +4,8 @@ import Neautrino.Type
 import Neautrino.Error
 
 
-type Unpacker a = LispVal -> ThrowsError a
-type Packer   a = a -> ThrowsError LispVal
+type Unpacker a = LispVal -> ErrorM a
+type Packer   a = a -> ErrorM LispVal
 
 
 -- ----------------------------------------------------------------------------------------
@@ -39,7 +39,7 @@ functionFold unpacker packer op params = do
 numberBinFunc :: (Integer -> Integer -> Integer) -> PrimitiveFunc
 numberBinFunc = functionFold unpackNumber (return . Integer)
 
-boolBinFunc :: (LispVal -> ThrowsError a) -> (a -> a -> Bool) -> PrimitiveFunc
+boolBinFunc :: (LispVal -> ErrorM a) -> (a -> a -> Bool) -> PrimitiveFunc
 boolBinFunc = function2 `flip` (return . Bool)
 
 numberBoolFunc :: (Integer -> Integer -> Bool) -> PrimitiveFunc
@@ -55,17 +55,17 @@ boolBoolFunc    = boolBinFunc unpackBool
 -- ----------------------------------------------------------------------------------------
 -- Unpacker
 
-unpackAny :: LispVal -> ThrowsError LispVal
+unpackAny :: LispVal -> ErrorM LispVal
 unpackAny = return
 
-unpackNumber :: LispVal -> ThrowsError Integer
+unpackNumber :: LispVal -> ErrorM Integer
 unpackNumber (Integer n) = return n
 unpackNumber notNum = throwError $ TypeMismatchError "number" notNum
 
-unpackString :: LispVal -> ThrowsError String
+unpackString :: LispVal -> ErrorM String
 unpackString (String a) = return a
 unpackString notString = throwError $ TypeMismatchError "string" notString
 
-unpackBool :: LispVal -> ThrowsError Bool
+unpackBool :: LispVal -> ErrorM Bool
 unpackBool (Bool b) = return b
 unpackBool notBool = throwError $ TypeMismatchError "boolean" notBool

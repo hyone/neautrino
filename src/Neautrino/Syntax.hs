@@ -1,8 +1,9 @@
+{-# LANGUAGE FlexibleContexts #-}
 module Neautrino.Syntax
   ( primitiveSyntaxes ) where
 
-import Neautrino.Type (LispVal(..), EvalExprMonad, PrimitiveFunc, SyntaxHandler, liftEvalExprM)
-import Neautrino.Env (Var, bindVars, defineVar, setVar)
+import Neautrino.Type (LispVal(..), EvalExprMonad, PrimitiveFunc, SyntaxHandler)
+import Neautrino.Env (Env, Var, bindVars, defineVar, setVar)
 import Neautrino.Error
 import {-# SOURCE #-} Neautrino.Eval (eval, evalBody)
 import Neautrino.Function.Equal (eqvP)
@@ -10,7 +11,7 @@ import Neautrino.Load (load)
 
 import Control.Monad (liftM, liftM2)
 import Control.Monad.IO.Class (liftIO)
-import Control.Monad.Reader (ask, local)
+import Control.Monad.Reader (MonadReader, ask, local)
 import Data.Array (bounds, elems, listArray)
 
 
@@ -27,15 +28,18 @@ fromUnarySyntaxHandler name _       badArgs = syntaxError name badArgs
 
 
 -- helper to build function 
-makeFunc :: Maybe String -> [LispVal] -> [LispVal] -> EvalExprMonad LispVal
+makeFunc :: (Monad m, MonadReader Env m)
+         => Maybe String -> [LispVal] -> [LispVal] -> m LispVal
 makeFunc varargs params body = do
   env <- ask
   return $ Func (map show params) varargs body env
 
-makeNormalFunc :: [LispVal] -> [LispVal] -> EvalExprMonad LispVal
+makeNormalFunc :: (Monad m, MonadReader Env m)
+               => [LispVal] -> [LispVal] -> m LispVal
 makeNormalFunc = makeFunc Nothing
 
-makeVarargsFunc :: LispVal -> [LispVal] -> [LispVal] -> EvalExprMonad LispVal
+makeVarargsFunc :: (Monad m, MonadReader Env m)
+                => LispVal -> [LispVal] -> [LispVal] -> m LispVal
 makeVarargsFunc = makeFunc . Just . show
 
 
@@ -62,7 +66,7 @@ defineForm :: SyntaxHandler
 -- variable
 defineForm [Atom var, form] = eval form >>= defineVar var
 -- normal function: (define (hoge a b) ...)
-defineForm (List (Atom var : params) : body) = do
+defineForm (List (Atom var : params) : body) =
   makeNormalFunc params body >>= defineVar var
 -- varargs function: (define (hoge a . b) ...)
 defineForm (Pair (Atom var : params) varargs : body) =
@@ -170,8 +174,8 @@ caseForm :: SyntaxHandler
 caseForm [_] = return Undefined
 caseForm (p : List (List vs : body) : rest) =
   do base         <- eval p
-     results      <- liftEvalExprM $ mapM (\v -> eqvP [base, v]) vs
-     Bool matched <- liftEvalExprM $ or' results
+     results      <- liftErrorM $ mapM (\v -> eqvP [base, v]) vs
+     Bool matched <- liftErrorM $ or' results
      if matched then
        evalBody body
      else

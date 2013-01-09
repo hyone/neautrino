@@ -5,7 +5,6 @@ module Neautrino.Type
   , IOPrimitiveFunc
   , LispVal(..)
   , EvalExprMonad
-  , liftEvalExprM
   , runEvalExprMonad
   ) where
 

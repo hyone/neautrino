@@ -8,7 +8,7 @@ module Neautrino.Eval
   , runRepl
   ) where
 
-import Neautrino.Type (LispVal(..), EvalExprMonad, liftEvalExprM, runEvalExprMonad)
+import Neautrino.Type (LispVal(..), EvalExprMonad, runEvalExprMonad)
 import Neautrino.Env (Env, bindVars, getVar, nullEnv)
 import Neautrino.Error
 import Neautrino.Function (primitiveFuncs, ioPrimitiveFuncs)
@@ -62,13 +62,13 @@ eval badForm = throwError $ BadSpecialFormError "Unrecognized special form" badF
 
 
 -- | apply function to argument list
-apply :: LispVal -> [LispVal] -> IOThrowsError LispVal
-apply (PrimitiveFunc   func) args = liftThrowsError (func args)
+apply :: LispVal -> [LispVal] -> IOErrorM LispVal
+apply (PrimitiveFunc   func) args = liftErrorM (func args)
 apply (IOPrimitiveFunc func) args = func args
 apply (Func params varargs body env) args =
-    if length params /= length args && isNothing varargs
-    then throwError $ NumArgsError (length params) args
-    else do
+    if length params /= length args && isNothing varargs then
+      throwError $ NumArgsError (length params) args
+    else
       liftIO (bindVars env (zip params args))
         >>= bindVarArgs varargs
         >>= runReaderT (evalBody body)
@@ -76,7 +76,7 @@ apply (Func params varargs body env) args =
     remainingArgs :: [LispVal]
     remainingArgs = drop (length params) args
 
-    bindVarArgs :: Maybe String -> Env -> IOThrowsError Env
+    bindVarArgs :: Maybe String -> Env -> IOErrorM Env
     bindVarArgs arg env' = case arg of
       Just argName -> liftIO $ bindVars env [(argName, List remainingArgs)]
       Nothing      -> return env'
@@ -85,7 +85,7 @@ apply notFunc _ = throwError $ NotFunctionError "invalid application" (show notF
 
 applyProcedure :: LispVal -> [LispVal] -> EvalExprMonad LispVal
 applyProcedure procedure args = do
-    f    <- eval procedure
+    f <- eval procedure
     case f of
       (Syntax _ handler) -> handler args
       _                  -> do vals <- mapM eval args
@@ -97,11 +97,10 @@ evalBody :: [LispVal] -> EvalExprMonad LispVal
 evalBody = liftM last . mapM eval
 
 
-evalStringAST :: Env -> String -> IO (ThrowsError LispVal)
+evalStringAST :: Env -> String -> IO (ErrorM LispVal)
 evalStringAST env expr = runEvalExprMonad env $ do
-  parsed <- liftThrowsError $ readExpr expr
-  result <- eval parsed
-  return result
+  parsed <- liftErrorM $ readExpr expr
+  eval parsed
 
 -- | eval String and return its result as String
 evalString :: Env -> String -> IO String

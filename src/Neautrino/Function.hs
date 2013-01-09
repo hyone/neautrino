@@ -159,7 +159,7 @@ closePort _             = return (Bool False)
 readProc :: IOPrimitiveFunc
 readProc []            = readProc [Port stdin]
 readProc [Port handle] = liftIO (hGetLine handle)
-                         >>= liftThrowsError . readExpr
+                         >>= liftErrorM . readExpr
 readProc badArgList    = throwError $ NumArgsError 1 badArgList
 
 writeProc :: IOPrimitiveFunc
@@ -172,9 +172,9 @@ readContents [String filename] = liftM String $ liftIO $ readFile filename
 readContents badArgList        = throwError $ NumArgsError 1 badArgList
 
 
-readParse :: String -> IOThrowsError [LispVal]
+readParse :: String -> IOErrorM [LispVal]
 readParse path = liftIO (readFile path)
-                   >>= liftThrowsError . readExprList
+                   >>= liftErrorM . readExprList
 
 readAll :: IOPrimitiveFunc
 readAll [String filename] = liftM List $ readParse filename

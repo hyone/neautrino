@@ -12,7 +12,7 @@ import Test.Hspec
 import Test.HUnit
 import Data.List (isInfixOf)
 
-import Neautrino.Error (LispError(..), ThrowsError)
+import Neautrino.Error (LispError(..), ErrorM)
 import Neautrino.Env (Env)
 import Neautrino.Type (LispVal, runEvalExprMonad)
 import Neautrino.Eval (eval)
@@ -42,7 +42,7 @@ instance Show ErrorType where
   show (ErrorType (DefaultError _))          = "DefaultError"
 
 
-evalAST :: Env -> LispVal -> IO (ThrowsError LispVal)
+evalAST :: Env -> LispVal -> IO (ErrorM LispVal)
 evalAST env = runEvalExprMonad env . eval
 
 
@@ -53,21 +53,21 @@ shouldContain :: String -> String -> Expectation
 shouldContain got expected = assertBool (message (show expected) (show got))
                                         (expected `isInfixOf` got)
 
-shouldEitherT :: (Eq a, Show a) => ThrowsError a -> ThrowsError a -> Expectation
+shouldEitherT :: (Eq a, Show a) => ErrorM a -> ErrorM a -> Expectation
 shouldEitherT (Right x)  (Right expected) = x `shouldBe` expected
 shouldEitherT (Left err) (Left expected)  = ErrorType err `shouldBe` ErrorType expected
 shouldEitherT err        expected         = assertFailure $ message (show expected) (show err)
 
-shouldBeT :: (Eq a, Show a) => ThrowsError a -> a -> Expectation
+shouldBeT :: (Eq a, Show a) => ErrorM a -> a -> Expectation
 shouldBeT got@(Right _) expected = got `shouldEitherT` Right expected
 shouldBeT err           expected = assertFailure $ message (show expected) (show err)
 
-shouldReturnT :: (Eq a, Show a) => IO (ThrowsError a) -> a -> Expectation
+shouldReturnT :: (Eq a, Show a) => IO (ErrorM a) -> a -> Expectation
 shouldReturnT action expected = action >>= (`shouldBeT` expected)
   
-shouldErrorT :: (Eq a, Show a) => ThrowsError a -> LispError -> Expectation
+shouldErrorT :: (Eq a, Show a) => ErrorM a -> LispError -> Expectation
 shouldErrorT got@(Left _) expected = got `shouldEitherT` Left expected
 shouldErrorT x            expected = assertFailure $ message (show $ ErrorType expected) (show x)
 
-shouldErrorReturnT :: (Eq a, Show a) => IO (ThrowsError a) -> LispError -> Expectation
+shouldErrorReturnT :: (Eq a, Show a) => IO (ErrorM a) -> LispError -> Expectation
 shouldErrorReturnT action expected = action >>= (`shouldErrorT` expected)

@@ -9,20 +9,18 @@ module Neautrino.Internal.Type
   , IOPrimitiveFunc
   , LispVal(..)
   , LispError(..)
-  , ThrowsError
-  , IOThrowsError
-  , extractValue
-  , liftThrowsError
+  , ErrorM
+  , IOErrorM
   , Env
   , EvalExprMonad
-  , liftEvalExprM
+  , extractValue
+  , liftErrorM
   , runEvalExprMonad
   ) where
 
 
 import Control.Monad.Error (Error(..), ErrorT, MonadError, throwError, runErrorT)
 import Control.Monad.Reader (ReaderT, runReaderT)
-import Control.Monad.Trans.Class (lift)
 import Data.Array (Array, elems)
 import Data.Complex (Complex)
 import Data.Generics ( Constr, Data(..), DataType
@@ -37,8 +35,8 @@ import System.IO (Handle)
 
 type SyntaxHandler = [LispVal] -> EvalExprMonad LispVal
 
-type PrimitiveFunc   = [LispVal] -> ThrowsError LispVal
-type IOPrimitiveFunc = [LispVal] -> IOThrowsError LispVal
+type PrimitiveFunc   = [LispVal] -> ErrorM LispVal
+type IOPrimitiveFunc = [LispVal] -> IOErrorM LispVal
 
 data LispVal = Atom String
              | List [LispVal]
@@ -186,8 +184,8 @@ data LispError = NumArgsError Int [LispVal]
                | DefaultError String
   deriving (Typeable)
 
-type ThrowsError = Either LispError
-type IOThrowsError = ErrorT LispError IO 
+type ErrorM = Either LispError
+type IOErrorM = ErrorT LispError IO 
 
 
 -- Error class instance
@@ -207,10 +205,10 @@ instance Data ParseError where
   dataTypeOf _ = parseErrorDataType
   toConstr   _ = parseErrorConstr
 
-instance Data a => Data (IOThrowsError a) where
+instance Data a => Data (IOErrorM a) where
   gunfold _ _  = error "gunfold"
-  dataTypeOf _ = error "dataTypeOf IOThrowsError"
-  toConstr   _ = error "toConstr IOThrowsError"
+  dataTypeOf _ = error "dataTypeOf IOErrorM"
+  toConstr   _ = error "toConstr IOErrorM"
 
 -- Typeable class instance
 
@@ -219,10 +217,10 @@ parseErrorTc = mkTyCon3 "Text.Parsec" "Error" "ParseError"
 instance Typeable ParseError where
   typeOf _ = mkTyConApp parseErrorTc []
 
-ioThrowsErrorTc :: TyCon
-ioThrowsErrorTc = mkTyCon3 "Neautrino" "Error" "IOThrowsError"
-instance Typeable a => Typeable (IOThrowsError a) where
-  typeOf _ = mkTyConApp ioThrowsErrorTc [typeOf (undefined :: a)]
+ioErrorMTc :: TyCon
+ioErrorMTc = mkTyCon3 "Neautrino" "Error" "IOErrorM"
+instance Typeable a => Typeable (IOErrorM a) where
+  typeOf _ = mkTyConApp ioErrorMTc [typeOf (undefined :: a)]
   
 
 -- Show class instance
@@ -244,10 +242,16 @@ showError (DefaultError message) = "Error: " ++ message
 
 -- Functions
 
--- | extractValue from ThrowsError to String
-extractValue :: (Show a) => ThrowsError a -> String
+-- | extractValue from ErrorM to String
+extractValue :: (Show a) => ErrorM a -> String
 extractValue (Right val) = show val
-extractValue (Left err)  = show err
+extractValue (Left  err) = show err
+
+-- | lift ErrorM to MonadError.
+liftErrorM :: (MonadError e m) => Either e a -> m a
+liftErrorM (Left  err) = throwError err
+liftErrorM (Right val) = return val
+
 
 -- Env Types -------------------------------------------------------
 
@@ -256,15 +260,10 @@ type Env = IORef [(String, IORef LispVal)]
 
 -- EvalExprMonad ---------------------------------------------------
 
-type EvalExprMonad a = ReaderT Env (ErrorT LispError IO) a
+type EvalExprMonad = ReaderT Env (ErrorT LispError IO)
 
-runEvalExprMonad :: Env -> EvalExprMonad a -> IO (ThrowsError a)
+-- Functions
+
+-- | run EvalExprMonad
+runEvalExprMonad :: Env -> EvalExprMonad a -> IO (ErrorM a)
 runEvalExprMonad env expr = runErrorT (runReaderT expr env)
-
-liftEvalExprM :: ThrowsError a -> EvalExprMonad a
-liftEvalExprM = lift . liftThrowsError
-
--- | lift ThrowsError to IOThrowsError.
-liftThrowsError :: (MonadError e m) => Either e a -> m a
-liftThrowsError (Left err)  = throwError err
-liftThrowsError (Right val) = return val

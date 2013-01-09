@@ -3,7 +3,7 @@
 module Neautrino.Internal.Parser where
 
 import Neautrino.Type
-import Neautrino.Error (throwError, ThrowsError, LispError(ParserError))
+import Neautrino.Error (throwError, ErrorM, LispError(ParserError))
 
 import Control.Applicative ((<*), (*>), (<$>))
 import Control.Monad
@@ -260,14 +260,14 @@ parseExpr = do
             <|> parseQuasiQuoted
             <|> parseUnQuote
 
-readOrThrow :: Parser a -> String -> ThrowsError a
+readOrThrow :: Parser a -> String -> ErrorM a
 readOrThrow parser input = case parse parser "lisp" input of
   Left  err -> throwError (ParserError err)
   Right val -> return val
 
-readExpr :: String -> ThrowsError LispVal
+readExpr :: String -> ErrorM LispVal
 readExpr = readOrThrow parseExpr
 
-readExprList :: String -> ThrowsError [LispVal]
+readExprList :: String -> ErrorM [LispVal]
 readExprList = readOrThrow $ 
   optional spaces *> sepEndBy parseExpr spaces

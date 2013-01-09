@@ -38,7 +38,7 @@ buildSearchPaths filename dirs =
   filterM doesFileExist $
     map (`combine` filename) dirs
 
-findLibrary :: FilePath -> IOThrowsError FilePath
+findLibrary :: FilePath -> IOErrorM FilePath
 findLibrary filename = do
   dirs  <- liftIO loadPath
   paths <- liftIO $ buildSearchPaths (fixFileExtension filename) dirs

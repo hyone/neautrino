@@ -6,13 +6,13 @@ module Neautrino.Function.Equal (
 
 import Neautrino.Function.Helper
 import Neautrino.Type (LispVal(..), PrimitiveFunc)
-import Neautrino.Error (LispError(..), ThrowsError, catchError, throwError)
+import Neautrino.Error (LispError(..), ErrorM, catchError, throwError)
 
 import Control.Monad (liftM)
 import Data.Array (elems)
 
 
-equalSeq :: LispVal -> LispVal -> PrimitiveFunc -> ThrowsError LispVal
+equalSeq :: LispVal -> LispVal -> PrimitiveFunc -> ErrorM LispVal
 equalSeq (Pair xs x) (Pair ys y) eq = eq [List $ xs ++ [x], List $ ys ++ [y]]
 equalSeq (Vector xs) (Vector ys) eq = eq [List (elems xs), List (elems ys)]
 equalSeq (List xs)   (List ys)   eq = return $ Bool $
@@ -44,7 +44,7 @@ eqvP badArgList         = throwError $ NumArgsError 2 badArgList
 
 data AnyUnpacker = forall a. Eq a => AnyUnpacker (Unpacker a)
 
-unpackEquals :: LispVal -> LispVal -> AnyUnpacker -> ThrowsError Bool
+unpackEquals :: LispVal -> LispVal -> AnyUnpacker -> ErrorM Bool
 unpackEquals arg1 arg2 (AnyUnpacker unpacker) =
   do unpacked1 <- unpacker arg1
      unpacked2 <- unpacker arg2

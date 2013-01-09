@@ -1,9 +1,9 @@
 module Neautrino.Error
   ( LispError(..)
-  , ThrowsError
-  , IOThrowsError
+  , ErrorM
+  , IOErrorM
   , extractValue
-  , liftThrowsError
+  , liftErrorM
   -- * Convenience re-exports
   , ParseError
   , catchError
@@ -11,7 +11,7 @@ module Neautrino.Error
   , throwError
   ) where
 
-import Neautrino.Internal.Type ( LispError(..), ThrowsError, IOThrowsError
-                               , extractValue, liftThrowsError )
+import Neautrino.Internal.Type ( LispError(..), ErrorM, IOErrorM
+                               , extractValue, liftErrorM )
 import Control.Monad.Error (catchError, throwError, runErrorT)
 import Text.Parsec (ParseError)
