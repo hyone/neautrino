@@ -1,10 +1,10 @@
 module Neautrino.LoadSpec (spec) where
 
 import Test.Hspec
-import Neautrino.TestUtil (evalAST, shouldContain, shouldReturnT)
+import Neautrino.TestUtil (shouldContain, shouldReturnT)
 
+import Neautrino (evalAST, initEnv)
 import Neautrino.Load (loadLibrary)
-import Neautrino.Run (initEnv)
 import Neautrino.Type (LispVal(..))
 
 

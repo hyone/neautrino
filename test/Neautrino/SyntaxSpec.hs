@@ -4,12 +4,11 @@
 module Neautrino.SyntaxSpec (spec) where
 
 import Test.Hspec
-import Neautrino.TestUtil (evalAST, shouldReturnT)
+import Neautrino.TestUtil (shouldReturnT)
 
+import Neautrino (evalAST, initEnv, scheme)
 import Neautrino.Env (getVar)
-import Neautrino.Run (initEnv)
 import Neautrino.Type (LispVal(..), runEvalExprMonad)
-import Neautrino.TH (scheme)
 
   
 spec :: Spec

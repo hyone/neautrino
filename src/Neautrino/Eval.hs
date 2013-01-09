@@ -1,6 +1,7 @@
 module Neautrino.Eval
   ( apply
   , eval
+  , evalAST
   , evalBody
   , evalString
   ) where
@@ -70,6 +71,11 @@ applyProcedure procedure args = do
 -- | evaluate list of expressions and returns the value from last expression
 evalBody :: [LispVal] -> EvalExprMonad LispVal
 evalBody = liftM last . mapM eval
+
+
+-- | evaluate abstract syntax tree (LispVal) and returns its result
+evalAST :: Env -> LispVal -> IO (ErrorM LispVal)
+evalAST env = runEvalExprMonad env . eval
 
 
 evalStringAST :: Env -> String -> IO (ErrorM LispVal)

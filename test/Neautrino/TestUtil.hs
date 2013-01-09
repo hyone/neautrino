@@ -1,6 +1,5 @@
 module Neautrino.TestUtil (
-  evalAST
-, shouldContain    
+  shouldContain    
 , shouldEitherT
 , shouldBeT
 , shouldReturnT
@@ -40,10 +39,6 @@ instance Show ErrorType where
   show (ErrorType (NotFunctionError x _))    = "NotFunctionError " ++ x
   show (ErrorType (UnboundVarError x _))     = "UnboundVarError " ++ x
   show (ErrorType (DefaultError _))          = "DefaultError"
-
-
-evalAST :: Env -> LispVal -> IO (ErrorM LispVal)
-evalAST env = runEvalExprMonad env . eval
 
 
 message :: String -> String -> String

@@ -37,6 +37,7 @@ library
                , template-haskell >= 2.7.0
                , transformers >= 0.3.0.0
   exposed-modules:
+    Neautrino
     Neautrino.Env
     Neautrino.Error
     Neautrino.Eval

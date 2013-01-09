@@ -3,9 +3,9 @@
 module Neautrino.EvalSpec (spec) where
 
 import Test.Hspec
-import Neautrino.TestUtil (evalAST, shouldReturnT)
+import Neautrino.TestUtil (shouldReturnT)
 
-import Neautrino.Run (initEnv)
+import Neautrino (evalAST, initEnv)
 import Neautrino.Type (LispVal(..))
 import Data.Array (listArray)
 

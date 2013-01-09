@@ -4,8 +4,8 @@ module Neautrino.THSpec ( spec ) where
 
 import Test.Hspec
 
+import Neautrino (evalAST, initEnv, scheme)
 import Neautrino.Type (LispVal(..))
-import Neautrino.TH (scheme)
 
   
 spec :: Spec
