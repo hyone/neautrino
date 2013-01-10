@@ -90,6 +90,14 @@ neautrino> `(1 2 ,a . 9)
 (1 2 5 . 9)
 neautrino> `(1 (2 ,a) 3)
 (1 (2 5) 3)
+
+;; macro
+neautrino> (define-macro when (lambda (t . body) `(if ,t (begin ,@body))))
+#<macro when>
+neautrino> (when (= (+ 1 2) 3) (display "first\n") (display "second\n") 'end)
+first
+second
+end
 ```
 
 ## Using scheme as DSL in Haskell Code
