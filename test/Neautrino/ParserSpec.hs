@@ -125,9 +125,16 @@ spec = do
         readExpr "'(1 2 3)" `shouldBeT`
           List [Atom "quote", List [Integer 1, Integer 2, Integer 3]]
 
+    describe "quasiquote" $ do
       it "should parse: `(1 2 ,a 4)" $
         readExpr "`(1 2 ,a 4)" `shouldBeT`
           List [Atom "quasiquote", List [Integer 1, Integer 2, List [Atom "unquote", Atom "a"], Integer 4]]
+
+      it "should parse: `(1 2 ,@a 4)" $
+        readExpr "`(1 2 ,@a 4)" `shouldBeT`
+          List [Atom "quasiquote", List [ Integer 1, Integer 2
+                                        , List [Atom "unquote-splicing", Atom "a"]
+                                        , Integer 4 ]]
 
     describe "comment" $ do
       it "should parse 2 ; comment" $

@@ -9,7 +9,7 @@ import Neautrino.Eval (eval, evalBody)
 import Neautrino.Function.Equal (eqvP)
 import Neautrino.Load (load)
 
-import Control.Monad (liftM, liftM2)
+import Control.Monad (liftM, liftM2, (>=>))
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (MonadReader, ask, local)
 import Data.Array (bounds, elems, listArray)
@@ -56,6 +56,8 @@ primitiveSyntaxes =
   , ("define-macro", defineMacroForm)
   , ("quote", quoteForm)
   , ("quasiquote", quasiquoteForm)
+  , ("unquote", unquoteForm)
+  , ("unquote-splicing", unquoteSplicingForm)
   , ("set!", setForm)
   , ("load", loadForm)
   , ("if", ifForm)
@@ -63,7 +65,6 @@ primitiveSyntaxes =
   , ("begin", beginForm)
   , ("cond", condForm)
   , ("case", caseForm)
-  , ("unquote", unquoteForm)
   ]
 
 
@@ -116,22 +117,47 @@ quoteForm = fromUnarySyntaxHandler "quote" quoteForm'
 
 -- quasiquote and unquote
 quasiquoteForm :: SyntaxHandler
-quasiquoteForm = fromUnarySyntaxHandler "quasiquote" quasiquoteForm'
+quasiquoteForm = fromUnarySyntaxHandler "quasiquote" $
+  unquote >=> unquoteSplicing
 
-quasiquoteForm' :: UnarySyntaxHandler
-quasiquoteForm' (List [Atom "unquote", val]) = eval val
-quasiquoteForm' (List xs) = liftM List $ mapM quasiquoteForm' xs
-quasiquoteForm' (Pair xs x) =
-  liftM2 Pair (mapM quasiquoteForm' xs) (quasiquoteForm' x)
-quasiquoteForm' (Vector as) =
-  fmap (Vector . listArray (bounds as)) $ mapM quasiquoteForm' (elems as)
-quasiquoteForm' e = return e    -- quote
+unquote :: UnarySyntaxHandler
+unquote (List [Atom "unquote", val]) = eval val
+unquote (List xs)   = liftM  List (mapM unquote xs)
+unquote (Pair xs x) = liftM2 Pair (mapM unquote xs) (unquote x)
+unquote (Vector as) = liftM  (Vector . listArray (bounds as)) (mapM unquote (elems as))
+unquote e           = return e    -- quote
+
+unquoteSplicing :: UnarySyntaxHandler
+unquoteSplicing e = liftM head (unquoteSplicingList [e])
+  where
+    unquoteSplicingList :: [LispVal] -> EvalExprMonad [LispVal]
+    unquoteSplicingList (List [Atom "unquote-splicing", val]:ys) = do
+      x <- eval val
+      case x of
+        List xs -> liftM (xs ++) $ unquoteSplicingList ys
+        _       -> liftM (x :)   $ unquoteSplicingList ys
+    unquoteSplicingList (x:xs) = do
+      x' <- case x of
+        List ys   -> liftM  List (unquoteSplicingList ys)
+        Pair ys y -> liftM2 Pair (unquoteSplicingList ys) (return y)
+        Vector as -> do ys' <- unquoteSplicingList (elems as)
+                        return $ Vector (listArray (0, length ys' - 1) ys')
+        _         -> return x
+      xs' <- unquoteSplicingList xs
+      return (x':xs')
+    unquoteSplicingList [] = return []
 
 
 unquoteForm :: SyntaxHandler
 unquoteForm args =
   throwError $ DefaultError $
     "unquote appeared outside quasiquote: " ++ show (List (Atom "unquote" : args))
+
+
+unquoteSplicingForm :: SyntaxHandler
+unquoteSplicingForm args =
+  throwError $ DefaultError $
+    "unquote-splicing appeared outside quasiquote: " ++ show (List (Atom "unquote-splicing" : args))
 
 
 setForm :: SyntaxHandler

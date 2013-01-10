@@ -10,6 +10,8 @@ import Neautrino (evalAST, initEnv, scheme)
 import Neautrino.Env (getVar)
 import Neautrino.Type (LispVal(..), runEvalExprMonad)
 
+import Data.Array (listArray)
+
   
 spec :: Spec
 spec =
@@ -91,12 +93,46 @@ spec =
         |] `shouldReturnT` List [Integer 1, Integer 2, Integer 3]
 
     describe "quasiquote" $ do
-      it "quote expression but handle unquote" $ do
-        env <- initEnv
-        evalAST env [scheme| (define a 22) |]
-        evalAST env [scheme|
-          `(1 ,a 3)
-        |] `shouldReturnT` List [Integer 1, Integer 22, Integer 3]
+      describe "unquote" $ do
+        it "should handle variable" $ do
+          env <- initEnv
+          evalAST env [scheme| (define a 22) |]
+          evalAST env [scheme|
+            `(1 ,a 3)
+          |] `shouldReturnT` List [Integer 1, Integer 22, Integer 3]
+
+      describe "unquote-splicing" $ do
+        it "should be evaluated in list" $ do
+          env <- initEnv
+          evalAST env [scheme| (define a '(2 3)) |]
+
+          evalAST env [scheme| `(1 ,@a 4) |]
+            `shouldReturnT` List [Integer 1, Integer 2, Integer 3, Integer 4]
+
+        it "should be evaluated in pair" $ do
+          env <- initEnv
+          evalAST env [scheme| (define a '(2 3)) |]
+          evalAST env [scheme| `(1 (,@a 4) . 5) |]
+            `shouldReturnT` Pair [Integer 1, List [Integer 2, Integer 3, Integer 4]]
+                                 (Integer 5)
+
+        it "should be evaluated in vector" $ do
+          env <- initEnv
+          evalAST env [scheme| (define a '(2 3)) |]
+          evalAST env (List [ Atom "quasiquote"
+                            , Vector (listArray (0, 2)
+                                                [ Integer 1
+                                                , List [Atom "unquote-splicing", Atom "a"]
+                                                , Integer 4] )])
+            `shouldReturnT`
+            Vector (listArray (0, 3) [Integer 1, Integer 2, Integer 3, Integer 4])
+
+        it "should handle expression" $ do
+          env <- initEnv
+          evalAST env [scheme| (define a '(2 3)) |]
+          evalAST env [scheme| `(1 ,@(cdr '(0 2 3)) 4) |]
+            `shouldReturnT` List [Integer 1, Integer 2, Integer 3, Integer 4]
+                                                                             
 
     describe "begin" $ do
       it "evaluates multi expressions sequentially." $ do

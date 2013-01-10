@@ -236,6 +236,13 @@ parseUnQuote = try $ do
   x <- parseExpr
   return $ List [Atom "unquote", x]
 
+-- Note: need to try before parseUnQuote
+parseUnQuoteSplicing :: Parser LispVal
+parseUnQuoteSplicing = try $ do
+  try $ string ",@"
+  x <- parseExpr
+  return $ List [Atom "unquote-splicing", x]
+
 parseComment :: Parser ()
 parseComment = try $ do
   char ';'
@@ -258,6 +265,7 @@ parseExpr = do
             <|> parseAnyList
             <|> parseQuoted
             <|> parseQuasiQuoted
+            <|> parseUnQuoteSplicing
             <|> parseUnQuote
 
 readOrThrow :: Parser a -> String -> ErrorM a
