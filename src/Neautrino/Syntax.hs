@@ -157,14 +157,14 @@ letForm exps = case exps of
     (_ : [])             -> return Undefined
     (List params : body) -> do
       env     <- ask
-      params' <- mapM extractVarName params
+      params' <- mapM extractVarTuple params
       env'    <- liftIO (bindVars env params')
       local (const env') $ evalBody body
     _ -> letError
   where
-    extractVarName :: LispVal -> EvalExprMonad (Var, LispVal)
-    extractVarName (List (Atom x : y : _)) = return (x, y)
-    extractVarName _ = letError
+    extractVarTuple :: LispVal -> EvalExprMonad (Var, LispVal)
+    extractVarTuple (List [Atom x, y]) = do { y' <- eval y; return (x, y') }
+    extractVarTuple _                  = letError
     letError :: EvalExprMonad a
     letError = syntaxError "let" exps
 

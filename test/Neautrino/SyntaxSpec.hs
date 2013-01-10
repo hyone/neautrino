@@ -112,7 +112,7 @@ spec =
           (define a 1)
         |]
         evalAST env [scheme|
-          (let ((a 3) (b 5)) a (+ a b))
+          (let ((a 3) (b (+ 1 4))) a (+ a b))
         |] `shouldReturnT` Integer 8
         evalAST env (Atom "a") `shouldReturnT` Integer 1
 
