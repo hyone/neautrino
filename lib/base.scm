@@ -29,6 +29,11 @@
 ;; List Operation
 ;; ----------------------------------------------------------------
 
+(define (caar pair) (car (car pair)))
+(define (cadr pair) (car (cdr pair)))
+(define (cdar pair) (cdr (car pair)))
+(define (cddr pair) (cdr (cdr pair)))
+
 (define (foldr func end lst)
   (if (null? lst)
       end
