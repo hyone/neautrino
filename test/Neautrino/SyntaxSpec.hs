@@ -61,19 +61,19 @@ spec =
           `shouldReturnT` Integer 3
 
     describe "if" $ do
-      it "should evaluate \"else\" if pred is evaluated to anthing else #f: (if #f \"then\" \"else\")" $ do
+      it "should evaluate \"else\" when pred is evaluated to anthing else #f: (if #f \"then\" \"else\")" $ do
         env <- initEnv
         evalAST env [scheme|
           (if (+ 1 2) "then" "else")
         |] `shouldReturnT` String "then"
 
-      it "should evaluate \"then\" if pred is evaluated to '(): (if '() \"then\" \"else\")" $ do
+      it "should evaluate \"then\" when pred is evaluated to '(): (if '() \"then\" \"else\")" $ do
         env <- initEnv
         evalAST env [scheme|
           (if '() "then" "else")
         |] `shouldReturnT` String "then"
 
-      it "should evaluate \"else\" if pred is evaluated to true: (if #f \"then\" \"else\")" $ do
+      it "should evaluate \"else\" when pred is evaluated to true: (if #f \"then\" \"else\")" $ do
         env <- initEnv
         evalAST env [scheme|
           (if #f "then" "else")

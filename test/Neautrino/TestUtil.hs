@@ -12,9 +12,6 @@ import Test.HUnit
 import Data.List (isInfixOf)
 
 import Neautrino.Error (LispError(..), ErrorM)
-import Neautrino.Env (Env)
-import Neautrino.Type (LispVal, runEvalExprMonad)
-import Neautrino.Eval (eval)
 
 
 newtype ErrorType = ErrorType { getErrorHolder ::  LispError }
