@@ -66,6 +66,7 @@ data LispVal = Atom { atomName :: String }
                      , macroVarg        :: Maybe String
                      , macroTransformer :: [LispVal]
                      , macroClosure     :: Env }
+             | SyntacticEnv Env
              | SyntacticClosure { syntacticClosureEnv      :: Env
                                 , syntacticClosureFreeVars :: [Var]
                                 , syntacticClosureExpr     :: LispVal }
@@ -113,6 +114,7 @@ showVal (List contents)    = "("  ++ unwordsList contents ++ ")"
 showVal (Vector arr)       = "#(" ++ unwordsList (elems arr) ++ ")"
 showVal (Pair h t)         = "("  ++ unwordsList h ++ " . " ++ showVal t ++ ")"
 showVal Macro { macroName = name } = "#<macro " ++ name ++ ">"
+showVal (SyntacticEnv _)   = "#<syntactic-environment>"
 showVal SyntacticClosure {} = "#<syntactic-closure>"
 
 unwordsList :: [LispVal] -> String

@@ -4,13 +4,16 @@ module Neautrino.FunctionSpec (spec) where
 import Test.Hspec
 import Test.Hspec.QuickCheck (prop)
 import Test.QuickCheck
-import Control.Monad (liftM, liftM2)
+import Control.Monad (liftM, liftM2, void)
 import Data.Array (Array, listArray)
 import Data.Complex (Complex(..))
 import Data.Ratio ((%))
 
+import Neautrino (initEnv)
+import Neautrino.Error (LispError(..), runErrorT)
 import Neautrino.Function
 import Neautrino.Type
+import Neautrino.TestUtil (shouldReturnT, shouldErrorReturnT)
 
 
 instance Arbitrary (Array Int LispVal) where
@@ -85,6 +88,20 @@ spec =
       prop "should be subset of IsReal" $ \x ->
           (isInteger x && isReal x) || True
 
+    describe "makeSyntacticClosure" $ do
+      it "should be return new syntactic closure" $ do
+         env        <- initEnv
+         void $ runErrorT (makeSyntacticClosure [ SyntacticEnv env
+                                                , List [Atom "a", Atom "b"]
+                                                , Atom "hoge"])
+
+      it "should raise NumArgsError when argnum is any other than 3" $ do
+         env <- initEnv
+         runErrorT (makeSyntacticClosure [ SyntacticEnv env
+                                         , List [Atom "a", Atom "b"]
+                                         , Atom "hoge"
+                                         , Undefined ])
+           `shouldErrorReturnT` NumArgsError 3 undefined
 
 main :: IO ()
 main = hspec spec
