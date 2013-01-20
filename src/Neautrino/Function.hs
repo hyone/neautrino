@@ -1,5 +1,6 @@
 module Neautrino.Function where
 
+import Neautrino.Env (equalVar)
 import Neautrino.Error
 import Neautrino.Eval (apply)
 import Neautrino.Function.Helper
@@ -11,7 +12,7 @@ import Control.Monad (liftM)
 import Control.Monad.IO.Class (liftIO)
 import Data.Complex (imagPart, realPart)
 import Data.Ratio (denominator, numerator)
-import System.IO
+import System.IO (IOMode(..), stdin, stdout, hPutStr, openFile, hClose, hGetLine)
 
 
 primitiveFuncs :: [(String, PrimitiveFunc)]
@@ -44,6 +45,7 @@ primitiveFuncs =
   , ("real?",     function1 unpackAny (return . Bool) isReal)
   , ("rational?", function1 unpackAny (return . Bool) isRational)
   , ("integer?",  function1 unpackAny (return . Bool) isInteger)
+  , ("identifier?", function1 unpackAny (return . Bool) isIdentifier)
   , ("eq?",    eqvP)
   , ("eqv?",   eqvP)
   , ("equal?", equalP)
@@ -66,6 +68,7 @@ ioPrimitiveFuncs =
   , ("read-contents", readContents)
   , ("read-all", readAll)
   , ("make-syntactic-closure", makeSyntacticClosure)
+  , ("identifier=?", identifierEqualP)
   ]
 
 
@@ -117,6 +120,15 @@ isString _           = False
 isList :: LispVal -> Bool
 isList (List _)  = True
 isList _         = False
+
+-- An alias is implemented as a syntactic closure whose form is an identifier:
+--   (make-syntactic-closure env '() 'a) => an alias
+isAlias :: LispVal -> Bool
+isAlias (SyntacticClosure _ _ (Atom _)) = True
+isAlias _ = False
+
+isIdentifier :: LispVal -> Bool
+isIdentifier x = isSymbol x || isAlias x
 
 
 -- List ------------------------------------------------------------------
@@ -203,3 +215,10 @@ makeSyntacticClosure [SyntacticEnv env, List ns, expr] = do
   return $ SyntacticClosure env freenames expr
 makeSyntacticClosure [_, _, _]  = throwError $ DefaultError "make-syntactic-closure"
 makeSyntacticClosure badArgList = throwError $ NumArgsError 3 badArgList
+
+
+identifierEqualP :: IOPrimitiveFunc
+identifierEqualP [SyntacticEnv env1, String var1, SyntacticEnv env2, String var2] =
+  liftM Bool (liftIO $ equalVar env1 var1 env2 var2)
+identifierEqualP [_, _, _, _] = return (Bool False)
+identifierEqualP badArgList   = throwError $ NumArgsError 4 badArgList
