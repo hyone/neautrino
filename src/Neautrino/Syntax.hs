@@ -161,8 +161,11 @@ unquoteSplicingForm args =
 
 
 setForm :: SyntaxHandler
-setForm [Atom var, form] = eval form >>= setVar var
-setForm args             = syntaxError "set!" args
+setForm [ Atom var, form ] = eval form >>= setVar var
+setForm [ SyntacticClosure env _ (Atom var), form ] = do
+  expr <- eval form
+  local (const env) $ setVar var expr
+setForm args = syntaxError "set!" args
 
 
 loadForm :: SyntaxHandler

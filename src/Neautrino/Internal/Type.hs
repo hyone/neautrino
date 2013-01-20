@@ -12,6 +12,7 @@ module Neautrino.Internal.Type
   , LispError(..)
   , ErrorM
   , IOErrorM
+  , Var
   , Env
   , EvalExprMonad
   , extractValue
@@ -39,7 +40,7 @@ type SyntaxHandler = [LispVal] -> EvalExprMonad LispVal
 type PrimitiveFunc   = [LispVal] -> ErrorM LispVal
 type IOPrimitiveFunc = [LispVal] -> IOErrorM LispVal
 
-data LispVal = Atom String
+data LispVal = Atom { atomName :: String }
              | List [LispVal]
              | Pair [LispVal] LispVal
              | Vector (Array Int LispVal)
@@ -65,6 +66,9 @@ data LispVal = Atom String
                      , macroVarg        :: Maybe String
                      , macroTransformer :: [LispVal]
                      , macroClosure     :: Env }
+             | SyntacticClosure { syntacticClosureEnv      :: Env
+                                , syntacticClosureFreeVars :: [Var]
+                                , syntacticClosureExpr     :: LispVal }
   deriving (Typeable)
 
 -- Eq class instance
@@ -109,6 +113,7 @@ showVal (List contents)    = "("  ++ unwordsList contents ++ ")"
 showVal (Vector arr)       = "#(" ++ unwordsList (elems arr) ++ ")"
 showVal (Pair h t)         = "("  ++ unwordsList h ++ " . " ++ showVal t ++ ")"
 showVal Macro { macroName = name } = "#<macro " ++ name ++ ">"
+showVal SyntacticClosure {} = "#<syntactic-closure>"
 
 unwordsList :: [LispVal] -> String
 unwordsList =  unwords . map showVal
@@ -262,7 +267,8 @@ liftErrorM (Right val) = return val
 
 -- Env Types -------------------------------------------------------
 
-type Env = IORef [(String, IORef LispVal)]
+type Var = String
+type Env = IORef [(Var, IORef LispVal)]
 
 
 -- EvalExprMonad ---------------------------------------------------

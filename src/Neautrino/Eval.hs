@@ -7,14 +7,14 @@ module Neautrino.Eval
   ) where
 
 import Neautrino.Type (LispVal(..), EvalExprMonad, runEvalExprMonad)
-import Neautrino.Env (Env, bindVars, getVar)
+import Neautrino.Env (Env, Var, bindVars, getVar, bindFreevars)
 import Neautrino.Error
 import Neautrino.Parser (readExpr)
 
 import Control.Monad (liftM)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Class (lift)
-import Control.Monad.Reader (runReaderT)
+import Control.Monad.Reader (ask, local, runReaderT)
 import Data.Maybe (isNothing)
 
 
@@ -32,10 +32,19 @@ eval val@(Vector _)    = return val
 eval Undefined         = return Undefined
 -- variable
 eval (Atom var) = getVar var
+-- syntactic closure
+eval (SyntacticClosure env freevars expr) = evalSyntacticClosure env freevars expr
 -- special form, macro and procedure application
 eval (List (app : args)) = evalApplication app args
 -- otherwise error
 eval badForm = throwError $ BadSpecialFormError "Unrecognized special form" badForm
+
+
+evalSyntacticClosure :: Env -> [Var] -> LispVal -> EvalExprMonad LispVal
+evalSyntacticClosure synEnv freevars expr = do
+  useEnv <- ask
+  env    <- liftIO $ bindFreevars freevars useEnv synEnv
+  local (const env) $ eval expr
 
 
 evalApplication :: LispVal -> [LispVal] -> EvalExprMonad LispVal

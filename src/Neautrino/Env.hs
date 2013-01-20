@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fno-warn-unused-do-bind #-}
 module Neautrino.Env
   ( Env
   , Var
@@ -8,19 +9,19 @@ module Neautrino.Env
   , setVar
   , defineVar
   , bindVars
+  , bindFreevars
+  , dumpEnv
   ) where
 
 import Neautrino.Error
-import Neautrino.Internal.Type (Env, EvalExprMonad, LispVal)
+import Neautrino.Internal.Type (Env, Var, EvalExprMonad, LispVal(..))
 
 import Data.IORef
-import Control.Monad (liftM)
+import Control.Monad (forM, liftM, unless, void)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (ask)
-import Data.Maybe (isJust)
+import Data.Maybe (fromJust, isJust)
 
-
-type Var = String
 type VarPair = (Var, LispVal)
 type VarRefPair = (Var, IORef LispVal)
 
@@ -51,18 +52,23 @@ setVar var value = do
         (lookup var env)
   return value
 
+addVar :: Env -> Var -> LispVal -> IO LispVal
+addVar envRef var value = do
+  env      <- readIORef envRef
+  valueRef <- newIORef value
+  writeIORef envRef ((var, valueRef) : env)
+  return value
+
 -- | modify value of an existing variable or create new one
 defineVar :: Var -> LispVal -> EvalExprMonad LispVal
 defineVar var value = do
   envRef  <- ask
   defined <- liftIO $ isBound envRef var
-  if defined
-     then setVar var value
-     else liftIO $ do
-       valueRef <- newIORef value
-       env <- readIORef envRef
-       writeIORef envRef ((var, valueRef) : env)
-       return value
+  if defined then
+    setVar var value
+  else
+    liftIO $ addVar envRef var value
+  return value
 
 
 -- | extend env with bindings
@@ -74,3 +80,21 @@ bindVars envRef bindings = readIORef envRef >>= extendEnv bindings >>= newIORef
 
     addBinding :: VarPair -> IO VarRefPair
     addBinding (var, value) = liftM (\ref -> (var, ref)) $ newIORef value
+
+bindFreevars :: [Var] -> Env -> Env -> IO Env
+bindFreevars freevars fromEnvRef toEnvRef = do
+  toEnv  <- readIORef toEnvRef
+  adding <- forM freevars $ \varname -> do
+    defined <- isBound fromEnvRef varname
+    unless defined $
+      void (addVar fromEnvRef varname Undefined)
+    valueRef <- (fromJust . lookup varname) `liftM` readIORef fromEnvRef
+    return (varname, valueRef)
+  newIORef (adding ++ toEnv)
+
+dumpEnv :: Env -> IO [VarPair]
+dumpEnv envRef = do
+  env <- readIORef envRef
+  forM (map fst env) $ \n -> do
+    v <- readIORef $ fromJust $ lookup n env
+    return (n, v)
