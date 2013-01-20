@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Neautrino.ParserSpec (spec) where
 
 import Test.Hspec
@@ -140,7 +141,7 @@ spec = do
       it "should parse 2 ; comment" $
          readExpr "2 ; comment"   `shouldBeT` Integer 2
       it "should parse ; comment\n 2" $
-         readExpr "; comment\n 2" `shouldBeT` Integer 2
+         readExprList " ; comment\n 2" `shouldBeT` [Integer 2]
 
 
     describe "pragmatic case" $ do

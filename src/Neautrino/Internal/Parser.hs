@@ -13,26 +13,50 @@ import Data.Complex (Complex(..))
 import Data.Ratio ((%))
 import Numeric (readInt, readOct, readDec, readHex, readFloat)
 import Text.Parsec hiding (spaces)
+import Text.Parsec.Language (LanguageDef, emptyDef)
 import Text.Parsec.String (Parser)
+import qualified Text.Parsec.Token as P
 
+
+-- Tokens
 
 symbol :: Parser Char
 symbol = oneOf "!$%&|*+-/:<=>?@^_~"
 
-spaces :: Parser ()
-spaces = skipMany1 space
+schemeDef :: LanguageDef ()
+schemeDef = emptyDef    
+  { P.commentStart   = "#|"
+  , P.commentEnd     = "|#"
+  , P.commentLine    = ";"
+  , P.nestedComments = True
+  , P.identStart     = letter <|> symbol
+  , P.identLetter    = letter <|> digit <|> symbol
+  , P.reservedNames  = []
+  , P.caseSensitive  = True
+  } 
 
-eol :: Parser Char
-eol = newline <|> (eof >> return '\n')
+lexer = P.makeTokenParser schemeDef
+
+parens :: Parser a -> Parser a
+parens = P.parens lexer
+
+dot :: Parser String
+dot = P.dot lexer
+
+identifier :: Parser String
+identifier = P.identifier lexer
+
+whiteSpace :: Parser()
+whiteSpace = P.whiteSpace lexer
+
+lexeme :: Parser a -> Parser a
+lexeme = P.lexeme lexer
 
 
 -- Atom
 
 parseAtom :: Parser LispVal
-parseAtom = try $ do
-  first <- letter <|> symbol
-  rest  <- many (letter <|> digit <|> symbol)
-  return $ Atom (first : rest)
+parseAtom = Atom <$> identifier
 
 
 -- Char and String
@@ -54,7 +78,6 @@ parseChar = do
         "newline" -> return $ Character '\n'
         _         -> fail $ "parse error at #\\" ++ s
 
-
 escapedChar :: Parser Char
 escapedChar = do
   char '\\'
@@ -73,10 +96,10 @@ parseString = try $ do
   return (String x)
 
 
--- Boolean
+-- Bool
 
-parseBoolean :: Parser LispVal
-parseBoolean = try $ do
+parseBool :: Parser LispVal
+parseBool = try $ do
   char '#'
   c <- oneOf "tf"
   case c of
@@ -190,83 +213,70 @@ parseNumeric = parseComplex
 -- Vector, List, Pair
 
 parseVector :: Parser LispVal
-parseVector = try $ string "#(" *> parseVector' <* char ')'
+parseVector = string "#(" *> parseVector' <* char ')'
   where
     parseVector' :: Parser LispVal
     parseVector' = do
-      arrayValues <- sepBy parseExpr spaces
+      arrayValues <- sepBy parseExpr whiteSpace
       return . Vector $ listArray (0, length arrayValues - 1) arrayValues
 
-parseListLiteral :: Parser LispVal
-parseListLiteral = List <$> sepEndBy parseExpr spaces
+parseList :: Parser LispVal
+parseList = List <$> sepEndBy parseExpr whiteSpace
 
-parsePairLiteral :: Parser LispVal
-parsePairLiteral = do
-  h <- sepEndBy1 parseExpr spaces
-  t <- char '.' >> spaces >> parseExpr
+parsePair :: Parser LispVal
+parsePair = do
+  h <- sepEndBy1 parseExpr whiteSpace
+  t <- dot >> parseExpr
   return $ Pair h t
 
 parseAnyList :: Parser LispVal
-parseAnyList = try $ do
-  char '('
-  optional spaces
-  e <- try parsePairLiteral <|> parseListLiteral
-  optional spaces
-  char ')'
-  return e
+parseAnyList = try (parens parseList) <|> parens parsePair
 
 
 -- Quote
 
 parseQuoted :: Parser LispVal
-parseQuoted = try $ do
-  char '\''
+parseQuoted = do
+  lexeme $ char '\''
   x <- parseExpr
   return $ List [Atom "quote", x]
 
 parseQuasiQuoted :: Parser LispVal
-parseQuasiQuoted = try $ do
-  char '`'
+parseQuasiQuoted = do
+  lexeme $ char '`'
   x <- parseExpr
   return $ List [Atom "quasiquote", x]
 
 parseUnQuote :: Parser LispVal
-parseUnQuote = try $ do
-  char ','
+parseUnQuote = do
+  lexeme $ char ','
   x <- parseExpr
   return $ List [Atom "unquote", x]
 
 -- Note: need to try before parseUnQuote
 parseUnQuoteSplicing :: Parser LispVal
 parseUnQuoteSplicing = try $ do
-  try $ string ",@"
+  lexeme $ try (string ",@")
   x <- parseExpr
   return $ List [Atom "unquote-splicing", x]
-
-parseComment :: Parser ()
-parseComment = try $ do
-  char ';'
-  manyTill anyChar eol
-  return ()
 
 
 -- API
 
 parseExpr :: Parser LispVal
 parseExpr = do
-  skipMany parseComment
-  -- remove newline or spaces just after comment
-  skipMany (oneOf "\n\r" <|> space)
-  parseAtom <|> parseChar
-            <|> parseString
-            <|> parseNumeric
-            <|> parseBoolean
-            <|> parseVector
-            <|> parseAnyList
-            <|> parseQuoted
-            <|> parseQuasiQuoted
-            <|> parseUnQuoteSplicing
-            <|> parseUnQuote
+  optional whiteSpace 
+  lexeme $ parseAtom
+       <|> parseChar
+       <|> parseString
+       <|> parseNumeric
+       <|> parseBool
+       <|> parseVector
+       <|> parseAnyList
+       <|> parseQuoted
+       <|> parseQuasiQuoted
+       <|> parseUnQuoteSplicing
+       <|> parseUnQuote
 
 readOrThrow :: Parser a -> String -> ErrorM a
 readOrThrow parser input = case parse parser "lisp" input of
@@ -277,5 +287,4 @@ readExpr :: String -> ErrorM LispVal
 readExpr = readOrThrow parseExpr
 
 readExprList :: String -> ErrorM [LispVal]
-readExprList = readOrThrow $ 
-  optional spaces *> sepEndBy parseExpr spaces
+readExprList = readOrThrow $ sepEndBy parseExpr whiteSpace
