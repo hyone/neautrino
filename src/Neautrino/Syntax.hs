@@ -190,7 +190,9 @@ ifForm badArgs = syntaxError "if" badArgs
 
 
 condForm :: SyntaxHandler
-condForm [] = return Undefined
+condForm []                  = return Undefined
+condForm [List (Atom "else" : body)] = evalBody body
+condForm exps@(List (Atom "else":_) : _) = syntaxError "cond" exps
 condForm (List (p : body) : xs) = do
   result <- eval p
   case result of

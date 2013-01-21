@@ -171,16 +171,15 @@ spec =
         evalAST env [scheme| (foo 1) |] `shouldReturnT` String "b"
 
       it "should evaluate else expression when nothing that pred is evaluted to true." $ do
-        pending "Fix bug"
-        -- env <- initEnv
-        -- _   <- evalAST env [scheme|
-        --   (define (foo n)
-        --     (cond
-        --       ((= n 0) "a")
-        --       ((= n 1) "b")
-        --       (else "z")))
-        -- |]
-        -- evalAST env [scheme| (foo 9) |] `shouldReturnT` String "z"
+        env <- initEnv
+        _   <- evalAST env [scheme|
+          (define (foo n)
+            (cond
+              ((= n 0) "a")
+              ((= n 1) "b")
+              (else "z")))
+        |]
+        evalAST env [scheme| (foo 9) |] `shouldReturnT` String "z"
  	
     describe "case" $ do
       it "should evaluate expression that in the alist the evaluated value is matched" $ do
