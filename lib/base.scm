@@ -114,3 +114,38 @@
   (fold (mem-helper (curry eqv? obj) car) #f alst))
 (define (assoc obj alst)
   (fold (mem-helper (curry equal? obj) car) #f alst))
+
+
+;; Macros and Syntax
+;; ------------------------------------------------------------------------
+;;
+;; ported from chibi-scheme:
+;; http://code.google.com/p/chibi-scheme/source/browse/lib/init-7.scm
+
+(define sc-macro-transformer
+  (lambda (f)
+    (lambda (expr use-env mac-env)
+      (make-syntactic-closure mac-env '() (f expr use-env)))))
+
+(define rsc-macro-transformer
+  (lambda (f)
+    (lambda (expr use-env mac-env)
+      (f expr mac-env))))
+
+(define er-macro-transformer
+  (lambda (f)
+    (lambda (expr use-env mac-env)
+      ((lambda (rename compare) (f expr rename compare))
+       ((lambda (renames)
+          (lambda (identifier)
+            ((lambda (cell)
+               (if cell
+                   (cdr cell)
+                   ((lambda (name)
+                      (set! renames (cons (cons identifier name) renames))
+                      name)
+                    (make-syntactic-closure mac-env '() identifier))))
+             (assq identifier renames))))
+        '())
+       (lambda (x y) (identifier=? use-env x use-env y))))))
+
