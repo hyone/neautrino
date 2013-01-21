@@ -56,6 +56,7 @@ primitiveFuncs =
   , ("cons", cons)
   , ("undefined", makeUndefined)
   , ("error", raiseException)
+  , ("make-syntactic-closure", makeSyntacticClosure)
   ]
 
 ioPrimitiveFuncs :: [(String, IOPrimitiveFunc)]
@@ -71,7 +72,6 @@ ioPrimitiveFuncs =
   , ("newline", newlineProc)
   , ("read-contents", readContents)
   , ("read-all", readAll)
-  , ("make-syntactic-closure", makeSyntacticClosure)
   , ("identifier=?", identifierEqualP)
   ]
 
@@ -181,6 +181,14 @@ raiseException []            = throwError $ DefaultError ""
 raiseException (reason:args) = throwError . DefaultError $
   show reason ++ " " ++ unwords (map show args)
 
+makeSyntacticClosure :: PrimitiveFunc
+makeSyntacticClosure [SyntacticEnv env, List ns, expr] = do
+  freenames <- mapM (\atom -> catchError (return $ atomName atom)
+                             (const . throwError $ TypeMismatchError "symbol" atom)) ns
+  return $ SyntacticClosure env freenames expr
+makeSyntacticClosure [_, _, _]  = throwError $ DefaultError "make-syntactic-closure"
+makeSyntacticClosure badArgList = throwError $ NumArgsError 3 badArgList
+
 
 -- IO Primitives ---------------------------------------------------------
 
@@ -232,15 +240,6 @@ readParse path = liftIO (readFile path)
 readAll :: IOPrimitiveFunc
 readAll [String filename] = liftM List $ readParse filename
 readAll badArgList        = throwError $ NumArgsError 1 badArgList
-
-
-makeSyntacticClosure :: IOPrimitiveFunc
-makeSyntacticClosure [SyntacticEnv env, List ns, expr] = do
-  freenames <- mapM (\atom -> catchError (return $ atomName atom)
-                             (const . throwError $ TypeMismatchError "symbol" atom)) ns
-  return $ SyntacticClosure env freenames expr
-makeSyntacticClosure [_, _, _]  = throwError $ DefaultError "make-syntactic-closure"
-makeSyntacticClosure badArgList = throwError $ NumArgsError 3 badArgList
 
 
 identifierEqualP :: IOPrimitiveFunc
