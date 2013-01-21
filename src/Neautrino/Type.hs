@@ -3,6 +3,7 @@ module Neautrino.Type
   ( SyntaxHandler
   , PrimitiveFunc
   , IOPrimitiveFunc
+  , Closure(..)
   , LispVal(..)
   , EvalExprMonad
   , runEvalExprMonad

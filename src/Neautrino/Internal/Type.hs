@@ -8,6 +8,7 @@ module Neautrino.Internal.Type
   ( SyntaxHandler
   , PrimitiveFunc
   , IOPrimitiveFunc
+  , Closure(..)
   , LispVal(..)
   , LispError(..)
   , ErrorM
@@ -40,6 +41,11 @@ type SyntaxHandler = [LispVal] -> EvalExprMonad LispVal
 type PrimitiveFunc   = [LispVal] -> ErrorM LispVal
 type IOPrimitiveFunc = [LispVal] -> IOErrorM LispVal
 
+data Closure = Closure' { closureParams :: [String]
+                        , closureVararg :: Maybe String
+                        , closureBody   :: [LispVal]
+                        , closureEnv    :: Env }
+
 data LispVal = Atom { atomName :: String }
              | List [LispVal]
              | Pair [LispVal] LispVal
@@ -57,19 +63,13 @@ data LispVal = Atom { atomName :: String }
              | IOPrimitiveFunc IOPrimitiveFunc
              | Syntax { syntaxName    :: String
                       , syntaxHandler :: SyntaxHandler }
-             | Func { funcParams  :: [String]
-                    , funcVararg  :: Maybe String
-                    , funcBody    :: [LispVal]
-                    , funcClosure :: Env }
-             | Macro { macroName        :: String
-                     , macroParams      :: [String]
-                     , macroVarg        :: Maybe String
-                     , macroTransformer :: [LispVal]
-                     , macroClosure     :: Env }
              | SyntacticEnv Env
              | SyntacticClosure { syntacticClosureEnv      :: Env
                                 , syntacticClosureFreeVars :: [Var]
                                 , syntacticClosureExpr     :: LispVal }
+             | Closure Closure
+             | MacroTransformer { macroName   :: String
+                                , macroProc   :: Closure }
   deriving (Typeable)
 
 -- Eq class instance
@@ -109,11 +109,11 @@ showVal Undefined          = "#<undef>"
 showVal (Syntax name _)    = "#<syntax " ++ name ++ ">"
 showVal PrimitiveFunc {}   = "#<primitive>"
 showVal IOPrimitiveFunc {} = "#<io primitive>"
-showVal Func {}            = "#<closure>"
+showVal Closure {}            = "#<closure>"
 showVal (List contents)    = "("  ++ unwordsList contents ++ ")"
 showVal (Vector arr)       = "#(" ++ unwordsList (elems arr) ++ ")"
 showVal (Pair h t)         = "("  ++ unwordsList h ++ " . " ++ showVal t ++ ")"
-showVal Macro { macroName = name } = "#<macro " ++ name ++ ">"
+showVal MacroTransformer { macroName = name } = "#<macro " ++ name ++ ">"
 showVal (SyntacticEnv _)   = "#<syntactic-environment>"
 showVal SyntacticClosure {} = "#<syntactic-closure>"
 

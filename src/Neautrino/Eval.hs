@@ -6,7 +6,7 @@ module Neautrino.Eval
   , evalString
   ) where
 
-import Neautrino.Type (LispVal(..), EvalExprMonad, runEvalExprMonad)
+import Neautrino.Type (Closure(..), LispVal(..), EvalExprMonad, runEvalExprMonad)
 import Neautrino.Env (Env, Var, bindVars, getVar, bindFreevars)
 import Neautrino.Error
 import Neautrino.Parser (readExpr)
@@ -51,23 +51,19 @@ evalApplication :: LispVal -> [LispVal] -> EvalExprMonad LispVal
 evalApplication app args = do
     f <- eval app
     case f of
-      (Syntax _ handler) -> handler args
-      (Macro _ params varargs transformer env) -> do
-        -- expand macro
-        expandedExp <- lift $ applyClosure params varargs transformer env args
+      Syntax _ handler -> handler args
+      MacroTransformer _ mproc -> do
+        useEnv        <- ask
+        macroexpanded <- lift $ applyMacroTransformer mproc (List (app:args)) useEnv
         -- and eval once
-        eval expandedExp
+        eval macroexpanded
       -- procedure
       _ -> do vals <- mapM eval args
               lift $ apply f vals
 
-applyClosure :: [String]
-             -> Maybe String
-             -> [LispVal]
-             -> Env
-             -> [LispVal]
-             -> IOErrorM LispVal
-applyClosure params varargs body env args =
+
+applyClosure :: Closure -> [LispVal] -> IOErrorM LispVal
+applyClosure (Closure' params varargs body env) args =
     if length params /= length args && isNothing varargs then
       throwError $ NumArgsError (length params) args
     else
@@ -82,13 +78,18 @@ applyClosure params varargs body env args =
     remainingArgs :: [LispVal]
     remainingArgs = drop (length params) args
 
+
+applyMacroTransformer :: Closure -> LispVal -> Env -> IOErrorM LispVal
+applyMacroTransformer mproc@(Closure' _ _ _ macEnv) expr useEnv =
+  applyClosure mproc [expr, SyntacticEnv useEnv, SyntacticEnv macEnv]
+
+
 -- | apply function to argument list
 apply :: LispVal -> [LispVal] -> IOErrorM LispVal
-apply (PrimitiveFunc   func)         args = liftErrorM (func args)
-apply (IOPrimitiveFunc func)         args = func args
-apply (Func params varargs body env) args = applyClosure params varargs body env args
-apply notFunc                        _    =
-  throwError $ NotFunctionError "invalid application" (show notFunc)
+apply (PrimitiveFunc   func) args = liftErrorM (func args)
+apply (IOPrimitiveFunc func) args = func args
+apply (Closure closure)      args = applyClosure closure args
+apply notFunc _ = throwError $ NotFunctionError "invalid application" (show notFunc)
 
 
 -- | evaluate list of expressions and returns the value from last expression
