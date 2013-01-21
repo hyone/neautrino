@@ -88,6 +88,23 @@ spec =
       prop "should be subset of IsReal" $ \x ->
           (isInteger x && isReal x) || True
 
+    describe "isPair" $ do
+      it "should be True with (2 . 3)" $
+         isPair (Pair [Integer 2] (Integer 3)) `shouldBe` True
+
+      it "should be True with (2)" $
+         isPair (List [Integer 2]) `shouldBe` True
+
+      it "should be False with ()" $
+         isPair (List []) `shouldBe` False
+
+    describe "isEnv" $
+      it "should be True with syntactic environment and False with otherwise" $ do
+         env <- initEnv
+         isEnv (SyntacticEnv env) `shouldBe` True
+         isEnv (List []) `shouldBe` False
+         isEnv Undefined `shouldBe` False
+
     describe "makeSyntacticClosure" $ do
       it "should be return new syntactic closure" $ do
          env        <- initEnv

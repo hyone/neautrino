@@ -40,11 +40,13 @@ primitiveFuncs =
   , ("boolean?",  function1 unpackAny (return . Bool) isBoolean)
   , ("string?",   function1 unpackAny (return . Bool) isString)
   , ("list?",     function1 unpackAny (return . Bool) isList)
+  , ("pair?",     function1 unpackAny (return . Bool) isPair)
   , ("number?",   function1 unpackAny (return . Bool) isNumber)
   , ("complex?",  function1 unpackAny (return . Bool) isComplex)
   , ("real?",     function1 unpackAny (return . Bool) isReal)
   , ("rational?", function1 unpackAny (return . Bool) isRational)
   , ("integer?",  function1 unpackAny (return . Bool) isInteger)
+  , ("environment?", function1 unpackAny (return . Bool) isEnv)
   , ("identifier?", function1 unpackAny (return . Bool) isIdentifier)
   , ("eq?",    eqvP)
   , ("eqv?",   eqvP)
@@ -120,6 +122,16 @@ isString _           = False
 isList :: LispVal -> Bool
 isList (List _)  = True
 isList _         = False
+
+isPair :: LispVal -> Bool
+isPair (List [])  = False
+isPair (List _)   = True
+isPair (Pair _ _) = True
+isPair _          = False
+
+isEnv :: LispVal -> Bool
+isEnv (SyntacticEnv _) = True
+isEnv _                = False
 
 -- An alias is implemented as a syntactic closure whose form is an identifier:
 --   (make-syntactic-closure env '() 'a) => an alias
