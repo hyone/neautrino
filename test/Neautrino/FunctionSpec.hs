@@ -13,7 +13,7 @@ import Neautrino (initEnv)
 import Neautrino.Error (LispError(..), runErrorT)
 import Neautrino.Function
 import Neautrino.Type
-import Neautrino.TestUtil (shouldReturnT, shouldErrorReturnT)
+import Neautrino.TestUtil (shouldReturnT, shouldErrorT)
 
 
 instance Arbitrary (Array Int LispVal) where
@@ -107,18 +107,19 @@ spec =
 
     describe "makeSyntacticClosure" $ do
       it "should be return new syntactic closure" $ do
-         env        <- initEnv
-         void $ runErrorT (makeSyntacticClosure [ SyntacticEnv env
-                                                , List [Atom "a", Atom "b"]
-                                                , Atom "hoge"])
+         env <- initEnv
+         void . return $ makeSyntacticClosure
+                           [ SyntacticEnv env
+                           , List [Atom "a", Atom "b"]
+                           , Atom "hoge"]
 
       it "should raise NumArgsError when argnum is any other than 3" $ do
          env <- initEnv
-         runErrorT (makeSyntacticClosure [ SyntacticEnv env
-                                         , List [Atom "a", Atom "b"]
-                                         , Atom "hoge"
-                                         , Undefined ])
-           `shouldErrorReturnT` NumArgsError 3 undefined
+         makeSyntacticClosure [ SyntacticEnv env
+                              , List [Atom "a", Atom "b"]
+                              , Atom "hoge"
+                              , Undefined ]
+           `shouldErrorT` NumArgsError 3 undefined
 
 main :: IO ()
 main = hspec spec
