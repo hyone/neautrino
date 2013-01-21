@@ -54,6 +54,8 @@ primitiveFuncs =
   , ("car",  car)
   , ("cdr",  cdr)
   , ("cons", cons)
+  , ("undefined", makeUndefined)
+  , ("error", raiseException)
   ]
 
 ioPrimitiveFuncs :: [(String, IOPrimitiveFunc)]
@@ -166,6 +168,18 @@ cons [x, List xs]       = return $ List (x:xs)
 cons [x, Pair xs xlast] = return $ Pair (x:xs) xlast
 cons [x, y]             = return $ Pair [x] y
 cons badArgList         = throwError $ NumArgsError 2 badArgList
+
+
+-- Other -----------------------------------------------------------------
+
+makeUndefined :: PrimitiveFunc
+makeUndefined []         = return Undefined
+makeUndefined badArgList = throwError $ NumArgsError 0 badArgList
+
+raiseException :: PrimitiveFunc
+raiseException []            = throwError $ DefaultError ""
+raiseException (reason:args) = throwError . DefaultError $
+  show reason ++ " " ++ unwords (map show args)
 
 
 -- IO Primitives ---------------------------------------------------------
