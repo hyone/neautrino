@@ -8,7 +8,7 @@ import Neautrino.Error (throwError, ErrorM, LispError(ParserError))
 import Control.Applicative ((<*), (*>), (<$>))
 import Control.Monad
 import Data.Array (listArray)
-import Data.Char (digitToInt)
+import Data.Char (digitToInt, isDigit)
 import Data.Complex (Complex(..))
 import Data.Ratio ((%))
 import Numeric (readInt, readOct, readDec, readHex, readFloat)
@@ -21,7 +21,7 @@ import qualified Text.Parsec.Token as P
 -- Tokens
 
 symbol :: Parser Char
-symbol = oneOf "!$%&|*+-/:<=>?@^_~"
+symbol = oneOf "!$%&|*+-/:<=>?@^_~."
 
 schemeDef :: LanguageDef ()
 schemeDef = emptyDef    
@@ -56,7 +56,13 @@ lexeme = P.lexeme lexer
 -- Atom
 
 parseAtom :: Parser LispVal
-parseAtom = Atom <$> identifier
+-- parseAtom = Atom <$> identifier
+parseAtom = do
+  name <- identifier
+  case name of
+    "."                             -> parserZero
+    (a:b:_) | a == '.' && isDigit b -> parserZero
+    _                               ->  return (Atom name)
 
 
 -- Char and String
@@ -266,7 +272,7 @@ parseUnQuoteSplicing = try $ do
 parseExpr :: Parser LispVal
 parseExpr = do
   optional whiteSpace 
-  lexeme $ parseAtom
+  lexeme $ try parseAtom
        <|> parseChar
        <|> parseString
        <|> parseNumeric

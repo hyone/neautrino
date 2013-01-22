@@ -18,6 +18,22 @@ parserError = ParserError undefined
 spec :: Spec
 spec = do
   describe "Neautrino.Parser" $ do
+    describe "atom" $ do
+      it "should parse: hoge->fuga" $
+        readExpr "hoge->fuga" `shouldBeT` Atom "hoge->fuga"
+
+      it "should parse: .a" $
+        readExpr ".a" `shouldBeT` Atom ".a"
+
+      it "should parse: =>" $
+        readExpr "=>" `shouldBeT` Atom "=>"
+
+      it "should parse: ..." $
+        readExpr "..." `shouldBeT` Atom "..."
+
+      it "should parse: ." $
+        readExpr "." `shouldErrorT` ParserError undefined
+
     describe "bool" $ do
       it "should parse: #t" $
         readExpr "#t" `shouldBeT` Bool True
