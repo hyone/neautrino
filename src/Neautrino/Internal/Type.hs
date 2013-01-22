@@ -113,9 +113,10 @@ showVal Closure {}            = "#<closure>"
 showVal (List contents)    = "("  ++ unwordsList contents ++ ")"
 showVal (Vector arr)       = "#(" ++ unwordsList (elems arr) ++ ")"
 showVal (Pair h t)         = "("  ++ unwordsList h ++ " . " ++ showVal t ++ ")"
-showVal MacroTransformer { macroName = name } = "#<macro " ++ name ++ ">"
+showVal (MacroTransformer name _) = "#<macro " ++ name ++ ">"
 showVal (SyntacticEnv _)   = "#<syntactic-environment>"
-showVal SyntacticClosure {} = "#<syntactic-closure>"
+showVal (SyntacticClosure _ freevars expr) = "#<syntactic-closure: " ++ show freevars
+                                          ++ ": " ++ show expr ++ ">"
 
 unwordsList :: [LispVal] -> String
 unwordsList =  unwords . map showVal

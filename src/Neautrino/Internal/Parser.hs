@@ -12,7 +12,7 @@ import Data.Char (digitToInt, isDigit)
 import Data.Complex (Complex(..))
 import Data.Ratio ((%))
 import Numeric (readInt, readOct, readDec, readHex, readFloat)
-import Text.Parsec hiding (spaces)
+import Text.Parsec
 import Text.Parsec.Language (LanguageDef, emptyDef)
 import Text.Parsec.String (Parser)
 import qualified Text.Parsec.Token as P
@@ -95,7 +95,7 @@ escapedChar = do
     _   -> c
 
 parseString :: Parser LispVal
-parseString = try $ do
+parseString = do
   char '"'
   x <- many (noneOf "\"\\" <|> escapedChar)
   char '"'
@@ -105,7 +105,7 @@ parseString = try $ do
 -- Bool
 
 parseBool :: Parser LispVal
-parseBool = try $ do
+parseBool = do
   char '#'
   c <- oneOf "tf"
   case c of
@@ -178,7 +178,7 @@ floatWithExp = do
   return (s1 ++ c : s2)
 
 parseFloat :: Parser LispVal
-parseFloat = try $ do
+parseFloat = do
   s <- try floatWithExp <|> float
   case readFloat s of
     [(x, _)] -> return (Float x)
@@ -201,18 +201,18 @@ toDouble (Integer n) = fromIntegral n
 toDouble _          = error "Not a number."
 
 parseComplex :: Parser LispVal
-parseComplex = try $ do
-  x <- parseFloat <|> parseNumber
+parseComplex = do
+  x <- try parseFloat <|> parseNumber
   char '+'
-  y <- parseFloat <|> parseNumber
+  y <- try parseFloat <|> parseNumber
   char 'i'
   return $ Complex (toDouble x :+ toDouble y)
 
 
 parseNumeric :: Parser LispVal
-parseNumeric = parseComplex
-           <|> parseRatio
-           <|> parseFloat
+parseNumeric = try parseComplex
+           <|> try parseRatio
+           <|> try parseFloat
            <|> parseNumber
 
 
@@ -261,7 +261,7 @@ parseUnQuote = do
 
 -- Note: need to try before parseUnQuote
 parseUnQuoteSplicing :: Parser LispVal
-parseUnQuoteSplicing = try $ do
+parseUnQuoteSplicing = do
   lexeme $ try (string ",@")
   x <- parseExpr
   return $ List [Atom "unquote-splicing", x]
@@ -274,14 +274,14 @@ parseExpr = do
   optional whiteSpace 
   lexeme $ try parseAtom
        <|> parseChar
-       <|> parseString
+       <|> try parseString
        <|> parseNumeric
-       <|> parseBool
+       <|> try parseBool
        <|> parseVector
        <|> parseAnyList
        <|> parseQuoted
        <|> parseQuasiQuoted
-       <|> parseUnQuoteSplicing
+       <|> try parseUnQuoteSplicing
        <|> parseUnQuote
 
 readOrThrow :: Parser a -> String -> ErrorM a

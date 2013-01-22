@@ -45,7 +45,7 @@ getVar var = do
         (liftIO . readIORef)
         (lookup var env)
 
--- | set value of variable
+-- | set value to variable in env
 setVar :: Var -> LispVal -> EvalExprMonad LispVal
 setVar var value = do
   envRef <- ask
