@@ -168,7 +168,11 @@ float = do
   s1 <- many digit
   c  <- char '.'
   s2 <- many digit
-  return (s1 ++ c : s2)
+  let num = s1 ++ c : s2
+  -- avoid to parse "." as float number
+  if num == "."
+     then parserZero
+     else return num
 
 floatWithExp :: Parser String
 floatWithExp = do
@@ -180,7 +184,9 @@ floatWithExp = do
 parseFloat :: Parser LispVal
 parseFloat = do
   s <- try floatWithExp <|> float
-  case readFloat s of
+  -- if integer part is omitted, assume it as '0'
+  let num = if head s == '.' then '0':s else s
+  case readFloat num of
     [(x, _)] -> return (Float x)
     _        -> fail "invalid float number"
 

@@ -87,6 +87,12 @@ spec = do
       it "should parse: 3.24" $ 
         readExpr "3.24" `shouldBeT` Float 3.24
 
+      it "should parse: .2" $ 
+        readExpr ".2" `shouldBeT` Float 0.2
+
+      it "should parse: 5." $ 
+        readExpr "5." `shouldBeT` Float 5.0
+
       it "should parse: 3.2e3" $
         readExpr "3.24e3" `shouldBeT` Float 3240.0
 
