@@ -3,7 +3,7 @@ module Neautrino.Syntax
   ( primitiveSyntaxes ) where
 
 import Neautrino.Type (Closure(..), LispVal(..), EvalExprMonad, PrimitiveFunc, SyntaxHandler)
-import Neautrino.Env (Env, Var, bindVars, defineVar, setVar)
+import Neautrino.Env (Env, Var, bindVars, defineVar, setVar, unsetVar)
 import Neautrino.Error
 import Neautrino.Eval (eval, evalBody)
 import Neautrino.Function.Equal (eqvP)
@@ -221,10 +221,14 @@ caseForm exps = syntaxError "case" exps
 
 defineSyntaxForm :: SyntaxHandler
 defineSyntaxForm exprs@[ Atom name, expr ] = do
+   -- First of all, define name to enable to refer self name in expr
+   defineVar name Undefined
    result <- eval expr
    case result of
      Closure closure -> do
        let macro = MacroTransformer name closure
-       defineVar name macro
-     _ -> syntaxError "define-syntax" exprs
+       setVar name macro
+     _               -> do
+       unsetVar name   -- Remove self name when syntax error
+       syntaxError "define-syntax" exprs
 defineSyntaxForm exprs = syntaxError "define-syntax" exprs

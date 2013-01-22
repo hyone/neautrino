@@ -5,8 +5,10 @@ module Neautrino.Env
   , VarPair
   , VarRefPair
   , nullEnv
+  , isBound
   , getVar
   , setVar
+  , unsetVar
   , defineVar
   , bindVars
   , bindFreevars
@@ -52,6 +54,14 @@ setVar var value = do
         (liftIO . (`writeIORef` value))
         (lookup var env)
   return value
+
+-- | unset name from env
+unsetVar :: Var -> EvalExprMonad ()
+unsetVar var = do
+  envRef <- ask
+  env    <- liftIO $ readIORef envRef
+  liftIO $ writeIORef envRef (filter ((/= var) . fst) env)
+  return ()
 
 addVar :: Env -> Var -> LispVal -> IO LispVal
 addVar envRef var value = do

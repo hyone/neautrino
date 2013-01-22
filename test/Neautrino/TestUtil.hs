@@ -5,6 +5,8 @@ module Neautrino.TestUtil (
 , shouldReturnT
 , shouldErrorT
 , shouldErrorReturnT
+, assertNoErrorT
+, assertNoIOErrorT
 ) where
 
 import Test.Hspec
@@ -63,3 +65,10 @@ shouldErrorT x            expected = assertFailure $ message (show $ ErrorType e
 
 shouldErrorReturnT :: (Eq a, Show a) => IO (ErrorM a) -> LispError -> Expectation
 shouldErrorReturnT action expected = action >>= (`shouldErrorT` expected)
+
+assertNoErrorT :: (Eq a, Show a) => ErrorM a -> Expectation
+assertNoErrorT (Right _) = return ()
+assertNoErrorT x         = assertFailure $ "raise error: " ++ show x
+
+assertNoIOErrorT :: (Eq a, Show a) => IO (ErrorM a) -> Expectation
+assertNoIOErrorT action = action >>= assertNoErrorT

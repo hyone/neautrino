@@ -4,7 +4,7 @@
 module Neautrino.SyntaxSpec (spec) where
 
 import Test.Hspec
-import Neautrino.TestUtil (shouldReturnT)
+import Neautrino.TestUtil (shouldReturnT, shouldErrorReturnT, assertNoIOErrorT)
 
 import Neautrino (evalAST, initEnv, scheme)
 import Neautrino.Env (getVar)
@@ -189,6 +189,17 @@ spec =
             ((2 3 5 7) 'prime)
             ((1 4 6 8 9) 'composite))
         |] `shouldReturnT` Atom "composite"
+
+    describe "define-syntax" $ do
+      it "whose name should be referrable in macro of er-macro-transformer" $ do
+        env <- initEnv
+        evalAST env [scheme|
+          (define-syntax foo
+            (er-macro-transformer
+             (lambda (expr rename compare)
+               `(,(rename 'display) ,(rename 'foo)))))
+        |]
+        assertNoIOErrorT $ evalAST env [scheme| (foo) |]
 
 main :: IO ()
 main = hspec spec

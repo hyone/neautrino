@@ -15,6 +15,7 @@ extra-source-files:
   test/doctest.hs
   test/test.hs
   test/LispCodeSpec.hs
+  test/Neautrino/EnvSpec.hs
   test/Neautrino/FunctionSpec.hs
   test/Neautrino/Function/EqualSpec.hs
   test/Neautrino/LoadSpec.hs
