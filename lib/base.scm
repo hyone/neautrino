@@ -99,6 +99,12 @@
 (define (reverse lst)
   (fold (flip cons) '() lst))
 
+(define (append lst1 lst2)
+  (define (append-reverse a b)
+    (if (pair? a)
+        (append-reverse (cdr a) (cons (car a) b))
+        b))
+  (append-reverse (reverse lst1) lst2))
 
 (define (mem-helper pred op)
   (lambda (acc next)
