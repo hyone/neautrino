@@ -86,16 +86,6 @@ data LispVal = Atom { atomName :: String }
   deriving (Typeable)
 
 
-complex :: Double -> Double -> LispVal
-complex x y = Complex (x :+ y)
-
-ratio :: Integer -> Integer -> LispVal
-ratio x y = Ratio (x % y)
-
-vector :: [LispVal] -> LispVal
-vector args = Vector $ listArray (0, length args - 1) args
-
-
 -- Eq class instance
 
 instance Eq LispVal where
@@ -209,6 +199,18 @@ instance Data LispVal where
   toConstr x             = error $ "toConstr: not implemented: " ++ show x
 
   dataTypeOf _ = lispValDataType
+
+
+-- Functions
+
+complex :: Double -> Double -> LispVal
+complex x y = Complex (x :+ y)
+
+ratio :: Integer -> Integer -> LispVal
+ratio x y = Ratio (x % y)
+
+vector :: [LispVal] -> LispVal
+vector args = Vector $ listArray (0, length args - 1) args
 
 
 isSymbol :: LispVal -> Bool

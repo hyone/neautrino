@@ -15,7 +15,7 @@ import Data.Array (listArray)
 spec :: Spec
 spec =
   describe "Neautrino.Eval" $ do
-    describe "eval" $ do
+    describe "eval" $
       describe "self evaluating form" $ 
         it "should return a vector as it is" $ do
           env <- initEnv
