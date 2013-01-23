@@ -1,4 +1,4 @@
-module Neautrino.TestUtil (
+module Neautrino.HspecHelper (
   shouldContain    
 , shouldEitherT
 , shouldBeT

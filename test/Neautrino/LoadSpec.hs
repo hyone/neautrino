@@ -1,7 +1,7 @@
 module Neautrino.LoadSpec (spec) where
 
 import Test.Hspec
-import Neautrino.TestUtil (shouldContain, shouldReturnT)
+import Neautrino.HspecHelper (shouldContain, shouldReturnT)
 
 import Neautrino (evalAST, initEnv)
 import Neautrino.Load (loadLibrary)

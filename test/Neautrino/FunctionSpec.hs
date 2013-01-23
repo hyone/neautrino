@@ -13,7 +13,7 @@ import Neautrino (initEnv)
 import Neautrino.Error (LispError(..), runErrorT)
 import Neautrino.Function
 import Neautrino.Type
-import Neautrino.TestUtil (shouldReturnT, shouldErrorT)
+import Neautrino.HspecHelper (shouldReturnT, shouldErrorT)
 
 
 instance Arbitrary (Array Int LispVal) where

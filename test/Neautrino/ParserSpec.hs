@@ -2,7 +2,7 @@
 module Neautrino.ParserSpec (spec) where
 
 import Test.Hspec
-import Neautrino.TestUtil (shouldBeT, shouldErrorT)
+import Neautrino.HspecHelper (shouldBeT, shouldErrorT)
 import Data.Array (listArray)
 import Data.Ratio ((%))
 import Data.Complex (Complex(..))

@@ -4,7 +4,7 @@
 module Neautrino.EvalSpec (spec) where
 
 import Test.Hspec
-import Neautrino.TestUtil (shouldReturnT)
+import Neautrino.HspecHelper (shouldReturnT)
 
 import Neautrino (evalAST, initEnv, scheme)
 import Neautrino.Env (bindVars)

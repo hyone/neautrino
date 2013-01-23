@@ -1,7 +1,7 @@
 module Neautrino.Function.EqualSpec (spec) where
 
 import Test.Hspec
-import Neautrino.TestUtil (shouldBeT)
+import Neautrino.HspecHelper (shouldBeT)
 
 import Neautrino.Function.Equal (eqvP, equalP)
 import Neautrino.Type (LispVal(..))

@@ -4,7 +4,7 @@
 module Neautrino.SyntaxSpec (spec) where
 
 import Test.Hspec
-import Neautrino.TestUtil (shouldReturnT, shouldErrorReturnT, assertNoIOErrorT)
+import Neautrino.HspecHelper (shouldReturnT, shouldErrorReturnT, assertNoIOErrorT)
 
 import Neautrino (evalAST, initEnv, scheme)
 import Neautrino.Env (getVar)
