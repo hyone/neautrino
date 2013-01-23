@@ -9,6 +9,8 @@ module Neautrino.Env
   , getVar
   , setVar
   , unsetVar
+  , pushVar
+  , popVar
   , defineVar
   , bindVars
   , bindFreevars
@@ -63,12 +65,19 @@ unsetVar var = do
   liftIO $ writeIORef envRef (filter ((/= var) . fst) env)
   return ()
 
-addVar :: Env -> Var -> LispVal -> IO LispVal
-addVar envRef var value = do
+pushVar :: Env -> Var -> LispVal -> IO LispVal
+pushVar envRef var value = do
   env      <- readIORef envRef
   valueRef <- newIORef value
   writeIORef envRef ((var, valueRef) : env)
   return value
+
+popVar :: Env -> IO ()
+popVar envRef = do
+  env <- readIORef envRef
+  unless (null env) $ 
+    writeIORef envRef (tail env)
+  return ()
 
 -- | modify value of an existing variable or create new one
 defineVar :: Var -> LispVal -> EvalExprMonad LispVal
@@ -78,9 +87,8 @@ defineVar var value = do
   if defined then
     setVar var value
   else
-    liftIO $ addVar envRef var value
+    liftIO $ pushVar envRef var value
   return value
-
 
 -- | extend env with bindings
 bindVars :: Env -> [VarPair] -> IO Env
@@ -109,7 +117,7 @@ bindFreevars freevars fromEnvRef toEnvRef = do
   adding <- forM freevars $ \varname -> do
     defined <- isBound fromEnvRef varname
     unless defined $
-      void (addVar fromEnvRef varname Undefined)
+      void (pushVar fromEnvRef varname Undefined)
     valueRef <- (fromJust . lookup varname) `liftM` readIORef fromEnvRef
     return (varname, valueRef)
   newIORef (adding ++ toEnv)
