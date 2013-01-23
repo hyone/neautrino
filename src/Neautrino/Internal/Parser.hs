@@ -7,10 +7,7 @@ import Neautrino.Error (throwError, ErrorM, LispError(ParserError))
 
 import Control.Applicative ((<*), (*>), (<$>))
 import Control.Monad
-import Data.Array (listArray)
 import Data.Char (digitToInt, isDigit)
-import Data.Complex (Complex(..))
-import Data.Ratio ((%))
 import Numeric (readInt, readOct, readDec, readHex, readFloat)
 import Text.Parsec
 import Text.Parsec.Language (LanguageDef, emptyDef)
@@ -197,7 +194,7 @@ parseRatio = try $ do
   Integer x <- parseNumber
   char '/'
   y <- many1 digit
-  return $ Ratio (x % read y)
+  return $ ratio x (read y)
 
 -- Complex
 
@@ -212,7 +209,7 @@ parseComplex = do
   char '+'
   y <- try parseFloat <|> parseNumber
   char 'i'
-  return $ Complex (toDouble x :+ toDouble y)
+  return $ complex (toDouble x) (toDouble y)
 
 
 parseNumeric :: Parser LispVal
@@ -230,7 +227,7 @@ parseVector = string "#(" *> parseVector' <* char ')'
     parseVector' :: Parser LispVal
     parseVector' = do
       arrayValues <- sepBy parseExpr whiteSpace
-      return . Vector $ listArray (0, length arrayValues - 1) arrayValues
+      return $ vector arrayValues
 
 parseList :: Parser LispVal
 parseList = List <$> sepEndBy parseExpr whiteSpace

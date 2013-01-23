@@ -10,6 +10,9 @@ module Neautrino.Internal.Type
   , IOPrimitiveFunc
   , Closure(..)
   , LispVal(..)
+  , ratio
+  , complex
+  , vector
   , LispError(..)
   , ErrorM
   , IOErrorM
@@ -24,8 +27,9 @@ module Neautrino.Internal.Type
 
 import Control.Monad.Error (Error(..), ErrorT, MonadError, throwError, runErrorT)
 import Control.Monad.Reader (ReaderT, runReaderT)
-import Data.Array (Array, elems)
-import Data.Complex (Complex)
+import Data.Array (Array, elems, listArray)
+import Data.Complex (Complex(..))
+import Data.Ratio ((%))
 import Data.Generics ( Constr, Data(..), DataType
                      , Fixity(Prefix), Typeable(..), TyCon
                      , mkConstr, mkDataType, mkTyCon3, mkTyConApp)
@@ -71,6 +75,17 @@ data LispVal = Atom { atomName :: String }
              | MacroTransformer { macroName   :: String
                                 , macroProc   :: Closure }
   deriving (Typeable)
+
+
+complex :: Double -> Double -> LispVal
+complex x y = Complex (x :+ y)
+
+ratio :: Integer -> Integer -> LispVal
+ratio x y = Ratio (x % y)
+
+vector :: [LispVal] -> LispVal
+vector args = Vector $ listArray (0, length args - 1) args
+
 
 -- Eq class instance
 

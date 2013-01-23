@@ -5,6 +5,9 @@ module Neautrino.Type
   , IOPrimitiveFunc
   , Closure(..)
   , LispVal(..)
+  , ratio
+  , complex
+  , vector
   , EvalExprMonad
   , runEvalExprMonad
   ) where
