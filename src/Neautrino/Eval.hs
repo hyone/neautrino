@@ -6,12 +6,13 @@ module Neautrino.Eval
   , evalString
   ) where
 
-import Neautrino.Type (Closure(..), LispVal(..), EvalExprMonad, runEvalExprMonad)
-import Neautrino.Env (Env, Var, bindVars, getVar, bindFreevars)
+import Neautrino.Type
+import Neautrino.Env
 import Neautrino.Error
 import Neautrino.Parser (readExpr)
 
-import Control.Monad (liftM)
+import Control.Arrow (first)
+import Control.Monad (liftM, forM_)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Class (lift)
 import Control.Monad.Reader (ask, local, runReaderT)
@@ -63,13 +64,25 @@ evalApplication app args = do
 
 
 applyClosure :: Closure -> [LispVal] -> IOErrorM LispVal
-applyClosure (Closure' params varargs body env) args =
+applyClosure (Closure' params varargs body closEnv) args =
     if length params /= length args && isNothing varargs then
       throwError $ NumArgsError (length params) args
-    else
-      liftIO (bindVars env (zip params args))
-        >>= bindVarArgs varargs
-        >>= runReaderT (evalBody body)
+    else do
+      let argPairs   = zip params args
+          atomPairs  = filter (isSymbol . fst) argPairs
+          aliasPairs = filter (isAlias  . fst) argPairs
+      -- add alias argument bindings to each syntactic environment
+      liftIO $ forM_ aliasPairs $ \(SyntacticClosure synEnv _ (Atom var), value) ->
+        pushVar synEnv var value
+      -- bind normal arguments
+      env  <- liftIO (bindVars closEnv (map (first atomName) atomPairs))
+                >>= bindVarArgs varargs
+      -- eval body
+      ret <- runReaderT (evalBody body) env
+      -- remove alias argument bindings to each syntactic environment
+      liftIO $ forM_ aliasPairs $ \(SyntacticClosure synEnv _ _, _) ->
+        popVar synEnv
+      return ret
   where
     bindVarArgs :: Maybe String -> Env -> IOErrorM Env
     bindVarArgs varg env' = case varg of

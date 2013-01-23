@@ -54,7 +54,7 @@ type SyntaxHandler = [LispVal] -> EvalExprMonad LispVal
 type PrimitiveFunc   = [LispVal] -> ErrorM LispVal
 type IOPrimitiveFunc = [LispVal] -> IOErrorM LispVal
 
-data Closure = Closure' { closureParams :: [String]
+data Closure = Closure' { closureParams :: [LispVal]
                         , closureVararg :: Maybe String
                         , closureBody   :: [LispVal]
                         , closureEnv    :: Env }

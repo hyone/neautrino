@@ -1,9 +1,12 @@
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE QuasiQuotes #-}
+{-# OPTIONS_GHC -fno-warn-unused-do-bind #-}
 module Neautrino.EvalSpec (spec) where
 
 import Test.Hspec
 import Neautrino.TestUtil (shouldReturnT)
 
-import Neautrino (evalAST, initEnv)
+import Neautrino (evalAST, initEnv, scheme)
 import Neautrino.Env (bindVars)
 import Neautrino.Type (LispVal(..))
 import Data.Array (listArray)
@@ -31,6 +34,21 @@ spec =
         env2 <- bindVars env1 [("a", Integer 99)]
         let synClosure = SyntacticClosure env2 ["a"] (Atom "a")
         evalAST env1 synClosure `shouldReturnT` Integer 1
+
+    describe "applyClosure" $
+      it "should bind aliases to closure environment" $ do
+        env <- initEnv
+        evalAST env [scheme|
+          (define-syntax foo
+            (er-macro-transformer
+             (lambda (expr rename compare)
+               `((,(rename 'lambda) (,(rename 'hoge))
+                    ,(rename 'hoge))
+                 ,(cadr expr)))))
+        |]
+        -- should be no unbound variable error
+        evalAST env [scheme| (foo (+ 1 2)) |] `shouldReturnT` Integer 3
+
 
 main :: IO ()
 main = hspec spec

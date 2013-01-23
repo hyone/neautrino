@@ -2,7 +2,7 @@
 module Neautrino.Syntax
   ( primitiveSyntaxes ) where
 
-import Neautrino.Type (Closure(..), LispVal(..), EvalExprMonad, PrimitiveFunc, SyntaxHandler)
+import Neautrino.Type
 import Neautrino.Env (Env, Var, bindVars, defineVar, setVar, unsetVar)
 import Neautrino.Error
 import Neautrino.Eval (eval, evalBody)
@@ -10,6 +10,7 @@ import Neautrino.Function.Equal (eqvP)
 import Neautrino.Load (load)
 
 import Control.Monad (liftM, liftM2, (>=>))
+import Control.Monad.Error (MonadError)
 import Control.Monad.Reader (MonadReader, ask, local)
 import Data.Array (bounds, elems, listArray)
 
@@ -27,19 +28,23 @@ fromUnarySyntaxHandler name _       badArgs = syntaxError name badArgs
 
 
 -- helper to build function 
-makeClojure :: (Monad m, MonadReader Env m)
+
+makeClojure :: (Monad m, MonadReader Env m, MonadError LispError m)
             => Maybe String -> [LispVal] -> [LispVal]
             -> m LispVal
 makeClojure varargs params body = do
-  env <- ask
-  return $ Closure (Closure' (map show params) varargs body env)
+  env     <- ask
+  params' <- mapM (\param -> if (not . isIdentifier) param
+                               then throwError $ DefaultError $ "non-symbol parameter: " ++ show param
+                               else return param) params
+  return $ Closure (Closure' params' varargs body env)
 
-makeNormalClojure :: (Monad m, MonadReader Env m)
+makeNormalClojure :: (Monad m, MonadReader Env m, MonadError LispError m)
                   => [LispVal] -> [LispVal]
                   -> m LispVal
 makeNormalClojure = makeClojure Nothing
 
-makeVarargsClojure :: (Monad m, MonadReader Env m)
+makeVarargsClojure :: (Monad m, MonadReader Env m, MonadError LispError m)
                    => LispVal -> [LispVal] -> [LispVal]
                    -> m LispVal
 makeVarargsClojure = makeClojure . Just . show
