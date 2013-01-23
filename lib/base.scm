@@ -251,6 +251,61 @@
              (error "bad let* syntax"))))))
 
 
+(define-syntax cond
+  (er-macro-transformer
+   (lambda (expr rename compare)
+     (if (null? (cdr expr))
+         #f
+         ((lambda (cl)
+            (if (compare (rename 'else) (car cl))
+                (if (pair? (cddr expr))
+                    (error "non-final else in cond" expr)
+                    (cons (rename 'begin) (cdr cl)))
+                (if (if (null? (cdr cl)) #t (compare (rename '=>) (cadr cl)))
+                    (list (list (rename 'lambda) (list (rename 'tmp))
+                                (list (rename 'if) (rename 'tmp)
+                                      (if (null? (cdr cl))
+                                          (rename 'tmp)
+                                          (list (car (cddr cl)) (rename 'tmp)))
+                                      (cons (rename 'cond) (cddr expr))))
+                          (car cl))
+                    (list (rename 'if)
+                          (car cl)
+                          (cons (rename 'begin) (cdr cl))
+                          (cons (rename 'cond) (cddr expr))))))
+          (cadr expr))))))
+
+
+(define-syntax case
+  (er-macro-transformer
+   (lambda (expr rename compare)
+     (define (body exprs)
+       (cond
+        ((null? exprs)
+         (rename 'tmp))
+        ((compare (rename '=>) (car exprs))
+         `(,(cadr exprs) ,(rename 'tmp)))
+        (else
+         `(,(rename 'begin) ,@exprs))))
+     (define (clause ls)
+       (cond
+        ((null? ls) #f)
+        ((compare (rename 'else) (caar ls))
+         (body (cdar ls)))
+        ((and (pair? (car (car ls))) (null? (cdr (car (car ls)))))
+         `(,(rename 'if) (,(rename 'eqv?) ,(rename 'tmp)
+                          (,(rename 'quote) ,(car (caar ls))))
+           ,(body (cdar ls))
+           ,(clause (cdr ls))))
+        (else
+         `(,(rename 'if) (,(rename 'memv) ,(rename 'tmp)
+                          (,(rename 'quote) ,(caar ls)))
+           ,(body (cdar ls))
+           ,(clause (cdr ls))))))
+     `(let ((,(rename 'tmp) ,(cadr expr)))
+        ,(clause (cddr expr))))))
+
+
 (define-syntax define-auxiliary-syntax
   (er-macro-transformer
    (lambda (expr rename compare)

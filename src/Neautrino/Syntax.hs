@@ -4,10 +4,9 @@ module Neautrino.Syntax
   ( primitiveSyntaxes ) where
 
 import Neautrino.Type
-import Neautrino.Env (Env, Var, bindVars, defineVar, setVar, unsetVar)
+import Neautrino.Env (Env, defineVar, setVar, unsetVar)
 import Neautrino.Error
 import Neautrino.Eval (eval, evalBody)
-import Neautrino.Function.Equal (eqvP)
 import Neautrino.Load (load)
 
 import Control.Monad (liftM, liftM2, (>=>))
@@ -66,8 +65,6 @@ primitiveSyntaxes =
   , ("load", loadForm)
   , ("if", ifForm)
   , ("begin", beginForm)
-  , ("cond", condForm)
-  , ("case", caseForm)
   ]
 
 
@@ -170,36 +167,6 @@ ifForm  [p, thenExp, elseExp] = do
     Bool False -> eval elseExp
     _          -> eval thenExp
 ifForm badArgs = syntaxError "if" badArgs
-
-
-condForm :: SyntaxHandler
-condForm []                  = return Undefined
-condForm [List (Atom "else" : body)] = evalBody body
-condForm exps@(List (Atom "else":_) : _) = syntaxError "cond" exps
-condForm (List (p : body) : xs) = do
-  result <- eval p
-  case result of
-    Bool False -> condForm xs
-    _          -> evalBody body
-condForm exps = syntaxError "cond" exps
-
-
-or' :: PrimitiveFunc
-or' []                = return (Bool False)
-or' (Bool False : xs) = or' xs
-or' (x : _)           = return x
-
-caseForm :: SyntaxHandler
-caseForm [_] = return Undefined
-caseForm (p : List (List vs : body) : rest) =
-  do base         <- eval p
-     results      <- liftErrorM $ mapM (\v -> eqvP [base, v]) vs
-     Bool matched <- liftErrorM $ or' results
-     if matched then
-       evalBody body
-     else
-       caseForm (base:rest)
-caseForm exps = syntaxError "case" exps
 
 
 defineSyntaxForm :: SyntaxHandler
