@@ -8,6 +8,15 @@ module Neautrino.Type
   , ratio
   , complex
   , vector
+  , isSymbol
+  , isBool
+  , isNumber
+  , isString 
+  , isList
+  , isPair
+  , isEnv
+  , isAlias
+  , isIdentifier
   , EvalExprMonad
   , runEvalExprMonad
   ) where

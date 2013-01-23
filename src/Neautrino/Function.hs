@@ -37,7 +37,7 @@ primitiveFuncs =
   , ("string<=?", stringBoolFunc (<=))
   , ("string>=?", stringBoolFunc (>=))
   , ("symbol?",   function1 unpackAny (return . Bool) isSymbol)
-  , ("boolean?",  function1 unpackAny (return . Bool) isBoolean)
+  , ("boolean?",  function1 unpackAny (return . Bool) isBool)
   , ("string?",   function1 unpackAny (return . Bool) isString)
   , ("list?",     function1 unpackAny (return . Bool) isList)
   , ("pair?",     function1 unpackAny (return . Bool) isPair)
@@ -78,21 +78,6 @@ ioPrimitiveFuncs =
 
 -- Type Check ------------------------------------------------------------
 
-isSymbol :: LispVal -> Bool
-isSymbol (Atom _) = True
-isSymbol _        = False
-
-isBoolean :: LispVal -> Bool
-isBoolean (Bool _) = True
-isBoolean _        = False
-
-isNumber :: LispVal -> Bool
-isNumber (Integer _) = True
-isNumber (Float _)   = True
-isNumber (Ratio _)   = True
-isNumber (Complex _) = True
-isNumber _           = False
-
 isComplex :: LispVal -> Bool
 isComplex = isNumber
 
@@ -116,33 +101,6 @@ isInteger (Ratio n)   = numerator n `mod` denominator n == 0
 isInteger (Complex n) = let r = realPart n in
                         imagPart n == 0 && isIntOfDouble r
 isInteger _           = False
-
-isString :: LispVal -> Bool
-isString (String _)  = True
-isString _           = False
-
-isList :: LispVal -> Bool
-isList (List _)  = True
-isList _         = False
-
-isPair :: LispVal -> Bool
-isPair (List [])  = False
-isPair (List _)   = True
-isPair (Pair _ _) = True
-isPair _          = False
-
-isEnv :: LispVal -> Bool
-isEnv (SyntacticEnv _) = True
-isEnv _                = False
-
--- An alias is implemented as a syntactic closure whose form is an identifier:
---   (make-syntactic-closure env '() 'a) => an alias
-isAlias :: LispVal -> Bool
-isAlias (SyntacticClosure _ _ (Atom _)) = True
-isAlias _ = False
-
-isIdentifier :: LispVal -> Bool
-isIdentifier x = isSymbol x || isAlias x
 
 
 -- List ------------------------------------------------------------------
