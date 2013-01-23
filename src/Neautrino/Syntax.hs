@@ -10,7 +10,6 @@ import Neautrino.Function.Equal (eqvP)
 import Neautrino.Load (load)
 
 import Control.Monad (liftM, liftM2, (>=>))
-import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (MonadReader, ask, local)
 import Data.Array (bounds, elems, listArray)
 
@@ -60,7 +59,6 @@ primitiveSyntaxes =
   , ("set!", setForm)
   , ("load", loadForm)
   , ("if", ifForm)
-  , ("let", letForm)
   , ("begin", beginForm)
   , ("cond", condForm)
   , ("case", caseForm)
@@ -156,27 +154,6 @@ loadForm args              = syntaxError "load" args
 
 beginForm :: SyntaxHandler
 beginForm = evalBody 
-
--- let bindings:
--- (let ((a 3) (b 5))
---   (print a) (print b) (* a b))
-letForm :: SyntaxHandler
-letForm exps = case exps of
-    []                   -> letError
-    (_ : [])             -> return Undefined
-    (List params : body) -> do
-      env     <- ask
-      params' <- mapM extractVarTuple params
-      env'    <- liftIO (bindVars env params')
-      local (const env') $ evalBody body
-    _ -> letError
-  where
-    extractVarTuple :: LispVal -> EvalExprMonad (Var, LispVal)
-    extractVarTuple (List [Atom x, y]) = do { y' <- eval y; return (x, y') }
-    extractVarTuple _                  = letError
-
-    letError :: EvalExprMonad a
-    letError = syntaxError "let" exps
 
 
 ifForm :: SyntaxHandler

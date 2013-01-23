@@ -8,6 +8,7 @@ import Neautrino.TestUtil (shouldReturnT, shouldErrorReturnT, assertNoIOErrorT)
 
 import Neautrino (evalAST, initEnv, scheme)
 import Neautrino.Env (getVar)
+import Neautrino.Error (LispError(..))
 import Neautrino.Type (LispVal(..), runEvalExprMonad)
 
 import Data.Array (listArray)
@@ -152,10 +153,10 @@ spec =
         |] `shouldReturnT` Integer 8
         evalAST env (Atom "a") `shouldReturnT` Integer 1
 
-      it "should return #undef at: (let ())" $ do
+      it "should raise error at: (let ())" $ do
         env <- initEnv
         evalAST env [scheme| (let ()) |]
-          `shouldReturnT` Undefined
+          `shouldErrorReturnT` DefaultError undefined
 
     describe "cond" $ do
       it "should evaluate expression that in the alist pred is evaluated to true" $ do

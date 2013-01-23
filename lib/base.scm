@@ -125,6 +125,31 @@
   (fold (mem-helper (curry equal? obj) car) #f alst))
 
 
+;; 'any' and 'every' are ported from chibi-scheme:
+;; http://code.google.com/p/chibi-scheme/source/browse/lib/init-7.scm
+
+(define (any pred ls . lol)
+  (define (any1 pred ls)
+    (if (null? (cdr ls))
+        (pred (car ls))
+        ((lambda (x) (if x x (any1 pred (cdr ls)))) (pred (car ls)))))
+  (define (anyn pred lol)
+    (if (every pair? lol)
+        ((lambda (x) (if x x (anyn pred (map cdr lol))))
+         (apply pred (map car lol)))
+        #f))
+  (if (null? lol) (if (pair? ls) (any1 pred ls) #f) (anyn pred (cons ls lol))))
+
+(define (every pred ls . lol)
+  (define (every1 pred ls)
+    (if (null? (cdr ls))
+        (pred (car ls))
+        (if (pred (car ls)) (every1 pred (cdr ls)) #f)))
+  (if (null? lol)
+      (if (pair? ls) (every1 pred ls) #t)
+      (not (apply any (lambda (x) (not (pred x))) ls lol))))
+
+
 ;; Macros and Syntax
 ;; ------------------------------------------------------------------------
 ;;
@@ -158,3 +183,66 @@
         '())
        (lambda (x y) (identifier=? use-env x use-env y))))))
 
+
+(define-syntax letrec
+  (er-macro-transformer
+   (lambda (expr rename compare)
+     ((lambda (defs)
+        `((,(rename 'lambda) () ,@defs ,@(cddr expr))))
+      (map (lambda (x) (cons (rename 'define) x)) (cadr expr))))))
+
+
+(define-syntax let
+  (er-macro-transformer
+   (lambda (expr rename compare)
+     (if (null? (cdr expr)) (error "empty let" expr))
+     (if (null? (cddr expr)) (error "no let body" expr))
+     ((lambda (bindings)
+        (if (list? bindings) #f (error "bad let bindings"))
+        (if (every (lambda (x)
+                     (if (pair? x) (if (pair? (cdr x)) (null? (cddr x)) #f) #f))
+                   bindings)
+            ((lambda (vars vals)
+               (if (identifier? (cadr expr))
+                   `((,(rename 'lambda) ,vars
+                      (,(rename 'letrec) ((,(cadr expr)
+                                           (,(rename 'lambda) ,vars
+                                            ,@(cdr (cddr expr)))))
+                       (,(cadr expr) ,@vars)))
+                     ,@vals)
+                   `((,(rename 'lambda) ,vars ,@(cddr expr)) ,@vals)))
+             (map car bindings)
+             (map cadr bindings))
+            (error "bad let syntax" expr)))
+      (if (identifier? (cadr expr)) (car (cddr expr)) (cadr expr))))))
+
+
+(define-syntax let*
+  (er-macro-transformer
+   (lambda (expr rename compare)
+     (if (null? (cdr expr)) (error "empty let*" expr))
+     (if (null? (cddr expr)) (error "no let* body" expr))
+     (if (null? (cadr expr))
+         `(,(rename 'let) () ,@(cddr expr))
+         (if (if (list? (cadr expr))
+                 (every
+                  (lambda (x)
+                    (if (pair? x) (if (pair? (cdr x)) (null? (cddr x)) #f) #f))
+                  (cadr expr))
+                 #f)
+             `(,(rename 'let) (,(caar (cdr expr)))
+               (,(rename 'let*) ,(cdar (cdr expr)) ,@(cddr expr)))
+             (error "bad let* syntax"))))))
+
+
+(define-syntax define-auxiliary-syntax
+  (er-macro-transformer
+   (lambda (expr rename compare)
+     `(,(rename 'define-syntax) ,(cadr expr)
+       (,(rename 'er-macro-transformer)
+        (,(rename 'lambda) (expr rename compare)
+         (,(rename 'error) "invalid use of auxiliary syntax" ',(cadr expr))))))))
+
+(define-auxiliary-syntax _)
+(define-auxiliary-syntax =>)
+(define-auxiliary-syntax else)
