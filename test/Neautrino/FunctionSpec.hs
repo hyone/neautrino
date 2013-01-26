@@ -132,6 +132,16 @@ spec =
                             , List [ Atom "a", Atom "b" ]
                             , Atom "hoge" ]
 
+    describe "identifierEqualP" $
+      it "should be comparable between symbol and alias" $ do
+         env <- initEnv
+         ret <- runErrorT $
+                  identifierEqualP [ SyntacticEnv env
+                                   , SyntacticClosure env [] (Atom "define")
+                                   , SyntacticEnv env
+                                   , Atom "define" ]
+         ret `shouldBeT` Bool True
+
 
 main :: IO ()
 main = hspec spec

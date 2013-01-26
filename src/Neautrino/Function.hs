@@ -214,7 +214,16 @@ readAll badArgList        = throwError $ NumArgsError 1 badArgList
 
 
 identifierEqualP :: IOPrimitiveFunc
-identifierEqualP [SyntacticEnv env1, String var1, SyntacticEnv env2, String var2] =
-  liftM Bool (liftIO $ equalVar env1 var1 env2 var2)
-identifierEqualP [_, _, _, _] = return (Bool False)
+identifierEqualP [SyntacticEnv env1, id1, SyntacticEnv env2, id2]
+  | isIdentifier id1 && isIdentifier id2 = do
+    let (env1', var1) = case id1 of
+                          SyntacticClosure synEnv _ (Atom var) -> (synEnv, var)
+                          Atom var                             -> (env1, var)
+                          _                                    -> (env1, "")
+    let (env2', var2) = case id2 of
+                          SyntacticClosure synEnv _ (Atom var) -> (synEnv, var)
+                          Atom var                             -> (env2, var)
+                          _                                    -> (env2, "")
+    liftM Bool (liftIO $ equalVar env1' var1 env2' var2)
+  | otherwise = return (Bool False)
 identifierEqualP badArgList   = throwError $ NumArgsError 4 badArgList
