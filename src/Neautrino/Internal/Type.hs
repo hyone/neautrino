@@ -19,6 +19,7 @@ module Neautrino.Internal.Type
   , isString 
   , isList
   , isPair
+  , isVector
   , isEnv
   , isAlias
   , isIdentifier
@@ -241,6 +242,10 @@ isPair (List [])  = False
 isPair (List _)   = True
 isPair (Pair _ _) = True
 isPair _          = False
+
+isVector :: LispVal -> Bool
+isVector (Vector _) = True
+isVector _          = False
 
 isEnv :: LispVal -> Bool
 isEnv (SyntacticEnv _) = True

@@ -41,6 +41,7 @@ primitiveFuncs =
   , ("string?",   function1 unpackAny (return . Bool) isString)
   , ("list?",     function1 unpackAny (return . Bool) isList)
   , ("pair?",     function1 unpackAny (return . Bool) isPair)
+  , ("vector?",   function1 unpackAny (return . Bool) isVector)
   , ("number?",   function1 unpackAny (return . Bool) isNumber)
   , ("complex?",  function1 unpackAny (return . Bool) isComplex)
   , ("real?",     function1 unpackAny (return . Bool) isReal)

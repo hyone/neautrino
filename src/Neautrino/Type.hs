@@ -14,6 +14,7 @@ module Neautrino.Type
   , isString 
   , isList
   , isPair
+  , isVector
   , isEnv
   , isAlias
   , isIdentifier
