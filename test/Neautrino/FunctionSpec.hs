@@ -13,7 +13,7 @@ import Neautrino (initEnv)
 import Neautrino.Error (LispError(..), runErrorT)
 import Neautrino.Function
 import Neautrino.Type
-import Neautrino.HspecHelper (shouldReturnT, shouldErrorT)
+import Neautrino.HspecHelper (shouldBeT, shouldReturnT, shouldErrorT)
 
 
 instance Arbitrary (Array Int LispVal) where
@@ -120,6 +120,18 @@ spec =
                               , Atom "hoge"
                               , Undefined ]
            `shouldErrorT` NumArgsError 3 undefined
+
+    describe "stripSyntacticClosures" $
+      it "should convert syntactic closure to normal expr" $ do
+         env <- initEnv
+         let expr = [List [ SyntacticClosure env [] (List [ Atom "+", Integer 3, Integer 5 ])
+                           , List [ Atom "a", SyntacticClosure env [] (Atom "b") ]
+                           , Atom "hoge" ]]
+         stripSyntacticClosures expr
+           `shouldBeT` List [ List [ Atom "+", Integer 3, Integer 5 ]
+                            , List [ Atom "a", Atom "b" ]
+                            , Atom "hoge" ]
+
 
 main :: IO ()
 main = hspec spec

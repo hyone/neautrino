@@ -58,6 +58,7 @@ primitiveFuncs =
   , ("undefined", makeUndefined)
   , ("error", raiseException)
   , ("make-syntactic-closure", makeSyntacticClosure)
+  , ("strip-syntactic-closures", stripSyntacticClosures)
   ]
 
 ioPrimitiveFuncs :: [(String, IOPrimitiveFunc)]
@@ -147,6 +148,17 @@ makeSyntacticClosure [SyntacticEnv env, List ns, expr] = do
   return $ SyntacticClosure env freenames expr
 makeSyntacticClosure [_, _, _]  = throwError $ DefaultError "make-syntactic-closure"
 makeSyntacticClosure badArgList = throwError $ NumArgsError 3 badArgList
+
+stripSyntacticClosures :: PrimitiveFunc
+stripSyntacticClosures [arg] = return $ stripSyntacticClosures' arg
+  where
+    stripSyntacticClosures' :: LispVal -> LispVal
+    stripSyntacticClosures' (SyntacticClosure _ _ expr) = stripSyntacticClosures' expr
+    stripSyntacticClosures' (List args)  = List (map stripSyntacticClosures' args)
+    stripSyntacticClosures' (Pair h t)   = Pair (map stripSyntacticClosures' h) (stripSyntacticClosures' t)
+    stripSyntacticClosures' (Vector arr) = Vector $ fmap stripSyntacticClosures' arr
+    stripSyntacticClosures' expr = expr
+stripSyntacticClosures badArgList = throwError $ NumArgsError 1 badArgList
 
 
 -- IO Primitives ---------------------------------------------------------
