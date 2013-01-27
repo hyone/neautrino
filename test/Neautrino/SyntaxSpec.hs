@@ -87,11 +87,30 @@ spec =
         |] `shouldReturnT` Undefined
 
     describe "quote" $ do
-      it "should stay an expression on uneval state" $ do
+      it "should keep an expression on uneval state" $ do
         env <- initEnv
         evalAST env [scheme|
           '(1 2 3)
         |] `shouldReturnT` List [Integer 1, Integer 2, Integer 3]
+
+      it "should strip syntactic closure" $ do
+        env <- initEnv
+        let expr = Pair [Atom "b", Integer 1] (Integer 2)
+        evalAST env (List [Atom "quote", SyntacticClosure env [] expr])
+          `shouldReturnT` expr
+
+    describe "syntax-quote" $ do
+      it "should keep an expression on uneval state" $ do
+        env <- initEnv
+        evalAST env [scheme|
+          (syntax-quote (1 2 3))
+        |] `shouldReturnT` List [Integer 1, Integer 2, Integer 3]
+
+      it "should not strip syntactic closure" $ do
+        env <- initEnv
+        let expr = Pair [Atom "b", Integer 1] (Integer 2)
+        evalAST env (List [Atom "syntax-quote", SyntacticClosure env [] expr])
+          `shouldReturnT` SyntacticClosure env [] expr
 
     describe "quasiquote" $ do
       describe "unquote" $ do

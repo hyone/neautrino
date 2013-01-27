@@ -7,6 +7,7 @@ import Neautrino.Type
 import Neautrino.Env (Env, defineVar, setVar, unsetVar)
 import Neautrino.Error
 import Neautrino.Eval (eval, evalBody)
+import Neautrino.Function (stripSyntacticClosures)
 import Neautrino.Load (load)
 
 import Control.Monad (liftM, liftM2, (>=>))
@@ -58,6 +59,7 @@ primitiveSyntaxes =
   , ("lambda", lambdaForm)
   , ("define-syntax", defineSyntaxForm)
   , ("quote", quoteForm)
+  , ("syntax-quote", syntaxQuoteForm)
   , ("quasiquote", quasiquoteForm)
   , ("unquote", unquoteForm)
   , ("unquote-splicing", unquoteSplicingForm)
@@ -94,7 +96,15 @@ quoteForm :: SyntaxHandler
 quoteForm = fromUnarySyntaxHandler "quote" quoteForm'
   where
     quoteForm' :: UnarySyntaxHandler
-    quoteForm' = return
+    quoteForm' (SyntacticClosure _ _ expr) = liftErrorM $ stripSyntacticClosures [expr]
+    quoteForm' expr                        = return expr
+
+
+syntaxQuoteForm :: SyntaxHandler
+syntaxQuoteForm = fromUnarySyntaxHandler "syntax-quote" syntaxQuoteForm'
+  where
+    syntaxQuoteForm' :: UnarySyntaxHandler
+    syntaxQuoteForm' = return
 
 
 -- quasiquote and unquote
