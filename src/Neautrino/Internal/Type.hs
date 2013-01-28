@@ -102,6 +102,9 @@ instance Eq LispVal where
   List xs       == List ys       = xs == ys
   Pair xs x     == Pair ys y     = xs == ys && x == y
   Vector xs     == Vector ys     = xs == ys
+  (SyntacticEnv x) == (SyntacticEnv y) = x == y
+  (SyntacticClosure env1 fvs1 x) == (SyntacticClosure env2 fvs2 y) =
+    env1 == env2 && fvs1 == fvs2 && x == y
   _             == _             = False
 
 -- Show class instance
