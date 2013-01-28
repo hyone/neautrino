@@ -90,14 +90,87 @@ neautrino> `(1 2 ,a . 9)
 (1 2 5 . 9)
 neautrino> `(1 (2 ,a) 3)
 (1 (2 5) 3)
+```
 
-;; macro
-neautrino> (define-macro when (lambda (t . body) `(if ,t (begin ,@body))))
-#<macro when>
-neautrino> (when (= (+ 1 2) 3) (display "first\n") (display "second\n") 'end)
-first
-second
-end
+### macro system
+
+#### low-level hygienic macro
+
+```scheme
+;; Syntactic Closure
+(define-syntax swap-sc! 
+   (sc-macro-transformer 
+    (lambda (form environment) 
+      (let ((a (make-syntactic-closure environment '() (cadr form))) 
+            (b (make-syntactic-closure environment '() (caddr form)))) 
+        `(let ((v ,a)) 
+           (set! ,a ,b) 
+           (set! ,b v))))))
+
+;; Explicit Renaming
+(define-syntax swap-er!
+  (er-macro-transformer
+   (lambda (form rename compare)
+     (let ((a (cadr form))
+           (b (caddr form)))
+       `(,(rename 'let) ((,(rename 'value) ,a))
+          (,(rename 'set!) ,a ,b)
+          (,(rename 'set!) ,b ,(rename 'value)))))))
+
+;; non-hygienic macro
+(define-syntax swap-evil! 
+   (er-macro-transformer 
+    (lambda (form rename compare) 
+      (let ((a (cadr form)) 
+            (b (caddr form)))
+        `(let ((v ,a)) 
+           (set! ,a ,b) 
+           (set! ,b v))))))
+```
+
+```scheme
+;; conflict name problem with non-hygienic macro
+neautrino> (define a 1)
+neautrino> (define v 99) -- using same name in swap macro
+neautrino> (swap-evil! a v)
+;; not swaped!
+neautrino> (list a v)
+(1, 99)
+
+;; By using hygienic macro system, don't conflict even if using same name
+
+neautrino> (swap-er! a v)
+neautrino> (list a v)
+(99, 1)
+
+neautrino> (begin (define a 1) (define v 99))
+neautrino> (swap-sc! a v)
+neautrino> (list a v)
+(99, 1)
+```
+
+#### syntax-rules
+
+```scheme
+(define-syntax incf
+  (syntax-rules ()
+    ((_ x)
+     (incf x 1))
+    ((_ x i)
+     (begin (set! x (+ x i)) x))))
+```
+
+```scheme
+neautrino> (load "./incf.scm")
+#<macro incf>
+neautrino> (define i 0)
+0
+neautrino> (incf i)
+1
+neautrino> (incf i 5)
+6
+neautrino> i
+6
 ```
 
 ## Using scheme as DSL in Haskell Code
