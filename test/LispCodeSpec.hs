@@ -72,6 +72,57 @@ spec = do
         evalString env "`(1 ,a 3)" `shouldReturn` "(1 5 3)"
 
     describe "macro" $ do
+      describe "sc-macro-transformer" $
+        it "swap!" $ do
+          env <- initEnv
+          evalAST env [scheme|
+            (define-syntax swap! 
+               (sc-macro-transformer 
+                (lambda (form environment) 
+                  (let ((a (make-syntactic-closure environment '() (cadr form))) 
+                        (b (make-syntactic-closure environment '() (caddr form)))) 
+                    `(let ((v ,a)) 
+                       (set! ,a ,b) 
+                       (set! ,b v))))))
+          |]
+          evalAST env [scheme| (begin (define a 1) (define v 99)) |]
+          evalAST env [scheme| (swap! a v) |]
+          evalAST env [scheme| (list a v) |] `shouldReturnT` List [Integer 99, Integer 1]
+
+      describe "er-macro-transformer" $ 
+        it "swap!" $ do
+          env <- initEnv
+          evalAST env [scheme|
+            (define-syntax swap!
+              (er-macro-transformer
+               (lambda (form rename compare)
+                 (let ((a (cadr form))
+                       (b (caddr form)))
+                   `(,(rename 'let) ((,(rename 'value) ,a))
+                      (,(rename 'set!) ,a ,b)
+                      (,(rename 'set!) ,b ,(rename 'value)))))))
+          |]
+          evalAST env [scheme| (begin (define a 1) (define v 99)) |]
+          evalAST env [scheme| (swap! a v) |]
+          evalAST env [scheme| (list a v) |] `shouldReturnT` List [Integer 99, Integer 1]
+
+      describe "define non-hygienic macro" $
+        it "swap!" $ do
+          env <- initEnv
+          evalAST env [scheme|
+            (define-syntax swap! 
+               (er-macro-transformer 
+                (lambda (form rename compare) 
+                  (let ((a (cadr form)) 
+                        (b (caddr form)))
+                    `(let ((v ,a)) 
+                       (set! ,a ,b) 
+                       (set! ,b v))))))
+          |]
+          evalAST env [scheme| (begin (define a 1) (define v 99)) |]
+          evalAST env [scheme| (swap! a v) |]
+          evalAST env [scheme| (list a v) |] `shouldReturnT` List [Integer 1, Integer 99]
+
       describe "syntax-rules" $
         it "incf" $ do
           env <- initEnv
