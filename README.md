@@ -131,10 +131,9 @@ neautrino> `(1 (2 ,a) 3)
 ```scheme
 ;; conflict name problem with non-hygienic macro
 neautrino> (define a 1)
-neautrino> (define v 99) -- using same name in swap macro
+neautrino> (define v 99)    ;; using same name in swap macro
 neautrino> (swap-evil! a v)
-;; not swaped!
-neautrino> (list a v)
+neautrino> (list a v)       ;; not swaped!
 (1, 99)
 
 ;; By using hygienic macro system, don't conflict even if using same name
