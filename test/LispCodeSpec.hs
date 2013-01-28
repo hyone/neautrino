@@ -1,8 +1,13 @@
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE QuasiQuotes #-}
+{-# OPTIONS_GHC -fno-warn-unused-do-bind #-}
 module LispCodeSpec (spec) where
 
 import Test.Hspec
-import Neautrino.Eval (evalString)
-import Neautrino.Run (initEnv)
+import Neautrino.HspecHelper (shouldReturnT)
+
+import Neautrino (evalAST, evalString, initEnv, scheme)
+import Neautrino.Type (LispVal(..))
 
 
 spec :: Spec
@@ -66,6 +71,22 @@ spec = do
         _   <- evalString env "(define a 5)"
         evalString env "`(1 ,a 3)" `shouldReturn` "(1 5 3)"
 
+    describe "macro" $ do
+      describe "syntax-rules" $
+        it "incf" $ do
+          env <- initEnv
+          evalAST env [scheme|
+            (define-syntax incf
+              (syntax-rules ()
+                ((_ x)
+                 (incf x 1))
+                ((_ x i)
+                 (begin (set! x (+ x i)) x))))
+          |]
+          evalAST env [scheme| (define i 0) |]
+          evalAST env [scheme| (incf i) |]   `shouldReturnT` Integer 1
+          evalAST env [scheme| (incf i 5) |] `shouldReturnT` Integer 6
+          evalAST env [scheme| i |]          `shouldReturnT` Integer 6
 
 main :: IO ()
 main = hspec spec

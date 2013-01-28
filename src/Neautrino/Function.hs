@@ -55,10 +55,18 @@ primitiveFuncs =
   , ("car",  car)
   , ("cdr",  cdr)
   , ("cons", cons)
+  , ("vector", return . vector)
   , ("undefined", makeUndefined)
   , ("error", raiseException)
   , ("make-syntactic-closure", makeSyntacticClosure)
   , ("strip-syntactic-closures", stripSyntacticClosures)
+  , ("string->symbol", stringToSymbol)
+  , ("symbol->string", symbolToString)
+  , ("string-append", stringAppend)
+  , ("make-string", makeString)
+  , ("list->vector", listToVector)
+  , ("vector->list", vectorToList)
+  , ("%number->string", perNumberToString)
   ]
 
 ioPrimitiveFuncs :: [(String, IOPrimitiveFunc)]
@@ -159,6 +167,46 @@ stripSyntacticClosures [arg] = return $ stripSyntacticClosures' arg
     stripSyntacticClosures' (Vector arr) = Vector $ fmap stripSyntacticClosures' arr
     stripSyntacticClosures' expr = expr
 stripSyntacticClosures badArgList = throwError $ NumArgsError 1 badArgList
+
+
+stringToSymbol :: PrimitiveFunc
+stringToSymbol [String s] = return (Atom s)
+stringToSymbol [arg]      = throwError $ TypeMismatchError "string" arg
+stringToSymbol badArgList = throwError $ NumArgsError 1 badArgList
+
+
+symbolToString :: PrimitiveFunc
+symbolToString [Atom var]                        = return (String var)
+symbolToString [SyntacticClosure _ _ (Atom var)] = return (String var)
+symbolToString [x]                               = throwError $ TypeMismatchError "identifier" x
+symbolToString badArgList                        = throwError $ NumArgsError 1 badArgList
+
+
+stringAppend :: PrimitiveFunc
+stringAppend = stringAppendReverse "" . reverse
+  where
+    stringAppendReverse :: String -> PrimitiveFunc
+    stringAppendReverse acc []              = return $ String acc
+    stringAppendReverse acc (String s : xs) = stringAppendReverse (s ++ acc) xs
+    stringAppendReverse _   (x : _)         = throwError $ TypeMismatchError "string" x
+
+makeString :: PrimitiveFunc
+makeString [Integer n, Character c] = return $ String (replicate (fromInteger n) c)
+makeString [x        , Character _] = throwError $ TypeMismatchError "integer" x
+makeString [_        , y          ] = throwError $ TypeMismatchError "character" y
+makeString badArgList               = throwError $ NumArgsError 1 badArgList
+
+
+listToVector :: PrimitiveFunc
+listToVector = undefined
+
+vectorToList :: PrimitiveFunc
+vectorToList = undefined
+
+perNumberToString :: PrimitiveFunc
+perNumberToString [x] | isNumber x = return $ String (show x)
+                      | otherwise  = throwError $ TypeMismatchError "number" x
+perNumberToString badArgList = throwError $ NumArgsError 1 badArgList
 
 
 -- IO Primitives ---------------------------------------------------------
