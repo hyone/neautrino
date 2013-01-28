@@ -200,7 +200,15 @@ spec =
               (else "z")))
         |]
         evalAST env [scheme| (foo 9) |] `shouldReturnT` String "z"
- 	
+
+      it "should treat syntax using =>" $ do
+        env <- initEnv
+        evalAST env [scheme|
+          (cond
+            ((even? 1) => (lambda (x) #f))
+            ((* 2 2)   => (lambda (x) (* 2 x))))	
+        |] `shouldReturnT` Integer 8
+
     describe "case" $ do
       it "should evaluate expression that in the alist the evaluated value is matched" $ do
         env <- initEnv

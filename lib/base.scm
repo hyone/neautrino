@@ -200,6 +200,21 @@
        (lambda (x y) (identifier=? use-env x use-env y))))))
 
 
+
+(define-syntax define-auxiliary-syntax
+  (er-macro-transformer
+   (lambda (expr rename compare)
+     `(,(rename 'define-syntax) ,(cadr expr)
+       (,(rename 'er-macro-transformer)
+        (,(rename 'lambda) (expr rename compare)
+         (,(rename 'error) "invalid use of auxiliary syntax" ',(cadr expr))))))))
+
+(define-auxiliary-syntax _)
+(define-auxiliary-syntax =>)
+(define-auxiliary-syntax ...)
+(define-auxiliary-syntax else)
+
+
 (define-syntax letrec
   (er-macro-transformer
    (lambda (expr rename compare)
@@ -306,14 +321,3 @@
         ,(clause (cddr expr))))))
 
 
-(define-syntax define-auxiliary-syntax
-  (er-macro-transformer
-   (lambda (expr rename compare)
-     `(,(rename 'define-syntax) ,(cadr expr)
-       (,(rename 'er-macro-transformer)
-        (,(rename 'lambda) (expr rename compare)
-         (,(rename 'error) "invalid use of auxiliary syntax" ',(cadr expr))))))))
-
-(define-auxiliary-syntax _)
-(define-auxiliary-syntax =>)
-(define-auxiliary-syntax else)
