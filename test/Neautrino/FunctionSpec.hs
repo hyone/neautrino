@@ -132,7 +132,7 @@ spec =
                             , List [ Atom "a", Atom "b" ]
                             , Atom "hoge" ]
 
-    describe "identifierEqualP" $
+    describe "identifierEqualP" $ do
       it "should be comparable between symbol and alias" $ do
          env <- initEnv
          ret <- runErrorT $
@@ -140,6 +140,15 @@ spec =
                                    , SyntacticClosure env [] (Atom "define")
                                    , SyntacticEnv env
                                    , Atom "define" ]
+         ret `shouldBeT` Bool True
+
+      it "should be comparable between symbols that is not bounded" $ do
+         env <- initEnv
+         ret <- runErrorT $
+                  identifierEqualP [ SyntacticEnv env
+                                   , Atom "no_such_var"
+                                   , SyntacticEnv env
+                                   , Atom "no_such_var" ]
          ret `shouldBeT` Bool True
 
 

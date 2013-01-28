@@ -1,6 +1,6 @@
 module Neautrino.Function where
 
-import Neautrino.Env (equalVar)
+import Neautrino.Env (equalVar, isBound)
 import Neautrino.Error
 import Neautrino.Eval (apply)
 import Neautrino.Function.Helper
@@ -224,6 +224,12 @@ identifierEqualP [SyntacticEnv env1, id1, SyntacticEnv env2, id2]
                           SyntacticClosure synEnv _ (Atom var) -> (synEnv, var)
                           Atom var                             -> (env2, var)
                           _                                    -> (env2, "")
-    liftM Bool (liftIO $ equalVar env1' var1 env2' var2)
+    -- if both var1 and var2 are not bounded, compare by var name
+    b1 <- liftIO $ isBound env1' var1
+    b2 <- liftIO $ isBound env2' var2
+    liftM Bool $ if not b1 && not b2 then
+      return $ var1 == var2
+    else
+      liftIO $ equalVar env1' var1 env2' var2
   | otherwise = return (Bool False)
 identifierEqualP badArgList   = throwError $ NumArgsError 4 badArgList
