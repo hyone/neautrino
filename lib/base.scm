@@ -93,12 +93,6 @@
 (define (product . lst)
   (fold * 1 lst))
 
-(define (and . lst)
-  (fold && #t lst))
-
-(define (or . lst)
-  (fold || #f lst))
-
 (define (max first . rest)
   (fold (lambda (old new)
           (if (> old new) old new))
@@ -124,8 +118,10 @@
 
 (define (mem-helper pred op)
   (lambda (acc next)
-    (if (and (not acc) (pred (op next)))
-        next
+    (if (not acc)
+        (if (pred (op next))
+            next
+            acc)
         acc)))
 (define (memq obj lst)
   (fold (mem-helper (curry eq? obj) id) #f lst))
@@ -141,8 +137,13 @@
   (fold (mem-helper (curry equal? obj) car) #f alst))
 
 
-;; 'any' and 'every' are ported from chibi-scheme:
+;; 'for-each', 'any' and 'every' are ported from chibi-scheme:
 ;; http://code.google.com/p/chibi-scheme/source/browse/lib/init-7.scm
+
+(define (for-each f ls . lol)
+  (define (for1 f ls) (if (pair? ls) (begin (f (car ls)) (for1 f (cdr ls)))))
+  (if (null? lol) (for1 f ls) (begin (apply map f ls lol) (if #f #f))))
+
 
 (define (any pred ls . lol)
   (define (any1 pred ls)
@@ -264,6 +265,28 @@
              `(,(rename 'let) (,(caar (cdr expr)))
                (,(rename 'let*) ,(cdar (cdr expr)) ,@(cddr expr)))
              (error "bad let* syntax"))))))
+
+
+(define-syntax or
+  (er-macro-transformer
+   (lambda (expr rename compare)
+     (cond ((null? (cdr expr)) #f)
+           ((null? (cddr expr)) (cadr expr))
+           (else
+            (list (rename 'let) (list (list (rename 'tmp) (cadr expr)))
+                  (list (rename 'if) (rename 'tmp)
+                        (rename 'tmp)
+                        (cons (rename 'or) (cddr expr)))))))))
+
+
+(define-syntax and
+  (er-macro-transformer
+   (lambda (expr rename compare)
+     (cond ((null? (cdr expr)))
+           ((null? (cddr expr)) (cadr expr))
+           (else (list (rename 'if) (cadr expr)
+                       (cons (rename 'and) (cddr expr))
+                       #f))))))
 
 
 (define-syntax cond
