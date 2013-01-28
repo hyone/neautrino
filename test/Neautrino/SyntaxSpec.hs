@@ -221,5 +221,17 @@ spec =
         |]
         assertNoIOErrorT $ evalAST env [scheme| (foo) |]
 
+    describe "macroexpand" $ do
+      it "should return macro transformed s-expressions before eval" $ do
+        env <- initEnv
+        evalAST env [scheme|
+          (define-syntax foo
+            (er-macro-transformer
+              (lambda (form rename compare) 
+                `(display ,(cadr form)))))
+        |]
+        evalAST env [scheme| (macroexpand '(foo a)) |]
+          `shouldReturnT` [scheme| (display a) |]
+
 main :: IO ()
 main = hspec spec

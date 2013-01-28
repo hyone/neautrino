@@ -1,5 +1,6 @@
 module Neautrino.Eval
   ( apply
+  , applyMacroTransformer
   , eval
   , evalAST
   , evalBody

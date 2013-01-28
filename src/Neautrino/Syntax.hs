@@ -6,13 +6,14 @@ module Neautrino.Syntax
 import Neautrino.Type
 import Neautrino.Env (Env, defineVar, setVar, unsetVar)
 import Neautrino.Error
-import Neautrino.Eval (eval, evalBody)
+import Neautrino.Eval (eval, evalBody, applyMacroTransformer)
 import Neautrino.Function (stripSyntacticClosures)
 import Neautrino.Load (load)
 
 import Control.Monad (liftM, liftM2, (>=>))
 import Control.Monad.Error (MonadError)
 import Control.Monad.Reader (MonadReader, ask, local)
+import Control.Monad.Trans.Class (lift)
 import Data.Array (bounds, elems, listArray)
 
 
@@ -67,6 +68,7 @@ primitiveSyntaxes =
   , ("load", loadForm)
   , ("if", ifForm)
   , ("begin", beginForm)
+  , ("macroexpand", macroExpand)
   ]
 
 
@@ -192,3 +194,18 @@ defineSyntaxForm exprs@[ Atom name, expr ] = do
        unsetVar name   -- Remove self name when syntax error
        syntaxError "define-syntax" exprs
 defineSyntaxForm exprs = syntaxError "define-syntax" exprs
+
+
+macroExpand :: SyntaxHandler
+macroExpand [form] = do
+    expr <- eval form
+    case expr of
+      List (app:args) -> do
+        f <- eval app
+        case f of
+          MacroTransformer _ mproc -> do
+            useEnv <- ask
+            lift $ applyMacroTransformer mproc (List (app:args)) useEnv
+          _ -> return expr
+      _ -> return expr
+macroExpand exprs = syntaxError "macroexpand" exprs
