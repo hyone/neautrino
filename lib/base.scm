@@ -346,7 +346,20 @@
 
 ;; Library Functions
 ;; ----------------------------------------------------------------
-;;
+
+(define (print . args)
+  (for-each display args)
+  (newline))
+
+;; temporary implementation ...
+(define gensym
+  ((lambda (n)
+    (lambda ()
+      (set! n (+ n 1))
+      (string->symbol
+       (string-append "__gensym__" (number->string n)))))
+   0))
+
 ;; ported from chibi-scheme:
 ;; http://code.google.com/p/chibi-scheme/source/browse/lib/init-7.scm
 
