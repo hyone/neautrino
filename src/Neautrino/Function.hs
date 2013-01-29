@@ -16,8 +16,8 @@ import Control.Monad.IO.Class (liftIO)
 import System.IO (IOMode(..))
 
 
-primitiveFuncs :: [(String, PrimitiveFunc)]
-primitiveFuncs =
+procedures :: [(String, Procedure)]
+procedures =
   [ ("+",               numberAdd)
   , ("-",               numberSub)
   , ("*",               numberMul)
@@ -76,8 +76,8 @@ primitiveFuncs =
   , ("strip-syntactic-closures", stripSyntacticClosures)
   ]
 
-ioPrimitiveFuncs :: [(String, IOPrimitiveFunc)]
-ioPrimitiveFuncs =
+ioProcedures :: [(String, IOProcedure)]
+ioProcedures =
   [ ("apply", applyProc)
   , ("open-input-file", makePort ReadMode)
   , ("open-output-file", makePort WriteMode)
@@ -96,24 +96,24 @@ ioPrimitiveFuncs =
 
 -- Basic Operation ---------------------------------------------------------------
 
-applyProc :: IOPrimitiveFunc
+applyProc :: IOProcedure
 applyProc [func, List args] = apply func args
 applyProc (func:args)       = apply func args
 applyProc _                 = throwError $ DefaultError "Apply Error"
 
 
-makeUndefined :: PrimitiveFunc
+makeUndefined :: Procedure
 makeUndefined []         = return Undefined
 makeUndefined badArgList = throwError $ NumArgsError 0 badArgList
 
 
-raiseException :: PrimitiveFunc
+raiseException :: Procedure
 raiseException []            = throwError $ DefaultError ""
 raiseException (reason:args) = throwError . DefaultError $
   show reason ++ " " ++ unwords (map show args)
 
 
-makeSyntacticClosure :: PrimitiveFunc
+makeSyntacticClosure :: Procedure
 makeSyntacticClosure [SyntacticEnv env, List ns, expr] = do
   freenames <- mapM (\atom -> catchError (return $ atomName atom)
                              (const . throwError $ TypeMismatchError "symbol" atom)) ns
@@ -122,7 +122,7 @@ makeSyntacticClosure [_, _, _]  = throwError $ DefaultError "make-syntactic-clos
 makeSyntacticClosure badArgList = throwError $ NumArgsError 3 badArgList
 
 
-stripSyntacticClosures :: PrimitiveFunc
+stripSyntacticClosures :: Procedure
 stripSyntacticClosures [arg] = return $ stripSyntacticClosures' arg
   where
     stripSyntacticClosures' :: LispVal -> LispVal
@@ -134,7 +134,7 @@ stripSyntacticClosures [arg] = return $ stripSyntacticClosures' arg
 stripSyntacticClosures badArgList = throwError $ NumArgsError 1 badArgList
 
 
-identifierEqualP :: IOPrimitiveFunc
+identifierEqualP :: IOProcedure
 identifierEqualP [SyntacticEnv env1, id1, SyntacticEnv env2, id2]
   | isIdentifier id1 && isIdentifier id2 = do
     let (env1', var1) = case id1 of

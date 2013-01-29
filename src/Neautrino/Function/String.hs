@@ -13,47 +13,47 @@ import Neautrino.Error
 import Neautrino.Type
 
 
-toString :: PrimitiveFunc
+toString :: Procedure
 toString [x]        = return $ String (show x)
 toString badArgList = throwError $ NumArgsError 1 badArgList
 
 
-symbolToString :: PrimitiveFunc
+symbolToString :: Procedure
 symbolToString [Atom var]                        = return (String var)
 symbolToString [SyntacticClosure _ _ (Atom var)] = return (String var)
 symbolToString [x]                               = throwError $ TypeMismatchError "identifier" x
 symbolToString badArgList                        = throwError $ NumArgsError 1 badArgList
 
 
-stringToSymbol :: PrimitiveFunc
+stringToSymbol :: Procedure
 stringToSymbol [String s] = return (Atom s)
 stringToSymbol [arg]      = throwError $ TypeMismatchError "string" arg
 stringToSymbol badArgList = throwError $ NumArgsError 1 badArgList
 
 
-stringAppend :: PrimitiveFunc
+stringAppend :: Procedure
 stringAppend = stringAppendReverse "" . reverse
   where
-    stringAppendReverse :: String -> PrimitiveFunc
+    stringAppendReverse :: String -> Procedure
     stringAppendReverse acc []              = return $ String acc
     stringAppendReverse acc (String s : xs) = stringAppendReverse (s ++ acc) xs
     stringAppendReverse _   (x : _)         = throwError $ TypeMismatchError "string" x
 
 
-makeString :: PrimitiveFunc
+makeString :: Procedure
 makeString [Integer n, Character c] = return $ String (replicate (fromInteger n) c)
 makeString [x        , Character _] = throwError $ TypeMismatchError "integer" x
 makeString [_        , y          ] = throwError $ TypeMismatchError "character" y
 makeString badArgList               = throwError $ NumArgsError 1 badArgList
 
 
-stringLength :: PrimitiveFunc
+stringLength :: Procedure
 stringLength [String s] = return $ Integer (toInteger (length s))
 stringLength [arg]      = throwError $ TypeMismatchError "string" arg
 stringLength badArgList = throwError $ NumArgsError 1 badArgList
 
 
-stringRef :: PrimitiveFunc
+stringRef :: Procedure
 stringRef [String s, Integer i] = let n = fromInteger i :: Int in
                                   if n < length s then
                                     return $ Character (s !! n)
@@ -64,7 +64,7 @@ stringRef [x       , _]         = throwError $ TypeMismatchError "string" x
 stringRef badArgList            = throwError $ NumArgsError 2 badArgList
 
 
-subString :: PrimitiveFunc
+subString :: Procedure
 subString [String str, Integer s, Integer e] = let start = fromInteger s
                                                    end   = fromInteger e in
                                                return . String $ drop start . take end $ str

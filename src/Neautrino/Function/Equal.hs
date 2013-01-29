@@ -5,14 +5,14 @@ module Neautrino.Function.Equal (
 ) where
 
 import Neautrino.Function.Helper
-import Neautrino.Type (LispVal(..), PrimitiveFunc)
+import Neautrino.Type (LispVal(..), Procedure)
 import Neautrino.Error (LispError(..), ErrorM, catchError, throwError)
 
 import Control.Monad (liftM)
 import Data.Array (elems)
 
 
-equalSeq :: LispVal -> LispVal -> PrimitiveFunc -> ErrorM LispVal
+equalSeq :: LispVal -> LispVal -> Procedure -> ErrorM LispVal
 equalSeq (Pair xs x) (Pair ys y) eq = eq [List $ xs ++ [x], List $ ys ++ [y]]
 equalSeq (Vector xs) (Vector ys) eq = eq [List (elems xs), List (elems ys)]
 equalSeq (List xs)   (List ys)   eq = return $ Bool $
@@ -29,7 +29,7 @@ equalSeq _            _          _  = return (Bool False)
 -- 
 -- >>> eqvP [Integer 22, Integer 22]
 -- Right #t
-eqvP :: PrimitiveFunc
+eqvP :: Procedure
 eqvP [Bool      x, Bool      y] = return $ Bool (x == y)
 eqvP [Integer   x, Integer   y] = return $ Bool (x == y)
 eqvP [Float     x, Float     y] = return $ Bool (x == y)
@@ -56,7 +56,7 @@ unpackEquals arg1 arg2 (AnyUnpacker unpacker) =
 -- 
 -- >>> equalP [List [Integer 22, String "hello"], List [Integer 22, String "hello"]]
 -- Right #t
-equalP :: PrimitiveFunc
+equalP :: Procedure
 equalP [xs@(Pair _ _), ys@(Pair _ _)] = equalSeq xs ys equalP
 equalP [xs@(Vector _), ys@(Vector _)] = equalSeq xs ys equalP
 equalP [xs@(List _),   ys@(List _)]   = equalSeq xs ys equalP

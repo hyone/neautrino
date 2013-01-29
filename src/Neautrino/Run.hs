@@ -5,14 +5,15 @@ module Neautrino.Run
   ) where
 
 import Neautrino.Env (Env, bindVars, nullEnv)
-import Neautrino.Error (extractValue)
+import Neautrino.Error (extractValue, liftErrorM)
 import Neautrino.Eval (evalString)
-import Neautrino.Function (primitiveFuncs, ioPrimitiveFuncs)
+import Neautrino.Function (procedures, ioProcedures)
 import Neautrino.Load (loadFrom, loadLibrary)
 import Neautrino.Syntax (primitiveSyntaxes)
 import Neautrino.Type (LispVal(..), runEvalExprMonad)
 import Neautrino.Util (until_)
 
+import Control.Arrow (second)
 import Control.Monad (unless)
 import System.IO (hFlush, hPutStrLn, stderr, stdout)
 import System.IO.Error (catchIOError, isEOFError)
@@ -23,15 +24,13 @@ primitiveEnv :: IO Env
 primitiveEnv =
     nullEnv >>=
       flip bindVars
-        (  map (buildSyntax Syntax) primitiveSyntaxes
-        ++ map (buildFunc IOPrimitiveFunc) ioPrimitiveFuncs
-        ++ map (buildFunc PrimitiveFunc) primitiveFuncs )
+        (  map (buildFunc Syntax) primitiveSyntaxes
+        ++ map (buildFunc Procedure) ioProcedures
+        ++ map (buildFunc Procedure . second (liftErrorM .)) procedures )
   where
-    buildSyntax :: (a -> b -> c) -> (a, b) -> (a, c)
-    buildSyntax constructor (var, handler) = (var, constructor var handler)
+    buildFunc :: (a -> b -> c) -> (a, b) -> (a, c)
+    buildFunc constructor (var, func) = (var, constructor var func)
 
-    buildFunc :: (a -> b) -> (c, a) -> (c, b)
-    buildFunc constructor (var, func) = (var, constructor func)
 
 -- | init environment and load initial scheme libraries.
 initEnv :: IO Env

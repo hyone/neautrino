@@ -100,9 +100,8 @@ applyMacroTransformer mproc@(Closure' _ _ _ macEnv) expr useEnv =
 
 -- | apply function to argument list
 apply :: LispVal -> [LispVal] -> IOErrorM LispVal
-apply (PrimitiveFunc   func) args = liftErrorM (func args)
-apply (IOPrimitiveFunc func) args = func args
-apply (Closure closure)      args = applyClosure closure args
+apply (Procedure _ func) args = func args
+apply (Closure closure)  args = applyClosure closure args
 apply notFunc _ = throwError $ NotFunctionError "invalid application" (show notFunc)
 
 

@@ -50,7 +50,7 @@ isInteger _           = False
 
 -- Type Conversion -------------------------------------------------------
 
-exactToInexact :: PrimitiveFunc
+exactToInexact :: Procedure
 exactToInexact [Integer n]     = return $ Float (fromInteger n)
 exactToInexact [Ratio n]       = return $ Float (fromRational n)
 exactToInexact [n@(Float _)]   = return n
@@ -59,7 +59,7 @@ exactToInexact [arg]           = throwError $ TypeMismatchError "number" arg
 exactToInexact badArgList      = throwError $ NumArgsError 1 badArgList
 
 
-inexactToExact :: PrimitiveFunc
+inexactToExact :: Procedure
 inexactToExact [n@(Integer _)] = return n
 inexactToExact [n@(Ratio _)]   = return n
 inexactToExact [Float i]       = return . Integer $ round i
@@ -67,7 +67,7 @@ inexactToExact [n@(Complex _)] = throwError . DefaultError $ "exact complex is n
 inexactToExact [arg]           = throwError $ TypeMismatchError "number" arg
 inexactToExact badArgList      = throwError $ NumArgsError 1 badArgList
 
-numberToString :: PrimitiveFunc
+numberToString :: Procedure
 numberToString [x] | isNumber x = return $ String (show x)
                    | otherwise  = throwError $ TypeMismatchError "number" x
 numberToString badArgList = throwError $ NumArgsError 1 badArgList
@@ -75,7 +75,7 @@ numberToString badArgList = throwError $ NumArgsError 1 badArgList
 
 -- Arithmetic ------------------------------------------------------------
 
-numberOp :: (forall a. Num a => (a -> a -> a)) -> ErrorM LispVal -> PrimitiveFunc
+numberOp :: (forall a. Num a => (a -> a -> a)) -> ErrorM LispVal -> Procedure
 numberOp _  ident []         = ident
 numberOp op _     (arg:args) = foldM numberOp' arg args
   where
@@ -86,16 +86,16 @@ numberOp op _     (arg:args) = foldM numberOp' arg args
     numberOp' x y = throwError . DefaultError $
                        "operation is not defined between " ++ show x ++ " and " ++ show y
 
-numberAdd :: PrimitiveFunc
+numberAdd :: Procedure
 numberAdd = numberOp (+) (return $ Integer 0)
 
-numberSub :: PrimitiveFunc
+numberSub :: Procedure
 numberSub = numberOp (-) (throwError $ NumArgsError 1 [])
 
-numberMul :: PrimitiveFunc
+numberMul :: Procedure
 numberMul = numberOp (*) (return $ Integer 1)
 
-numberDiv :: PrimitiveFunc
+numberDiv :: Procedure
 numberDiv []         = throwError $ NumArgsError 1 []
 numberDiv (arg:args) = foldM numberDiv' arg args
   where

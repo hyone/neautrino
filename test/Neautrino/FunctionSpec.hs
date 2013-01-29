@@ -8,7 +8,7 @@ import Neautrino (initEnv)
 import Neautrino.Error (LispError(..), runErrorT)
 import Neautrino.Function
 import Neautrino.Type
-import Neautrino.HspecHelper (shouldBeT, shouldReturnT, shouldErrorT)
+import Neautrino.HspecHelper (shouldBeT, shouldErrorT)
 
 
 spec :: Spec

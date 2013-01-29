@@ -6,8 +6,8 @@
 -- | Internal DataType module.
 module Neautrino.Internal.Type
   ( SyntaxHandler
-  , PrimitiveFunc
-  , IOPrimitiveFunc
+  , Procedure
+  , IOProcedure
   , Closure(..)
   , LispVal(..)
   , ratio
@@ -52,8 +52,8 @@ import System.IO (Handle)
 
 type SyntaxHandler = [LispVal] -> EvalExprMonad LispVal
 
-type PrimitiveFunc   = [LispVal] -> ErrorM LispVal
-type IOPrimitiveFunc = [LispVal] -> IOErrorM LispVal
+type Procedure   = [LispVal] -> ErrorM LispVal
+type IOProcedure = [LispVal] -> IOErrorM LispVal
 
 data Closure = Closure' { closureParams :: [LispVal]
                         , closureVararg :: Maybe String
@@ -73,15 +73,15 @@ data LispVal = Atom { atomName :: String }
              | Bool Bool
              | Port Handle
              | Undefined
-             | PrimitiveFunc PrimitiveFunc
-             | IOPrimitiveFunc IOPrimitiveFunc
+             | Closure Closure
+             | Procedure { procedureName :: String
+                         , procedureProc :: IOProcedure }
              | Syntax { syntaxName    :: String
                       , syntaxHandler :: SyntaxHandler }
              | SyntacticEnv Env
-             | SyntacticClosure { syntacticClosureEnv      :: Env
-                                , syntacticClosureFreeVars :: [Var]
-                                , syntacticClosureExpr     :: LispVal }
-             | Closure Closure
+             | SyntacticClosure { synClosureEnv      :: Env
+                                , synClosureFreeVars :: [Var]
+                                , synClosureExpr     :: LispVal }
              | MacroTransformer { macroName   :: String
                                 , macroProc   :: Closure }
   deriving (Typeable)
@@ -125,9 +125,8 @@ showVal (Bool False)       = "#f"
 showVal (Port _)           = "#<io-port>"
 showVal Undefined          = "#<undef>"
 showVal (Syntax name _)    = "#<syntax " ++ name ++ ">"
-showVal PrimitiveFunc {}   = "#<primitive>"
-showVal IOPrimitiveFunc {} = "#<io-primitive>"
-showVal Closure {}            = "#<closure>"
+showVal (Procedure name _) = "#<procedure " ++ name ++ ">"
+showVal Closure {}         = "#<closure>"
 showVal (List contents)    = "("  ++ unwordsList contents ++ ")"
 showVal (Vector arr)       = "#(" ++ unwordsList (elems arr) ++ ")"
 showVal (Pair h t)         = "("  ++ unwordsList h ++ " . " ++ showVal t ++ ")"

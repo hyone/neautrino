@@ -1,8 +1,8 @@
 -- | Neautrino Types
 module Neautrino.Type
   ( SyntaxHandler
-  , PrimitiveFunc
-  , IOPrimitiveFunc
+  , Procedure
+  , IOProcedure
   , Closure(..)
   , LispVal(..)
   , ratio
