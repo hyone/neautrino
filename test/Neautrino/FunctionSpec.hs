@@ -3,7 +3,6 @@ module Neautrino.FunctionSpec (spec) where
 
 import Test.Hspec
 import Test.Hspec.QuickCheck (prop)
-import Test.QuickCheck
 import Control.Monad (liftM, liftM2, void)
 import Data.Array (Array, listArray)
 import Data.Complex (Complex(..))
@@ -15,27 +14,6 @@ import Neautrino.Function
 import Neautrino.Type
 import Neautrino.HspecHelper (shouldBeT, shouldReturnT, shouldErrorT)
 
-
-instance Arbitrary (Array Int LispVal) where
-  arbitrary = do
-    xs <- arbitrary :: Gen [LispVal]
-    return $ listArray (0, length xs - 1) xs
-
-instance Arbitrary LispVal where
-  arbitrary = oneof [
-      liftM Bool arbitrary
-    , liftM Character arbitrary
-    , liftM String arbitrary
-    , liftM Integer arbitrary
-    , liftM Float arbitrary
-    , liftM Ratio arbitrary
-    , liftM Complex arbitrary
-    , liftM List arbitrary
-    , liftM2 Pair arbitrary arbitrary
-    , liftM Vector arbitrary
-    , return Undefined
-    ]
-    
 
 spec :: Spec
 spec =

@@ -1,3 +1,5 @@
+{-# LANGUAGE FlexibleInstances #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 module Neautrino.HspecHelper (
   shouldContain    
 , shouldEitherT
@@ -11,10 +13,39 @@ module Neautrino.HspecHelper (
 
 import Test.Hspec
 import Test.HUnit
+import Test.QuickCheck
 import Data.List (isInfixOf)
 
+import Neautrino.Type
 import Neautrino.Error (LispError(..), ErrorM)
+import Control.Monad (liftM, liftM2)
+import Data.Array (Array, listArray)
 
+
+-- Arbitrary Class for LispVal
+
+instance Arbitrary (Array Int LispVal) where
+  arbitrary = do
+    xs <- arbitrary :: Gen [LispVal]
+    return $ listArray (0, length xs - 1) xs
+
+instance Arbitrary LispVal where
+  arbitrary = oneof [
+      liftM Bool arbitrary
+    , liftM Character arbitrary
+    , liftM String arbitrary
+    , liftM Integer arbitrary
+    , liftM Float arbitrary
+    , liftM Ratio arbitrary
+    , liftM Complex arbitrary
+    , liftM List arbitrary
+    , liftM2 Pair arbitrary arbitrary
+    , liftM Vector arbitrary
+    , return Undefined
+    ]
+    
+
+-- Newtype for LispError to be comparable each otehr
 
 newtype ErrorType = ErrorType { getErrorHolder ::  LispError }
 
