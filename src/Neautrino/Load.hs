@@ -17,7 +17,7 @@ import Paths_neautrino (getDataFileName)
 import Neautrino.Env (Env)
 import Neautrino.Error
 import Neautrino.Eval (evalBody)
-import Neautrino.Function (readParse)
+import Neautrino.Function.IO (readParse)
 import Neautrino.Type
 
 
