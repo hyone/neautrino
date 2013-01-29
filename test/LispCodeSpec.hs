@@ -39,7 +39,7 @@ spec = do
         _   <- evalString env "(define a 3)"
         evalString env "a" `shouldReturn` "3"
         _   <- evalString env "(set! a #\\c)"
-        evalString env "a" `shouldReturn` "#\\c"
+        evalString env "a" `shouldReturn` "c"
 
     describe "function" $ do
       it "basic" $ do

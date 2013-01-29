@@ -39,7 +39,7 @@ import Control.Monad.Error (Error(..), ErrorT, MonadError, throwError, runErrorT
 import Control.Monad.Reader (ReaderT, runReaderT)
 import Data.Array (Array, elems, listArray)
 import Data.Complex (Complex(..))
-import Data.Ratio ((%))
+import Data.Ratio ((%), denominator, numerator)
 import Data.Generics ( Constr, Data(..), DataType
                      , Fixity(Prefix), Typeable(..), TyCon
                      , mkConstr, mkDataType, mkTyCon3, mkTyConApp)
@@ -113,12 +113,12 @@ instance Show LispVal where
   show = showVal
 
 showVal :: LispVal -> String
-showVal (Character c)      = "#\\" ++ [c]
+showVal (Character c)      = [c]
 showVal (String s)         = "\"" ++ s ++ "\""
 showVal (Atom name)        = name
 showVal (Integer i)        = show i
 showVal (Float n)          = show n
-showVal (Ratio n)          = show n
+showVal (Ratio n)          = show (numerator n) ++ "/" ++ show (denominator n)
 showVal (Complex n)        = show n
 showVal (Bool True)        = "#t"
 showVal (Bool False)       = "#f"
