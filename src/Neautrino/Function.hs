@@ -5,68 +5,68 @@ import Neautrino.Error
 import Neautrino.Eval (apply)
 import Neautrino.Function.Helper
 import Neautrino.Function.Equal (eqvP, equalP)
+import Neautrino.Function.Number
 import Neautrino.Parser (readExpr, readExprList)
 import Neautrino.Type
 
 import Control.Monad (liftM)
 import Control.Monad.IO.Class (liftIO)
-import Data.Complex (imagPart, realPart)
-import Data.Ratio (denominator, numerator)
 import System.IO (IOMode(..), stdin, stdout, hPutStr, openFile, hClose, hGetLine)
 
 
 primitiveFuncs :: [(String, PrimitiveFunc)]
 primitiveFuncs =
-  [ ("+",   numberBinFunc (+))
-  , ("-",   numberBinFunc (-))
-  , ("*",   numberBinFunc (*))
-  , ("/",   numberBinFunc div)
-  , ("mod", numberBinFunc mod)
-  , ("remainder", numberBinFunc rem)
-  , ("=",   numberBoolFunc (==))
-  , ("<",   numberBoolFunc (<))
-  , (">",   numberBoolFunc (>))
-  , ("/=",  numberBoolFunc (/=))
-  , (">=",  numberBoolFunc (>=))
-  , ("<=",  numberBoolFunc (<=))
-  , ("&&", boolBoolFunc (&&))
-  , ("||", boolBoolFunc (||))
-  , ("string=?",  stringBoolFunc (==))
-  , ("string<?",  stringBoolFunc (<))
-  , ("string>?",  stringBoolFunc (>))
-  , ("string<=?", stringBoolFunc (<=))
-  , ("string>=?", stringBoolFunc (>=))
-  , ("symbol?",   function1 unpackAny (return . Bool) isSymbol)
-  , ("boolean?",  function1 unpackAny (return . Bool) isBool)
-  , ("string?",   function1 unpackAny (return . Bool) isString)
-  , ("list?",     function1 unpackAny (return . Bool) isList)
-  , ("pair?",     function1 unpackAny (return . Bool) isPair)
-  , ("vector?",   function1 unpackAny (return . Bool) isVector)
-  , ("number?",   function1 unpackAny (return . Bool) isNumber)
-  , ("complex?",  function1 unpackAny (return . Bool) isComplex)
-  , ("real?",     function1 unpackAny (return . Bool) isReal)
-  , ("rational?", function1 unpackAny (return . Bool) isRational)
-  , ("integer?",  function1 unpackAny (return . Bool) isInteger)
-  , ("environment?", function1 unpackAny (return . Bool) isEnv)
-  , ("identifier?", function1 unpackAny (return . Bool) isIdentifier)
-  , ("eq?",    eqvP)
-  , ("eqv?",   eqvP)
-  , ("equal?", equalP)
-  , ("car",  car)
-  , ("cdr",  cdr)
-  , ("cons", cons)
-  , ("vector", return . vector)
-  , ("undefined", makeUndefined)
-  , ("error", raiseException)
+  [ ("+",               numberAdd)
+  , ("-",               numberSub)
+  , ("*",               numberMul)
+  , ("/",               numberDiv)
+  , ("mod",             numberBinFunc mod)
+  , ("remainder",       numberBinFunc rem)
+  , ("=",               numberBoolFunc (==))
+  , ("<",               numberBoolFunc (<))
+  , (">",               numberBoolFunc (>))
+  , ("/=",              numberBoolFunc (/=))
+  , (">=",              numberBoolFunc (>=))
+  , ("<=",              numberBoolFunc (<=))
+  , ("&&",              boolBoolFunc (&&))
+  , ("||",              boolBoolFunc (||))
+  , ("string=?",        stringBoolFunc (==))
+  , ("string<?",        stringBoolFunc (<))
+  , ("string>?",        stringBoolFunc (>))
+  , ("string<=?",       stringBoolFunc (<=))
+  , ("string>=?",       stringBoolFunc (>=))
+  , ("symbol?",         function1 unpackAny (return . Bool) isSymbol)
+  , ("boolean?",        function1 unpackAny (return . Bool) isBool)
+  , ("string?",         function1 unpackAny (return . Bool) isString)
+  , ("list?",           function1 unpackAny (return . Bool) isList)
+  , ("pair?",           function1 unpackAny (return . Bool) isPair)
+  , ("vector?",         function1 unpackAny (return . Bool) isVector)
+  , ("number?",         function1 unpackAny (return . Bool) isNumber)
+  , ("complex?",        function1 unpackAny (return . Bool) isComplex)
+  , ("real?",           function1 unpackAny (return . Bool) isReal)
+  , ("rational?",       function1 unpackAny (return . Bool) isRational)
+  , ("integer?",        function1 unpackAny (return . Bool) isInteger)
+  , ("environment?",    function1 unpackAny (return . Bool) isEnv)
+  , ("identifier?",     function1 unpackAny (return . Bool) isIdentifier)
+  , ("eq?",             eqvP)
+  , ("eqv?",            eqvP)
+  , ("equal?",          equalP)
+  , ("car",             car)
+  , ("cdr",             cdr)
+  , ("cons",            cons)
+  , ("vector",          return . vector)
+  , ("undefined",       makeUndefined)
+  , ("error",           raiseException)
+  , ("exact->inexact",  exactToInexact)
+  , ("inexact->exact",  inexactToExact)
+  , ("string->symbol",  stringToSymbol)
+  , ("symbol->string",  symbolToString)
+  , ("make-string",     makeString)
+  , ("list->vector",    listToVector)
+  , ("vector->list",    vectorToList)
+  , ("number->string",  numberToString)
   , ("make-syntactic-closure", makeSyntacticClosure)
   , ("strip-syntactic-closures", stripSyntacticClosures)
-  , ("string->symbol", stringToSymbol)
-  , ("symbol->string", symbolToString)
-  , ("string-append", stringAppend)
-  , ("make-string", makeString)
-  , ("list->vector", listToVector)
-  , ("vector->list", vectorToList)
-  , ("%number->string", perNumberToString)
   ]
 
 ioPrimitiveFuncs :: [(String, IOPrimitiveFunc)]
@@ -84,33 +84,6 @@ ioPrimitiveFuncs =
   , ("read-all", readAll)
   , ("identifier=?", identifierEqualP)
   ]
-
-
--- Type Check ------------------------------------------------------------
-
-isComplex :: LispVal -> Bool
-isComplex = isNumber
-
-isReal :: LispVal -> Bool
-isReal (Integer _) = True
-isReal (Float _)   = True
-isReal (Ratio _)   = True
-isReal (Complex n) = imagPart n == 0
-isReal _           = False
-                     
-isRational :: LispVal -> Bool
-isRational = isReal
-
-isIntOfDouble :: Double -> Bool
-isIntOfDouble d = realToFrac (round d :: Integer) == d
-
-isInteger :: LispVal -> Bool
-isInteger (Integer _) = True
-isInteger (Float n)   = isIntOfDouble n
-isInteger (Ratio n)   = numerator n `mod` denominator n == 0
-isInteger (Complex n) = let r = realPart n in
-                        imagPart n == 0 && isIntOfDouble r
-isInteger _           = False
 
 
 -- List ------------------------------------------------------------------
@@ -202,11 +175,6 @@ listToVector = undefined
 
 vectorToList :: PrimitiveFunc
 vectorToList = undefined
-
-perNumberToString :: PrimitiveFunc
-perNumberToString [x] | isNumber x = return $ String (show x)
-                      | otherwise  = throwError $ TypeMismatchError "number" x
-perNumberToString badArgList = throwError $ NumArgsError 1 badArgList
 
 
 -- IO Primitives ---------------------------------------------------------

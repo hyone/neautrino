@@ -391,7 +391,7 @@
        (define forms (if ellipsis-specified? (cdr (cddr expr)) (cddr expr)))
        (define (next-symbol s)
          (set! count (+ count 1))
-         (rename (string->symbol (string-append s (%number->string count)))))
+         (rename (string->symbol (string-append s (number->string count)))))
        (define (expand-pattern pat tmpl)
          (let lp ((p (cdr pat))
                   (x (list _cdr _expr))
