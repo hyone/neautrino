@@ -16,13 +16,16 @@ extra-source-files:
   test/test.hs
   test/LispCodeSpec.hs
   test/Neautrino/EnvSpec.hs
+  test/Neautrino/EvalSpec.hs
   test/Neautrino/FunctionSpec.hs
   test/Neautrino/Function/EqualSpec.hs
+  test/Neautrino/Function/NumberSpec.hs
   test/Neautrino/LoadSpec.hs
   test/Neautrino/ParserSpec.hs
   test/Neautrino/SyntaxSpec.hs
   test/Neautrino/THSpec.hs.hs
-  test/Neautrino/TestUtil.hs
+  test/Neautrino/TypeSpec.hs
+  test/Neautrino/HspecHelper.hs
 
 library
   default-language: Haskell2010
@@ -45,6 +48,10 @@ library
     Neautrino.Function
     Neautrino.Function.Equal
     Neautrino.Function.Helper
+    Neautrino.Function.IO
+    Neautrino.Function.List
+    Neautrino.Function.Number
+    Neautrino.Function.String
     Neautrino.Load
     Neautrino.Parser
     Neautrino.Run
