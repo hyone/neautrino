@@ -1,5 +1,5 @@
 
-;; Basic Operation
+;; Basic Functions
 ;; ----------------------------------------------------------------
 
 (define (not x)
@@ -25,8 +25,9 @@
 
 (define zero? (curry = 0))
 (define positive? (curry < 0))
-(define (odd? n) (= (mod n 2) 1))
-(define (even? n) (not (odd? n)))
+(define negative? (curry > 0))
+(define (odd? n)  (= (mod n 2) 1))
+(define (even? n) (= (mod n 2) 0))
 
 
 ;; List Operation
@@ -156,6 +157,7 @@
          (apply pred (map car lol)))
         #f))
   (if (null? lol) (if (pair? ls) (any1 pred ls) #f) (anyn pred (cons ls lol))))
+
 
 (define (every pred ls . lol)
   (define (every1 pred ls)

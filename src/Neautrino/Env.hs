@@ -2,8 +2,8 @@
 module Neautrino.Env
   ( Env
   , Var
-  , VarPair
-  , VarRefPair
+  , EnvField
+  , EnvCell
   , nullEnv
   , isBound
   , getVar
@@ -27,16 +27,19 @@ import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (ask)
 import Data.Maybe (fromJust, isJust)
 
-type VarPair = (Var, LispVal)
-type VarRefPair = (Var, IORef LispVal)
+
+type EnvField = (Var, LispVal)
+type EnvCell  = (Var, IORef LispVal)
 
 
 nullEnv :: IO Env
 nullEnv = newIORef []
 
+
 -- | whether or not the variable is bounded
 isBound :: Env -> Var -> IO Bool
 isBound envRef var = liftM (isJust . lookup var) (readIORef envRef)
+
 
 -- | get value of variable
 getVar :: Var -> EvalExprMonad LispVal
@@ -46,6 +49,7 @@ getVar var = do
   maybe (throwError $ UnboundVarError "Getting an unbound variable" var)
         (liftIO . readIORef)
         (lookup var env)
+
 
 -- | set value to variable in env
 setVar :: Var -> LispVal -> EvalExprMonad LispVal
@@ -57,6 +61,7 @@ setVar var value = do
         (lookup var env)
   return value
 
+
 -- | unset name from env
 unsetVar :: Var -> EvalExprMonad ()
 unsetVar var = do
@@ -65,6 +70,7 @@ unsetVar var = do
   liftIO $ writeIORef envRef (filter ((/= var) . fst) env)
   return ()
 
+
 pushVar :: Env -> Var -> LispVal -> IO LispVal
 pushVar envRef var value = do
   env      <- readIORef envRef
@@ -72,12 +78,14 @@ pushVar envRef var value = do
   writeIORef envRef ((var, valueRef) : env)
   return value
 
+
 popVar :: Env -> IO ()
 popVar envRef = do
   env <- readIORef envRef
   unless (null env) $ 
     writeIORef envRef (tail env)
   return ()
+
 
 -- | modify value of an existing variable or create new one
 defineVar :: Var -> LispVal -> EvalExprMonad LispVal
@@ -90,14 +98,15 @@ defineVar var value = do
     liftIO $ pushVar envRef var value
   return value
 
+
 -- | extend env with bindings
-bindVars :: Env -> [VarPair] -> IO Env
+bindVars :: Env -> [EnvField] -> IO Env
 bindVars envRef bindings = readIORef envRef >>= extendEnv bindings >>= newIORef
   where
-    extendEnv :: [VarPair] -> [VarRefPair] -> IO [VarRefPair]
+    extendEnv :: [EnvField] -> [EnvCell] -> IO [EnvCell]
     extendEnv bindings' env = liftM (++ env) (mapM addBinding bindings')
 
-    addBinding :: VarPair -> IO VarRefPair
+    addBinding :: EnvField -> IO EnvCell
     addBinding (var, value) = liftM (\ref -> (var, ref)) $ newIORef value
 
 
@@ -111,6 +120,7 @@ equalVar envRef1 var1 envRef2 var2 = do
     (Just ref1, Just ref2) -> ref1 == ref2
     _                      -> False
 
+
 bindFreevars :: [Var] -> Env -> Env -> IO Env
 bindFreevars freevars fromEnvRef toEnvRef = do
   toEnv  <- readIORef toEnvRef
@@ -122,7 +132,8 @@ bindFreevars freevars fromEnvRef toEnvRef = do
     return (varname, valueRef)
   newIORef (adding ++ toEnv)
 
-dumpEnv :: Env -> IO [VarPair]
+
+dumpEnv :: Env -> IO [EnvField]
 dumpEnv envRef = do
   env <- readIORef envRef
   forM (map fst env) $ \n -> do
