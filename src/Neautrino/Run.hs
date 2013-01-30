@@ -15,6 +15,7 @@ import Neautrino.Util (until_)
 
 import Control.Arrow (second)
 import Control.Monad (unless)
+import Data.Char (isSpace)
 import System.IO (hFlush, hPutStrLn, stderr, stdout)
 import System.IO.Error (catchIOError, isEOFError)
 
@@ -67,4 +68,7 @@ runRepl = do env <- initEnv
               ( \e -> unless (isEOFError e) $ ioError e )
   where
     loop :: Env -> IO ()
-    loop env = until_ (== "quit") (readPrompt "neautrino> ") (evalAndPrint env)
+    loop env = until_ (== "quit") (readPrompt "neautrino> ") $ \input ->
+                 -- skip empty or only white space input
+                 unless (null input || all isSpace input) $
+                   evalAndPrint env input
