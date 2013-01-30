@@ -116,40 +116,55 @@ parseBool = do
 readBin :: (Eq a, Num a) => ReadS a
 readBin = readInt 2 (`elem` "o01") digitToInt
 
+parseSign :: Num a => Parser a
+parseSign = do
+  sign <- many (oneOf "-+")
+  return . fromInteger $ case sign of
+    "-" -> -1
+    _   ->  1
+  
+
 parseBinLiteral :: Parser LispVal
 parseBinLiteral = do
   try $ string "#b"
-  s <- many1 (oneOf "01")
+  sign <- parseSign
+  s    <- many1 (oneOf "01")
   case readBin s of
-    [(x, _)] -> return (Integer x)
+    [(x, _)] -> return $ Integer (sign * x)
     _        -> fail "invalid binary number"
 
 parseOctLiteral :: Parser LispVal
 parseOctLiteral = do
   try $ string "#o"
-  s <- many1 octDigit
+  sign <- parseSign
+  s    <- many1 octDigit
   case readOct s of
-    [(x, _)] -> return (Integer x)
+    [(x, _)] -> return $ Integer (sign * x)
     _        -> fail "invalid octal number"
 
 parseDecLiteral :: Parser LispVal
 parseDecLiteral = do
   try $ string "#d"
-  s <- many1 digit
+  sign <- parseSign
+  s    <- many1 digit
   case readDec s of
-    [(x, _)] -> return (Integer x)
+    [(x, _)] -> return $ Integer (sign * x)
     _        -> fail "invalid decimal number"
 
 parseHexLiteral :: Parser LispVal
 parseHexLiteral = do
   try $ string "#x"
-  s <- many1 hexDigit
+  sign <- parseSign
+  s    <- many1 hexDigit
   case readHex s of
-    [(x, _)] -> return (Integer x)
-    _ -> fail "invalid hex number"
+    [(x, _)] -> return $ Integer (sign * x)
+    _        -> fail "invalid hex number"
 
 parseDigit :: Parser LispVal
-parseDigit = (Integer . read) <$> many1 digit
+parseDigit = do
+  sign <- parseSign
+  s    <- many1 digit
+  return $ Integer (sign * read s)
 
 parseNumber :: Parser LispVal
 parseNumber = parseBinLiteral
@@ -162,9 +177,9 @@ parseNumber = parseBinLiteral
 
 float :: Parser String
 float = do
-  s1 <- many digit
-  c  <- char '.'
-  s2 <- many digit
+  s1   <- many digit
+  c    <- char '.'
+  s2   <- many digit
   let num = s1 ++ c : s2
   -- avoid to parse "." as float number
   if num == "."
@@ -173,24 +188,26 @@ float = do
 
 floatWithExp :: Parser String
 floatWithExp = do
-  s1 <- try float <|> many1 digit
-  c  <- char 'e'
-  s2 <- many1 digit
-  return (s1 ++ c : s2)
+  s1   <- try float <|> many1 digit
+  c    <- char 'e'
+  sign <- many (oneOf "+-")
+  s2   <- many1 digit
+  return (s1 ++ c : sign ++ s2)
 
 parseFloat :: Parser LispVal
 parseFloat = do
-  s <- try floatWithExp <|> float
+  sign <- parseSign
+  s    <- try floatWithExp <|> float
   -- if integer part is omitted, assume it as '0'
   let num = if head s == '.' then '0':s else s
   case readFloat num of
-    [(x, _)] -> return (Float x)
+    [(x, _)] -> return $ Float (sign * x)
     _        -> fail "invalid float number"
 
 -- Ratio
 
 parseRatio :: Parser LispVal
-parseRatio = try $ do
+parseRatio = do
   Integer x <- parseNumber
   char '/'
   y <- many1 digit
@@ -199,14 +216,14 @@ parseRatio = try $ do
 -- Complex
 
 toDouble :: LispVal -> Double
-toDouble (Float f)  = f
+toDouble (Float f)   = f
 toDouble (Integer n) = fromIntegral n
-toDouble _          = error "Not a number."
+toDouble _           = error "Not a number."
 
 parseComplex :: Parser LispVal
 parseComplex = do
   x <- try parseFloat <|> parseNumber
-  char '+'
+  many (char '+')
   y <- try parseFloat <|> parseNumber
   char 'i'
   return $ complex (toDouble x) (toDouble y)
@@ -275,11 +292,11 @@ parseUnQuoteSplicing = do
 parseExpr :: Parser LispVal
 parseExpr = do
   optional whiteSpace 
-  lexeme $ try parseAtom
+  lexeme $ try parseNumeric
        <|> parseChar
        <|> try parseString
-       <|> parseNumeric
        <|> try parseBool
+       <|> try parseAtom
        <|> parseVector
        <|> parseAnyList
        <|> parseQuoted

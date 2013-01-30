@@ -34,6 +34,7 @@ spec = do
       it "should parse: ." $
         readExpr "." `shouldErrorT` ParserError undefined
 
+
     describe "bool" $ do
       it "should parse: #t" $
         readExpr "#t" `shouldBeT` Bool True
@@ -46,6 +47,7 @@ spec = do
 
       it "should parse error: #false" $
         readExpr "#\\false" `shouldErrorT` parserError
+
 
     describe "char" $ do
       it "should parse: #\\c" $ 
@@ -66,49 +68,73 @@ spec = do
 
       it "should parse: \"\"" $ 
         readExpr "\"\"" `shouldBeT` String ""
-          
+
+
     describe "number" $ do
-      it "should parse: 2" $ 
-        readExpr "2" `shouldBeT` Integer 2
+      describe "integer" $ do
+        it "should parse: 2" $ 
+          readExpr "2" `shouldBeT` Integer 2
 
-      it "should parse: #b110" $ 
-        readExpr "#b110" `shouldBeT` Integer 6
+        it "should parse: -25" $ 
+          readExpr "-25" `shouldBeT` Integer (-25)
 
-      it "should parse: #o37" $ 
-        readExpr "#o37" `shouldBeT` Integer 31
+        it "should parse: #b110" $ 
+          readExpr "#b110" `shouldBeT` Integer 6
 
-      it "should parse: #d37" $ 
-        readExpr "#d37" `shouldBeT` Integer 37
+        it "should parse: #o37" $ 
+          readExpr "#o37" `shouldBeT` Integer 31
 
-      it "should parse: #xA7" $ 
-        readExpr "#xA7"  `shouldBeT` Integer 167
+        it "should parse: #d+37" $ 
+          readExpr "#d+37" `shouldBeT` Integer 37
 
-    describe "float" $ do
-      it "should parse: 3.24" $ 
-        readExpr "3.24" `shouldBeT` Float 3.24
+        it "should parse: #x-A7" $ 
+          readExpr "#x-A7"  `shouldBeT` Integer (-167)
 
-      it "should parse: .2" $ 
-        readExpr ".2" `shouldBeT` Float 0.2
+      describe "float" $ do
+        it "should parse: 3.24" $ 
+          readExpr "3.24" `shouldBeT` Float 3.24
 
-      it "should parse: 5." $ 
-        readExpr "5." `shouldBeT` Float 5.0
+        it "should parse: -3.24" $ 
+          readExpr "-3.24" `shouldBeT` Float (-3.24)
 
-      it "should parse: 3.2e3" $
-        readExpr "3.24e3" `shouldBeT` Float 3240.0
+        it "should parse: .2" $ 
+          readExpr ".2" `shouldBeT` Float 0.2
 
-    describe "ratio" $ do
-      it "should parse: 4/2" $ 
-        readExpr "4/2" `shouldBeT` Ratio (4 % 2)
+        it "should parse: -.2" $ 
+          readExpr "-.2" `shouldBeT` Float (-0.2)
 
-      it "should parse: #x22/5" $ 
-        readExpr "#x22/5" `shouldBeT` Ratio (34 % 5)
+        it "should parse: 5." $ 
+          readExpr "5." `shouldBeT` Float 5.0
 
-    describe "complex" $ do
-      it "should parse: 5.2+3i" $ 
-        readExpr "5.2+3i" `shouldBeT` Complex (5.2 :+ 3)
+        it "should parse: -5." $ 
+          readExpr "-5." `shouldBeT` Float (-5.0)
 
-      it "should parse: #x52+#d53i" $
-        readExpr "#x52+#d53i" `shouldBeT` Complex (82.0 :+ 53.0)
+        it "should parse: 3.2e3" $
+          readExpr "3.2e3" `shouldBeT` Float 3200.0
+
+        it "should parse: -3.2e+3" $
+          readExpr "-3.2e+3" `shouldBeT` Float (-3200.0)
+
+        it "should parse: 3.2e-3" $
+          readExpr "3.2e-3" `shouldBeT` Float 3.2e-3
+
+      describe "ratio" $ do
+        it "should parse: 4/2" $ 
+          readExpr "4/2" `shouldBeT` Ratio (4 % 2)
+
+        it "should parse: #x-22/5" $ 
+          readExpr "#x-22/5" `shouldBeT` Ratio (-34 % 5)
+
+      describe "complex" $ do
+        it "should parse: -5.2+3i" $ 
+          readExpr "-5.2+3i" `shouldBeT` Complex ((-5.2) :+ 3)
+
+        it "should parse: 2.-5.3i" $
+          readExpr "2.-5.3i" `shouldBeT` Complex (2.0 :+ (-5.3))
+
+        it "should parse: #x52+#d53i" $
+          readExpr "#x52+#d53i" `shouldBeT` Complex (82.0 :+ 53.0)
+
 
     describe "list" $ do
       it "should parse: (hoge)" $ 
@@ -122,6 +148,7 @@ spec = do
       it "should parse: ()" $ 
         readExpr "()" `shouldBeT` List []
 
+
     describe "pairs" $ do
       it "should parse: (a . 2)" $
         readExpr "(a . 2)" `shouldBeT`
@@ -134,6 +161,7 @@ spec = do
       it "should parse error: (.)" $ 
         readExpr "(.)" `shouldErrorT` parserError
 
+
     describe "vector" $ do
       it "should parse: #(1 2 3)" $ 
         readExpr "#(1 2 3)" `shouldBeT`
@@ -143,10 +171,12 @@ spec = do
         readExpr "#()" `shouldBeT`
           Vector (listArray (0, -1) [])
 
-    describe "quote" $ do
+
+    describe "quote" $ 
       it "should parse: '(1 2 3)" $
         readExpr "'(1 2 3)" `shouldBeT`
           List [Atom "quote", List [Integer 1, Integer 2, Integer 3]]
+
 
     describe "quasiquote" $ do
       it "should parse: `(1 2 ,a 4)" $
@@ -159,6 +189,7 @@ spec = do
                                         , List [Atom "unquote-splicing", Atom "a"]
                                         , Integer 4 ]]
 
+
     describe "comment" $ do
       it "should parse 2 ; comment" $
          readExpr "2 ; comment"   `shouldBeT` Integer 2
@@ -166,7 +197,7 @@ spec = do
          readExprList " ; comment\n 2" `shouldBeT` [Integer 2]
 
 
-    describe "pragmatic case" $ do
+    describe "pragmatic case" $ 
       it "shoud parse: (define (map func lst)(foldr (lambda (x acc) (cons (func x) acc)) '() lst))" $
         readExpr "(define (map func lst) (foldr (lambda (x acc) (cons (func x) acc)) '() lst))" `shouldBeT`
           List [ Atom "define"
