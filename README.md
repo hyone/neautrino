@@ -134,18 +134,18 @@ neautrino> (define a 1)
 neautrino> (define v 99)    ;; using same name in swap macro
 neautrino> (swap-evil! a v)
 neautrino> (list a v)       ;; not swaped!
-(1, 99)
+(1 99)
 
 ;; By using hygienic macro system, don't conflict even if using same name
 
 neautrino> (swap-er! a v)
 neautrino> (list a v)
-(99, 1)
+(99 1)
 
 neautrino> (begin (define a 1) (define v 99))
 neautrino> (swap-sc! a v)
 neautrino> (list a v)
-(99, 1)
+(99 1)
 ```
 
 #### syntax-rules
